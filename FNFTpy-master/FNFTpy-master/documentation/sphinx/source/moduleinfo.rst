@@ -1,7 +1,0 @@
-
-
-===============
-Module overview
-===============
-
-.. automodule:: FNFTpy
