@@ -1,0 +1,4 @@
+matplotlib
+pysigproc
+ModulationPy
+scikit-commpy
