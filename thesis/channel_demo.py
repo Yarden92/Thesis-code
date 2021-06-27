@@ -1,7 +1,10 @@
 import numpy as np
 
-from thesis.src import NFT, data, pulse_shaping, visualizer
+from thesis.src import NFT
+from thesis.src import pulse_shaping
+from thesis.src import visualizer
 from thesis.src import params as p
+from thesis.src import data
 from thesis.src import signal_processing as sp
 
 

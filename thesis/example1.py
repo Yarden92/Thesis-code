@@ -1,6 +1,6 @@
 import numpy as np
 
-import thesis.src.visualizer
+# import thesis.src.visualizer
 from FNFTpy.FNFTpy import kdvv
 
 print("\n\nkdvv example")
@@ -16,8 +16,8 @@ M = 1024
 Xivec = np.linspace(Xi1, Xi2, M)
 rq = np.real(q)
 iq = np.imag(q)
-thesis.src.visualizer.my_plot(tvec, rq, tvec, iq, title="q[t]", output_name="before.jpg", xlabel="t[sec]",
-                              legend=['real', 'imag'])
+# thesis.src.visualizer.my_plot(tvec, rq, tvec, iq, title="q[t]", output_name="before.jpg", xlabel="t[sec]",
+#                               legend=['real', 'imag'])
 
 # call function
 res = kdvv(q, tvec, M, Xi1=Xi1, Xi2=Xi2)
@@ -36,6 +36,6 @@ for i in range(len(res['cont'])):
 
 rQ = np.real(res['cont'])
 iQ = np.imag(res['cont'])
-thesis.src.visualizer.my_plot(Xivec, rQ, Xivec, iQ, title="Q[xi]", output_name="after.jpg", xlabel="xi",
-                              legend=['real', 'imag'])
-thesis.src.visualizer.my_plot(Xivec, np.abs(res['cont']), title="|Q[xi]|", output_name="abs.jpg", xlabel="xi")
+# thesis.src.visualizer.my_plot(Xivec, rQ, Xivec, iQ, title="Q[xi]", output_name="after.jpg", xlabel="xi",
+#                               legend=['real', 'imag'])
+# thesis.src.visualizer.my_plot(Xivec, np.abs(res['cont']), title="|Q[xi]|", output_name="abs.jpg", xlabel="xi")
