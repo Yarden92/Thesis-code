@@ -1,21 +1,21 @@
 import numpy as np
 
 from FNFTpy.FNFTpy import nsev_inverse, nsev, nsev_inverse_xi_wrapper
-from thesis.src import params as p
+from my_files.src import params as p
 
 
 def INFT(Q_xi, params):
     # TODO: validate this whole function
 
     # set values
-    M = params.length_of_xi
+    N = params.length_of_xi
 
     tvec = create_tvec(params)
     xivec = create_xivec(params, tvec)
 
     # contspec, bound_states, discspec = what_are_those(Q_xi, params)
 
-    contspec = Q_xi
+    contspec = Q_xi[0:N]
     bound_states = []
     discspec = []
 

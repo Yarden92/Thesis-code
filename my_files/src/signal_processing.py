@@ -1,6 +1,6 @@
 import numpy as np
 
-# from thesis.src.params import Params
+# from my_files.src.params import Params
 
 
 def channel_equalizer(input_vec: np.ndarray):

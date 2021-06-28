@@ -1,11 +1,13 @@
 import numpy as np
 from ModulationPy import ModulationPy
 
-# from thesis.src.params
+
+# from my_files.src.params
 
 
 def generate_random_msg(N: int) -> np.ndarray:
-    return np.random.choice([0, 1], size=N)
+    # N = length of msg vector
+    return np.random.choice([0,1], size=N)
 
 
 def data_encoder(binary_msg: np.ndarray, params) -> np.array:

@@ -4,8 +4,8 @@ import matplotlib
 from ModulationPy import ModulationPy
 from matplotlib import pyplot as plt
 
-from thesis.src import params as p
-# from thesis.src.params import Params
+from my_files.src import params as p
+# from my_files.src.params import Params
 
 
 def plot_constellation_map_with_points(data_vec, params):
@@ -18,8 +18,9 @@ def plot_constellation_map_with_points(data_vec, params):
     plt.ylabel('imag part')
     plt.title(f'{params.m_qam}-QAM constellation map after channel')
     file_name = 'output/constellation_through_channel.jpg'
-    plt.savefig(file_name)
-    print(f'saved figure under: {file_name}')
+    # plt.savefig(file_name)
+    plt.show()
+    # print(f'saved figure under: {file_name}')
 
 
 def plot_constellation_map_grid(modem: ModulationPy):
@@ -78,7 +79,7 @@ def plot_constellation_map_grid(modem: ModulationPy):
 def my_plot(*args, name='graph', title=None, output_name=None,
             xlabel=None, ylabel=None,
             legend=None):
-    matplotlib.use('Agg')
+    # matplotlib.use('Agg')
     fig = plt.figure()
     plt.plot(*args)
     if title:
@@ -99,4 +100,17 @@ def my_plot(*args, name='graph', title=None, output_name=None,
     plt.grid(True)
 
     path = os.path.join(p.path,output_name)
-    plt.savefig(path)
+    # plt.savefig(path)
+
+    plt.show()
+
+
+def plot_bins(bins,name='graph'):
+    fig = plt.figure()
+    plt.bar(bins)
+    plt.grid(True)
+    plt.show()
+
+def print_bits(bits,M):
+    mat = np.reshape(bits,(-1,M))
+    print(mat)
