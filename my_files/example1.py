@@ -1,7 +1,7 @@
 import numpy as np
 
 # import thesis.src.visualizer
-from FNFTpy.FNFTpy import kdvv
+from FNFTpy_folder.FNFTpy import kdvv
 
 print("\n\nkdvv example")
 
