@@ -48,7 +48,9 @@ def get_lib_path():
     """
     #libstr = "/usr/local/lib/libfnft.so.0.2.2-dev"
     # libstr = "/usr/local/lib/libfnft.so.0.4.1"
-    libstr = "C:/FNFT/build/libfnft.dll"
+    # libstr = "C:/FNFT/build/libfnft.dll"
+    libstr = "/Users/yarden/Desktop/thesis_stuff/thesis-git-project/lib/FNFT-mac/lib/libfnft.dylib"
+
 
     return libstr
 

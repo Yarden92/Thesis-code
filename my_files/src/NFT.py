@@ -1,6 +1,6 @@
 import numpy as np
 
-from FNFTpy2 import nsev_inverse, nsev, nsev_inverse_xi_wrapper
+from FNFTpy import nsev_inverse, nsev, nsev_inverse_xi_wrapper
 from my_files.src import params as p
 
 
