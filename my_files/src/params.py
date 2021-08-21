@@ -11,6 +11,7 @@ sps = 4  # Number of samples per symbol (oversampling factor)
 # pulse_shaping params:
 filter_len = 50  # filter length in symbols
 roll_off = 0.25  # filter roll-off factor
+NFT_size = 100
 
 weird_factor = 1  # TODO: what is this?
 Ts = 1  # symbol period

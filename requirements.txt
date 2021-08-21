@@ -2,7 +2,4 @@ numpy
 matplotlib
 joblib
 threadpoolctl
-scipy
-pysigproc
 ModulationPy
-scikit-commpy

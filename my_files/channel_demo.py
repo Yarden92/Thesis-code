@@ -31,11 +31,14 @@ def simulate_comm_system(msg_bits: np.ndarray, parameters):
 
     # TODO: pulse shaping + up-sampling
     signal = pulse_shaping.pulse_shaping(normalized_modulated_data)
-    visualizer.my_plot(np.real(signal)[0:50], name='signal=x(t) * h(t)', ylabel='Re{signal}')
+    visualizer.my_plot(np.real(signal)[0:100], name='signal=X(xi) * h(xi)', ylabel='Re{signal}')
 
     # TODO: divide the full signal to packages of ~100-120 symbols (try 32 / 64 symbols - on test 128)
-
-    tx_samples = NFT.INFT(signal, parameters)  # q[t,0]
+    folded_signal = fold_subvectors(signal, N=parameters.NFT_size)
+    tx_samples = []
+    for sub_signal in folded_signal:
+        tx_subsignal = NFT.INFT(sub_signal, parameters.Tmax)  # q[t,0]
+        tx_samples.append(tx_subsignal)
     rx_samples = sp.pass_through_channel(tx_samples)  # q[t,L]
     rx_data = NFT.NFT(rx_samples, parameters)  # r[xi,L]
     rx_data_eq = sp.channel_equalizer(rx_data)
@@ -43,6 +46,21 @@ def simulate_comm_system(msg_bits: np.ndarray, parameters):
     unnormalized_rx_vec = sp.unnormalize_vec(rx_data_eq, parameters)
 
     return unnormalized_rx_vec
+
+
+def fold_subvectors(vec: np.ndarray, N: int = 100) -> np.ndarray:
+    """
+
+    :param vec: long vector to be sliced into multiple sub vectors
+    :param N: desired output sub-vector len
+    :return: multi vector with length of N - each
+    """
+    # extend to multiplication of N
+    N_zeros = int(np.ceil(len(vec) / N) * N - len(vec))
+    vec = np.pad(vec,[0, N_zeros])
+    # slice it
+    vec = vec.reshape([-1, N])
+    return vec
 
 
 if __name__ == "__main__":
