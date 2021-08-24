@@ -18,9 +18,12 @@ def main():
 
 def simulate_comm_system(msg_bits: np.ndarray) -> np.ndarray:
     """
-    msg -> [encoder] -> r[xi,0] -> [INFT] -> q[t,0]
-    -> [channel] -> q[t,L] ->
-    ->[NFT] -> r[xi,L] ->[equalizer] -> r[xi,L]_eq -> [decoder] -> msg
+    msg     ->  [encoder]   ->  r[xi,0]     ->  [INFT]  ->  q[t,0]  ⤵
+                                                                    [channel]
+                                r[xi,L]     <-  [NFT]   <-  q[t,L]  ↩
+                             ↳  [equalizer] ⤵
+    out_msg <-  [decoder]   <-  r[xi,L]_eq
+
 
     :param msg_bits: input message - binary vector
     :param p: parameters object
