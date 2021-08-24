@@ -10,7 +10,7 @@ from my_files.src import params as p
 # from my_files.src.params import Params
 
 #
-def plot_constellation_map_with_points(data_vec, m_qam):
+def plot_constellation_map_with_points(data_vec, m_qam, title='after channel'):
     modem = ModulationPy.QAMModem(m_qam)
     fig = plot_constellation_map_grid(modem)
 
@@ -18,10 +18,10 @@ def plot_constellation_map_with_points(data_vec, m_qam):
     plt.plot(i, q, '.')
     plt.xlabel('real part')
     plt.ylabel('imag part')
-    plt.title(f'{m_qam}-QAM constellation map after channel')
-    file_name = 'output/constellation_through_channel.jpg'
-    # plt.savefig(file_name)
+    plt.title(f'{m_qam}-QAM constellation map {title}')
     plt.show()
+    # file_name = 'output/constellation_through_channel.jpg'
+    # plt.savefig(file_name)
     # print(f'saved figure under: {file_name}')
 
 
@@ -101,7 +101,7 @@ def my_plot(*args, name='graph', title=None, output_name=None,
 
     plt.grid(True)
 
-    path = os.path.join(p.path, output_name)
+    path = os.path.join(p.visualization_path, output_name)
     # plt.savefig(path)
 
     plt.show()
@@ -114,6 +114,9 @@ def plot_bins(bins, name='graph'):
     plt.show()
 
 
-def print_bits(bits, M):
+def print_bits(bits, M, title='the bits are:'):
+    print('\n_______________________________________________')
+    print(title)
     mat = np.reshape(bits, (-1, M))
     print(mat)
+    print('\n')
