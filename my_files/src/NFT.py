@@ -11,32 +11,18 @@ def INFT(X_xi, Tmax):
     tvec = create_tvec(Tmax, N_time)
     xivec = create_xivec(Tmax, N_time, N_xi, tvec)
 
-    bound_states = np.array([0.7j, 1.7j])
+    bound_states = np.array([0.7j, 1.7j])  # TODO make those [] instead
     disc_norming_const_ana = [1.0, -1.0]
 
     res = nsev_inverse(xivec, tvec, X_xi, bound_states, disc_norming_const_ana, cst=1, dst=0)
 
-    # end of NEW
-
-    # TODO: validate this whole function
-    # set values
-    # N = N_xi
-    #
-    # # contspec, bound_states, discspec = what_are_those(Q_xi, params)
-    #
-    # contspec = Q_xi[0:N]
-    # bound_states = []
-    # discspec = []
-    #
-    # # call function
-    # res = nsev_inverse(xivec, tvec, contspec, bound_states, discspec)
     assert res['return_value'] == 0, "INFT failed"
 
     return res['q']
 
 
 def NFT(q, params):
-    # TODO: validate this whole function
+    # TODO: validate this whole function - make sure it matches INFT
     Xi1 = - params.BW
     Xi2 = params.BW
     M = params.length_of_xi
