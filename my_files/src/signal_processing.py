@@ -7,8 +7,8 @@ def channel_equalizer(input_vec: np.ndarray):
     return output_vec
 
 
-def normalize_vec(vec: np.ndarray, params):
-    return params.normalization_factor * vec
+def normalize_vec(vec: np.ndarray, factor):
+    return factor * vec
 
 
 def unnormalize_vec(vec: np.ndarray, params):

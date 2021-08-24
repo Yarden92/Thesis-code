@@ -10,15 +10,15 @@ from my_files.src import params as p
 # from my_files.src.params import Params
 
 #
-def plot_constellation_map_with_points(data_vec, params):
-    modem = ModulationPy.QAMModem(params.m_qam)
+def plot_constellation_map_with_points(data_vec, m_qam):
+    modem = ModulationPy.QAMModem(m_qam)
     fig = plot_constellation_map_grid(modem)
 
     i, q = np.real(data_vec), np.imag(data_vec)
     plt.plot(i, q, '.')
     plt.xlabel('real part')
     plt.ylabel('imag part')
-    plt.title(f'{params.m_qam}-QAM constellation map after channel')
+    plt.title(f'{m_qam}-QAM constellation map after channel')
     file_name = 'output/constellation_through_channel.jpg'
     # plt.savefig(file_name)
     plt.show()
