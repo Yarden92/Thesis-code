@@ -9,8 +9,8 @@ def INFT(X_xi, Tmax):
     tvec = create_tvec(Tmax, N_time)
     xivec = create_xivec(Tmax, N_time, N_xi, tvec)
 
-    bound_states = np.array([0.7j, 1.7j])  # TODO make those [] instead
-    disc_norming_const_ana = [1.0, -1.0]
+    bound_states = [] # np.array([0.7j, 1.7j])
+    disc_norming_const_ana = [] # [1.0, -1.0]
 
     res = nsev_inverse(xivec, tvec, X_xi, bound_states, disc_norming_const_ana, cst=1, dst=0)
 
