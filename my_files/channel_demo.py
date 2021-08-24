@@ -18,12 +18,9 @@ def main():
 
 def simulate_comm_system(msg_bits: np.ndarray) -> np.ndarray:
     """
-    msg     ->  [encoder]   ->  r[xi,0]     ->  [INFT]  ->  q[t,0]  ⤵
-                                                                    [channel]
-                                r[xi,L]     <-  [NFT]   <-  q[t,L]  ↩
-                             ↳  [equalizer] ⤵
-    out_msg <-  [decoder]   <-  r[xi,L]_eq
-
+    msg     ->  [encoder]   --  r[xi,0]     ->  [pre-equalizer] ->  [INFT]  --  q[t,0]  ⤵
+                                                                                        [channel]
+    out_msg <-  [decoder]   <-  r[xi,L]_eq  --  [equalizer]     <-  [NFT]   <-  q[t,L]  /
 
     :param msg_bits: input message - binary vector
     :param p: parameters object
@@ -34,7 +31,6 @@ def simulate_comm_system(msg_bits: np.ndarray) -> np.ndarray:
     visualizer.plot_constellation_map_with_points(modulated_data, p.m_qam)
 
     normalized_modulated_data = sp.normalize_vec(modulated_data, p.normalization_factor)
-    normalized_modulated_data = modulated_data
 
     signal = pulse_shaping.pulse_shaping(normalized_modulated_data)
     visualizer.my_plot(np.real(signal), name='signal=X(xi) * h(xi)', ylabel='Re{signal}', xlabel='xi')
