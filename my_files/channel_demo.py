@@ -33,21 +33,31 @@ def simulate_comm_system(msg_bits: np.ndarray, parameters):
     #  [V] pulse shaping
     #  [ ] up-sampling
     signal = pulse_shaping.pulse_shaping(normalized_modulated_data)
-    visualizer.my_plot(np.real(signal)[0:100], name='signal=X(xi) * h(xi)', ylabel='Re{signal}')
-    Tmax = sp.estimate_T(signal)
+    visualizer.my_plot(np.real(signal), name='signal=X(xi) * h(xi)', ylabel='Re{signal}',xlabel='xi')
+    Tmax = p.Tmax # sp.estimate_T(signal)
 
-    folded_signal = sp.fold_subvectors(signal, N=parameters.NFT_size)
-    tx_samples = []
-    for sub_signal in folded_signal:
-        tx_subsignal = NFT.INFT(sub_signal, Tmax)  # q[t,0]
-        tx_samples.append(tx_subsignal)
-    rx_samples = sp.pass_through_channel(tx_samples)  # q[t,L]
+    # tx_samples = obsoleted_doing_INFT_in_chuncks(Tmax, parameters, signal)
+    tx_signal = NFT.INFT(signal, Tmax)  # q[t,0]
+    visualizer.my_plot(tx_signal,name='signal in time', xlabel='t')
+
+    rx_samples = sp.pass_through_channel(tx_signal)  # q[t,L]
     rx_data = NFT.NFT(rx_samples, parameters)  # r[xi,L]
+    visualizer.my_plot(np.real(rx_data), name='signal after NFT again', ylabel='Re{signal}',xlabel='xi')
     rx_data_eq = sp.channel_equalizer(rx_data)
 
     unnormalized_rx_vec = sp.unnormalize_vec(rx_data_eq, parameters)
 
     return unnormalized_rx_vec
+
+
+def obsoleted_doing_INFT_in_chuncks(Tmax, parameters, signal):
+    folded_signal = sp.fold_subvectors(signal, N=parameters.NFT_size)
+    tx_samples = []
+    for sub_signal in folded_signal:
+        visualizer.my_plot(np.real(sub_signal), name='sub_signal', ylabel='Re{sub_signal}')
+        tx_subsignal = NFT.INFT(sub_signal, Tmax)  # q[t,0]
+        tx_samples.append(tx_subsignal)
+    return tx_samples
 
 
 if __name__ == "__main__":

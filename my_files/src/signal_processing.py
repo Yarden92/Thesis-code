@@ -1,6 +1,4 @@
 import numpy as np
-import scipy
-# from my_files.src.params import Params
 
 
 def channel_equalizer(input_vec: np.ndarray):
@@ -42,10 +40,11 @@ def estimate_T(X: np.ndarray) -> int:
     """
     estimate T (sample time) by the IFFT
     :param X: vector in xi domain
-    :return: int T -
+    :return: int T - the time period
     """
 
-    x = scipy.fft.iffft(X)
+    x = np.fft.ifft(X)
 
-    from my_files.src import params as p
-    return p.Tmax
+
+    # TODO: find the part where the signal power goes zero..
+    return 200

@@ -5,11 +5,11 @@ path = '/thesis/output/'
 M = 16  # Modulation order
 bps = int(np.log2(M))  # 4
 # numBits = 3e5  # Number of bits to process
-num_symbols = 1000
+num_symbols = 2000
 sps = 4  # Number of samples per symbol (oversampling factor)
 
 # pulse_shaping params:
-filter_len = 50  # filter length in symbols
+filter_len = 49  # filter length in symbols
 roll_off = 0.25  # filter roll-off factor
 NFT_size = 100
 
