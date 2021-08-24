@@ -1,11 +1,9 @@
 import numpy as np
 
 from FNFTpy import nsev_inverse, nsev, nsev_inverse_xi_wrapper
-from my_files.src import params as p
 
 
 def INFT(X_xi, Tmax):
-
     N_xi = len(X_xi)  # (=M)
     N_time = int(N_xi / 2)  # (=D)
     tvec = create_tvec(Tmax, N_time)

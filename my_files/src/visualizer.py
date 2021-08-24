@@ -1,10 +1,12 @@
 import os
+
 import numpy as np
-import matplotlib
 from ModulationPy import ModulationPy
 from matplotlib import pyplot as plt
 
 from my_files.src import params as p
+
+
 # from my_files.src.params import Params
 
 #
@@ -99,18 +101,19 @@ def my_plot(*args, name='graph', title=None, output_name=None,
 
     plt.grid(True)
 
-    path = os.path.join(p.path,output_name)
+    path = os.path.join(p.path, output_name)
     # plt.savefig(path)
 
     plt.show()
 
 
-def plot_bins(bins,name='graph'):
+def plot_bins(bins, name='graph'):
     fig = plt.figure()
     plt.bar(bins)
     plt.grid(True)
     plt.show()
 
-def print_bits(bits,M):
-    mat = np.reshape(bits,(-1,M))
+
+def print_bits(bits, M):
+    mat = np.reshape(bits, (-1, M))
     print(mat)

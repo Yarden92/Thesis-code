@@ -30,7 +30,7 @@ def fold_subvectors(vec: np.ndarray, N: int = 100) -> np.ndarray:
     """
     # extend to multiplication of N
     N_zeros = int(np.ceil(len(vec) / N) * N - len(vec))
-    vec = np.pad(vec,[0, N_zeros])
+    vec = np.pad(vec, [0, N_zeros])
     # slice it
     vec = vec.reshape([-1, N])
     return vec
@@ -44,7 +44,6 @@ def estimate_T(X: np.ndarray) -> int:
     """
 
     x = np.fft.ifft(X)
-
 
     # TODO: find the part where the signal power goes zero..
     return 200

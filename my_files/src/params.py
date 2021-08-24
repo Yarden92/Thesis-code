@@ -18,7 +18,7 @@ Ts = 1  # symbol period
 Fs = 4  # sampling rate
 
 # params for rest
-length_of_msg = int(num_symbols*bps)  # N_t
+length_of_msg = int(num_symbols * bps)  # N_t
 BW = 2
 m_qam = M
 
