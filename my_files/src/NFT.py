@@ -19,13 +19,14 @@ def INFT(X_xi, Tmax):
     return res['q']
 
 
-def NFT(q, params):
+def NFT(x_t, BW, Tmax):
     # TODO: validate this whole function - make sure it matches INFT
-    Xi1 = - params.BW
-    Xi2 = params.BW
-    M = params.length_of_xi
-    tvec = create_tvec(params.Tmax, params.length_of_time)
-    res = nsev(q, tvec, Xi1, Xi2, M)
+    Xi1 = -BW
+    Xi2 = BW
+    N_time = len(x_t)  # (=D)
+    N_xi = int(N_time * 2)  # (=M)
+    tvec = create_tvec(Tmax, N_time)
+    res = nsev(x_t, tvec, Xi1, Xi2, N_xi)
     assert res['return_value'] == 0, "NFT failed"
     Q = res['cont_ref']
     return Q

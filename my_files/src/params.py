@@ -25,10 +25,13 @@ m_qam = M
 alpha = 2.0  # TODO: whats that?
 beta = 0.55  # TODO: whats that?
 
-normalization_factor = 1e-3
+# normalization_factor = 1e-3
+normalization_factor = 1
 Tmax = 15
 
-length_of_time = int(length_of_msg / bps)
-length_of_xi = length_of_time  # not sure if it can be different than N_t
+# length_of_time = int(length_of_msg / bps)
+# length_of_xi = length_of_time  # not sure if it can be different than N_t
 
 gamma = np.sqrt(np.abs(alpha) ** 2 + np.abs(beta) ** 2)  # TODO: whats that?
+
+channel_func = 1

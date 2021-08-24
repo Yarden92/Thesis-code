@@ -11,12 +11,11 @@ def normalize_vec(vec: np.ndarray, factor):
     return factor * vec
 
 
-def unnormalize_vec(vec: np.ndarray, params):
-    return vec / params.normalization_factor
+def unnormalize_vec(vec: np.ndarray, factor):
+    return vec / factor
 
 
-def pass_through_channel(input_vec: np.ndarray):
-    channel_func = 1
+def pass_through_channel(input_vec: np.ndarray, channel_func):
     output_vec = input_vec * channel_func
     return output_vec
 
