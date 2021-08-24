@@ -60,9 +60,10 @@ def _pulse_shaping_(normalized_modulated_data):
     if p.plot_vec_after_creation:
         xi_vec = NFT.create_xivec(p.Tmax,N_xi=len(signal))
         visualizer.my_plot(xi_vec,np.real(signal),
-                           xi_vec,np.imag(signal),
-                           legend=['Real{X}','Imag{X}'],
-                           name='signal=X(xi) * h(xi)', ylabel='Re{signal}', xlabel='xi')
+                           legend=['Real{X}'],
+                           # xi_vec,np.imag(signal),
+                           # legend=['Real{X}','Imag{X}'],
+                           name='signal=X(xi) * h(xi)', xlabel='xi')
     return signal
 
 
@@ -74,7 +75,8 @@ def _INFT_(signal):
     # tx_samples = obsoleted_doing_INFT_in_chuncks(Tmax, parameters, signal)
     tx_signal = NFT.INFT(signal, p.Tmax)  # q[t,0]
     if p.plot_vec_after_creation:
-        visualizer.my_plot(tx_signal, name='signal in time', xlabel='t')
+        tvec = NFT.create_tvec(p.Tmax,N_time=len(tx_signal))
+        visualizer.my_plot(tvec, tx_signal, name='signal in time', xlabel='t')
     return tx_signal
 
 
