@@ -28,7 +28,7 @@ def simulate_comm_system(msg_bits: np.ndarray) -> np.ndarray:
     :return: output message after channel - binary vector
     """
 
-    modulated_data = data.data_modulation(msg_bits, p)  # r[xi,0] = [1+j,-1+j,1-j,...]
+    modulated_data = data.data_modulation(msg_bits,p.m_qam)  # r[xi,0] = [1+j,-1+j,1-j,...]
     visualizer.plot_constellation_map_with_points(modulated_data, p.m_qam)
 
     normalized_modulated_data = sp.normalize_vec(modulated_data, p.normalization_factor)
@@ -49,7 +49,7 @@ def simulate_comm_system(msg_bits: np.ndarray) -> np.ndarray:
     unnormalized_rx_vec = sp.unnormalize_vec(rx_data_eq, p.normalization_factor)
     visualizer.plot_constellation_map_with_points(unnormalized_rx_vec, p.m_qam)
 
-    output_msg = data.data_decoder(unnormalized_rx_vec)
+    output_msg = data.data_decoder(unnormalized_rx_vec,p.m_qam)
 
     return output_msg
 

@@ -26,7 +26,7 @@ def data_modulation(binary_vec: np.ndarray, M_QAM: int) -> np.ndarray:
     return modulated_vec
 
 
-def data_decoder(modulated_vec: np.ndarrary, M_QAM: int) -> np.ndarray:
+def data_decoder(modulated_vec: np.ndarray, M_QAM: int) -> np.ndarray:
     """
     i_q_samples_vec -> [Demodulator] -> binary_bits
     The demodulator takes vector of complex values, and convert each one to M binary bits
