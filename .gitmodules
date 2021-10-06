@@ -1,0 +1,3 @@
+[submodule "lib/packages/eyediagram"]
+	path = lib/packages/eyediagram
+	url = https://github.com/WarrenWeckesser/eyediagram
