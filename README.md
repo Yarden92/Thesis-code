@@ -8,6 +8,7 @@
 1. on terminal run `brew install scipy`
 2. then copy this folder: <pre>`/opt/homebrew/lib/python3.9/site-packages/scipy`</pre>
 to: `<project_dir>/venv/lib/python**/site_packages/___HERE__`
+3. make sure there is no "alias" files, if there are -> go to the original location and copy the folder from there.
 
 # how to install conda 
 ###(but no need for that, actually)
@@ -21,4 +22,4 @@ to: `<project_dir>/venv/lib/python**/site_packages/___HERE__`
 
 
 # Notes
-* Tensor flow only works on version 2.3, not 2.4 the latest
+* Tensor flow only works on version 2.3, not h2.4 the latest

@@ -3,6 +3,8 @@ import os
 import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib import pyplot as plt
+# from lib.packages.eyediagram.eyediagram.mpl import eyediagram
+
 
 from my_files.src import params as p
 
@@ -78,11 +80,15 @@ def plot_constellation_map_grid(modem: ModulationPy):
     return fig
 
 
+def gen_fig() -> plt.Figure:
+    return plt.figure()
+
 def my_plot(*args, name='graph', title=None, output_name=None,
             xlabel=None, ylabel=None,
+            fig=None,
             legend=None):
     # matplotlib.use('Agg')
-    fig = plt.figure()
+    fig = fig or plt.figure()
     plt.plot(*args)
     if title:
         fig.suptitle(title)
@@ -96,15 +102,18 @@ def my_plot(*args, name='graph', title=None, output_name=None,
     if legend:
         plt.legend(legend)
 
-    if output_name is None:
-        output_name = name
 
     plt.grid(True)
 
-    path = os.path.join(p.visualization_path, output_name)
+    # output_name = output_name or name
+    # path = os.path.join(p.visualization_path, output_name)
     # plt.savefig(path)
 
     plt.show()
+
+
+def multi_plot(x_vec, y_vec):
+    raise NotImplementedError
 
 
 def plot_bins(bins, name='graph'):
@@ -116,7 +125,25 @@ def plot_bins(bins, name='graph'):
 
 def print_bits(bits, M, title='the bits are:'):
     print('\n_______________________________________________')
-    print(title)
+    print(title,f'- len={len(bits)}')
     mat = np.reshape(bits, (-1, M))
     print(mat)
     print('\n')
+
+
+def eye_diagram(x: np.ndarray, sps: int) -> None:
+    """
+    creates an eye_diagram from vector x
+    :param x: analog vector - after pulse shaping - received at the receiver
+    :param sps: samples per symbol - do determine the window size for cropping
+    :return: None (new eye-diagram plot will be generated)
+    """
+    fig = plt.figure()
+    num_plots = int(len(x)/sps)
+    for i in range(num_plots):
+        index1 = i*sps
+        index2 = (i+1)*sps
+        sub_x = x[index1:index2]
+        plt.plot(np.real(sub_x))
+    # eyediagram(x,2*sps)
+    plt.show()

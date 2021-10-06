@@ -1,6 +1,7 @@
-from typing import Tuple, Optional
+from typing import Tuple
 
 import numpy as np
+from scipy import fft
 
 from FNFTpy import nsev_inverse, nsev, nsev_inverse_xi_wrapper
 
@@ -11,12 +12,18 @@ def INFT(X_xi, Tmax):
     tvec = create_tvec(Tmax, N_time)
     xivec = create_xivec(Tmax, N_time, N_xi, tvec)
 
+    contspec = X_xi
     bound_states = []  # np.array([0.7j, 1.7j])
-    disc_norming_const_ana = []  # [1.0, -1.0]
+    discspec = []  # [1.0, -1.0]
 
-    res = nsev_inverse(xivec, tvec, X_xi, bound_states, disc_norming_const_ana, cst=1, dst=0)
+    cst = 1  # continous spectrum type - default is None
+    dst = 0  # default is None
 
-    assert res['return_value'] == 0, "INFT failed"
+    res = nsev_inverse(xivec, tvec, contspec, bound_states, discspec, cst=cst, dst=dst)
+
+    if res['return_value'] != 0:
+        return None
+    # assert res['return_value'] == 0, "INFT failed"
 
     return res['q']
 
@@ -59,7 +66,7 @@ def create_tvec(Tmax, N_time):
     return tvec
 
 
-def fetch_time_and_xi_lengthes(N_time: int = None, N_xi: int = None) -> Tuple[int,int]:
+def fetch_time_and_xi_lengthes(N_time: int = None, N_xi: int = None) -> Tuple[int, int]:
     """
     convert between length of time to length of xi and reversa
     using the relationship of: N_xi = 2*N_time
@@ -68,9 +75,21 @@ def fetch_time_and_xi_lengthes(N_time: int = None, N_xi: int = None) -> Tuple[in
     :return: N_time and N_xi
     """
     assert (N_time or N_xi), "at least one input is required"
-    if N_time:
-        N_xi = int(N_time * 2)
-    if N_xi:
-        N_time = int(N_xi / 2)
+
+    N_xi = N_xi or int(N_time * 2)  # using the second option only if the first is None
+    N_time = N_time or int(N_xi / 2)  # using the second option only if the first is None
+    # if N_xi is None:
+    #     N_xi = int(N_time * 2)
+    # if N_time is None:
+    #     N_time = int(N_xi / 2)
     return N_time, N_xi
 
+
+def FFT(x):
+    x_xi = fft.fft(x)
+    return fft.fftshift(x_xi)
+
+
+def IFFT(x):
+    x_t = fft.ifft(x)
+    return fft.ifftshift(x_t)

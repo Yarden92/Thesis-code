@@ -1,25 +1,38 @@
 import numpy as np
 
 visualization_path = '/thesis/output/'
-# network params
-M = 16  # Modulation order
-bps = int(np.log2(M))  # 4
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Network Params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+M = 4  # Modulation order
+sps = int(np.log2(M))  # samples per symbol (4)
 # numBits = 3e5  # Number of bits to process
 num_symbols = 2000
 # sps = 4  # Number of samples per symbol (oversampling factor)
 
-# pulse_shaping params:
-filter_len = 49  # filter length in symbols
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pulse Shaping Params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# filter_len = 49  # filter length in symbols
+# roll_off = 0.25  # filter roll-off factor
+# Ts = 1  # symbol period
+# Fs = 4  # sampling rate
+# better version
+Ts = 5  # symbol period
+over_sampling = 8  # sampling rate
+filter_len = 2048*Ts  # filter length in symbols
 roll_off = 0.25  # filter roll-off factor
-# NFT_size = 100
 
-# weird_factor = 1  # TODO: what is this?
-Ts = 1  # symbol period
-Fs = 4  # sampling rate
-
-# params for rest
-length_of_msg = int(num_symbols * bps)  # N_t
-# BW = 2
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Signal Processing Params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Filter_Fstart = 35
+Filter_Fstop = -35
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other Params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+length_of_msg = int(num_symbols * sps)  # N_t
 m_qam = M
 
 # alpha = 2.0  # TODO: whats that?
@@ -28,6 +41,7 @@ m_qam = M
 normalization_factor = 1e-3
 # normalization_factor = 1
 Tmax = 15
+BW = 2*3.14*Tmax
 
 # length_of_time = int(length_of_msg / bps)
 # length_of_xi = length_of_time  # not sure if it can be different than N_t
@@ -36,7 +50,7 @@ Tmax = 15
 
 channel_func = 1
 
-
-
-# SETTINGS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 plot_vec_after_creation = True

@@ -3,3 +3,5 @@ matplotlib
 joblib
 threadpoolctl
 ModulationPy
+cython
+scikit-commpy
