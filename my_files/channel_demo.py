@@ -23,10 +23,6 @@ def simulate_comm_system() -> None:
 
     # TODO: multiply the match filter by the filter of rrc
 
-    q = pulse_shaping.example_for_rrc_from_the_internet()
-    for i in np.linspace(1, 100000, 100):
-        if (NFT.INFT(q, int(i))):
-            print(f'number {i} worked!')
 
 
     x1i = _gen_msg_()
@@ -36,7 +32,7 @@ def simulate_comm_system() -> None:
     x4i = _pulse_shaping_(x3i)
 
     # TODO: 3: padd x3i with zeros before and after
-    x5i = _pre_equalizer_(x4i)  # normalize + BPF + zero padding
+    x5i = _pre_equalizer_(x4i)  # normalize + zero pad to acceptable M length
     x6i = _INFT_(x5i)
 
     x6o = _channel_(x6i)  # nothing
@@ -67,6 +63,7 @@ def _pre_equalizer_(x: np.ndarray) -> np.ndarray:
     :param x: signal vector
     :return: processed signal vector
     """
+    x = sp.fix_length(x)
     xi_axis = NFT.create_xivec(p.Tmax, N_xi=len(x))
     x = sp.normalize_vec(x, p.normalization_factor)
     # x = sp.bpf(x,xi_axis, fstart=p.Filter_Fstart, fstop=p.Filter_Fstop)
@@ -117,7 +114,9 @@ def _NFT_(rx_samples):
     # for bw in [2,6,10,20,40,60,100,300,1000,20e3,600e3,3e6]:
     rx_data = NFT.NFT(rx_samples, BW=p.BW, Tmax=p.Tmax)  # r[xi,L]
     if p.plot_vec_after_creation:
-        visualizer.my_plot(np.real(rx_data), name=f'signal after NFT again, (BW={p.BW})', ylabel='Re{signal}', xlabel='xi')
+        xi_vec = NFT.create_xivec(p.Tmax, N_xi=len(rx_data))
+        visualizer.my_plot(xi_vec, np.real(rx_data),
+                           name=f'signal after NFT again, (BW={p.BW:.2f})', ylabel='Re{signal}', xlabel='xi')
     return rx_data
 
 
@@ -134,8 +133,8 @@ def _equalizer_(x):
 def _de_pulse_shaping_(x):
     # y = pulse_shaping.pulse_shaping(x)
     if p.plot_vec_after_creation:
-        my_files.src.visualizer.eye_diagram(x, sps=p.sps)
-        # visualizer.plot_constellation_map_with_points(y, p.m_qam, 'after depulse shaping')
+    #     my_files.src.visualizer.eye_diagram(x, sps=p.sps)
+        visualizer.plot_constellation_map_with_points(x, p.m_qam, 'after depulse shaping')
     return x
 
 

@@ -147,3 +147,16 @@ def eye_diagram(x: np.ndarray, sps: int) -> None:
         plt.plot(np.real(sub_x))
     # eyediagram(x,2*sps)
     plt.show()
+
+
+def print_nft_options(res_ob: dict) -> None:
+    """
+    pretty print the options of the INFT / NFT that was done.
+    :param res_ob: the res output of the function nsev_inverse
+    :return: None (pretty prints the options)
+    """
+    assert isinstance(res_ob['options'],str), "non valid object, insert the outcome of nsev_inv"
+    jsonable_str = ('{' + res_ob['options'] + '}').replace("\'",'\"')
+    import json
+    json_ob = json.loads(jsonable_str)
+    print(json.dumps(json_ob, indent=4))

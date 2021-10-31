@@ -16,7 +16,7 @@ def INFT(X_xi, Tmax):
     bound_states = []  # np.array([0.7j, 1.7j])
     discspec = []  # [1.0, -1.0]
 
-    cst = 1  # continous spectrum type - default is None
+    cst = 1  # continuous spectrum type - default is None
     dst = 0  # default is None
 
     res = nsev_inverse(xivec, tvec, contspec, bound_states, discspec, cst=cst, dst=dst)
@@ -77,12 +77,10 @@ def fetch_time_and_xi_lengthes(N_time: int = None, N_xi: int = None) -> Tuple[in
     assert (N_time or N_xi), "at least one input is required"
 
     N_xi = N_xi or int(N_time * 2)  # using the second option only if the first is None
-    N_time = N_time or int(N_xi / 2)  # using the second option only if the first is None
-    # if N_xi is None:
-    #     N_xi = int(N_time * 2)
-    # if N_time is None:
-    #     N_time = int(N_xi / 2)
+    N_time = N_time or int(2**np.floor(np.log2(N_xi/2))) # using the second option only if the first is None
+
     return N_time, N_xi
+
 
 
 def FFT(x):

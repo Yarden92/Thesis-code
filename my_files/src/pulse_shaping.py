@@ -1,5 +1,4 @@
 import numpy as np
-from ModulationPy import ModulationPy
 
 from my_files.src import visualizer
 
@@ -80,25 +79,3 @@ def rrcosfilter(N, alpha, Ts, Fs):
     return time_idx, h_rrc
 
 
-def example_for_rrc_from_the_internet():
-    N = 1024  # Number of symbols
-    os = 8  # over sampling factor
-    # Create modulation. QAM16 makes 4 bits/symbol
-    mod1 = ModulationPy.QAMModem(16)
-    bps = 4
-    # Generate the bit stream for N symbols
-    sB = np.random.randint(0, 2, N * bps)
-    # Generate N complex-integer valued symbols
-    sQ = mod1.modulate(sB)
-    sQ_upsampled = np.zeros(os * (len(sQ) - 1) + 1, dtype=np.complex64)
-    sQ_upsampled[::os] = sQ
-    # Create a filter with limited bandwidth. Parameters:
-    #      N: Filter length in samples
-    #    0.8: Roll off factor alpha
-    #      1: Symbol period in time-units
-    #     24: Sample rate in 1/time-units
-    sPSF = rrcosfilter(N, alpha=0.8, Ts=1, Fs=os)[1]
-    # Analog signal has N/2 leading and trailing near-zero samples
-    qW = np.convolve(sPSF, sQ_upsampled)
-
-    return qW

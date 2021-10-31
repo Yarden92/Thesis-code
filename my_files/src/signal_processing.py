@@ -118,3 +118,17 @@ def up_sample(x:np.ndarray, factor: int) -> np.ndarray:
     y = np.zeros(factor * (len(x) - 1) + 1, dtype=np.complex64)
     y[::factor] = x
     return y
+
+def fix_length(x:np.ndarray) -> np.ndarray:
+    """
+    pad with zeros to make length of x to be power of 2
+    :param x: some vector
+    :return: longer vector of x, with zeros at the end
+    """
+    current_length = len(x)
+    desired_length = int(2**np.ceil(np.log2(current_length)))
+    num_of_zeros = desired_length - current_length
+    num_of_zeros_after = num_of_zeros//2
+    num_of_zeros_before = num_of_zeros - num_of_zeros_after
+    x = np.pad(x,(num_of_zeros_before,num_of_zeros_after),'constant',constant_values=0)
+    return x

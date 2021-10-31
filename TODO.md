@@ -21,8 +21,11 @@ perhaps generating something else or bandpass filter it somehow
 * check the XI params if they are wide enough to cover the entire signal
 
 # what I've done lately:
-* I've added an interesting example for the pulse shaping, try to mimick that and insert it to INFT
+* I've added an interesting example for the pulse shaping, try to mimic that and insert it to INFT
 * if not as is, take the shape of the rrc from the example, and generate something similar by playing with the parameters 
   of the pulse shaping
 * added an upsampling
 * I'm still not sure how to find Tmax.. if I do IFFT on unknown vector, there is no time axis..
+# few more:
+* important discovery: D length (time domain length) must be a power of 2! updated the N_time fetching method accordingly
+* BW should be about 2&pi;&bullet;1200 (where spectrum lives)
