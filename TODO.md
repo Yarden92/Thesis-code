@@ -1,9 +1,7 @@
 # TODO list:
-* make the vectors more generic so we won't need to make sure that: `len(X_xi)+len(pulse_shaper)=2048`
-* from 4.10:
-  * TODO: 3: padd x3i with zeros before and after
-  * send stas and bella the scholarship documents
-
+* validate that the pulse shape is fine
+* de-pulse shaping / sampling: how to convert from pulse back to (i,q) modulation symbols?
+* the BW is made up empirically, is there a formula way to calculate it?
 
 # Tasks that are done:
 * based on the T -> calc the max XI boundaries
@@ -13,19 +11,13 @@
 * TODO: 3) compare with IFFT - on small factors they should be similar (on abs) up to time scale (pi) 
 * missing upsampling
 * do linear IFFT and check the width of the signal in time (< but there is no units on t axis..)
-
-
-# Things I thought on:
-* is the signal even band-limited? its totally random so maybe the bandwidth on freq domain is inf...
-perhaps generating something else or bandpass filter it somehow
-* check the XI params if they are wide enough to cover the entire signal
+* pad x3i with zeros before and after
+* send stas and bella the scholarship documents
+* make the vectors more generic so we won't need to make sure that: `len(X_xi)+len(pulse_shaper)=2048`
 
 # what I've done lately:
-* I've added an interesting example for the pulse shaping, try to mimic that and insert it to INFT
-* if not as is, take the shape of the rrc from the example, and generate something similar by playing with the parameters 
-  of the pulse shaping
-* added an upsampling
-* I'm still not sure how to find Tmax.. if I do IFFT on unknown vector, there is no time axis..
-# few more:
-* important discovery: D length (time domain length) must be a power of 2! updated the N_time fetching method accordingly
-* BW should be about 2&pi;&bullet;1200 (where spectrum lives)
+* I've found an interesting example for the pulse shaping, I adopted some of it to get better shape of the pulse
+* added an upsampling (zero padding between each sample)
+* important discovery: D length (time domain length) must be a power of 2! 
+  * I updated the N_time fetching method accordingly
+* empirically discovery: BW should be about 700&bullet;2&pi; for the signal after NFT to look like before INFT
