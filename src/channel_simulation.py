@@ -3,8 +3,8 @@ import numpy as np
 from ModulationPy import ModulationPy
 
 from FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
-from src.visualizer import Visualizer
 from lib.rrcos import rrcosfilter
+from src.visualizer import Visualizer
 
 
 class Step0:
