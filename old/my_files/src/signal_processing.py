@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import butter, lfilter
 
-from my_files.src import NFT
+from old.my_files.src import NFT
 
 
 def channel_equalizer(input_vec: np.ndarray):

@@ -3,6 +3,8 @@
 * de-pulse shaping / sampling: how to convert from pulse back to (i,q) modulation symbols?
 * the BW is made up empirically, is there a formula way to calculate it?
 
+* match filter as depulse shaping / demodulation for rrc
+
 # Tasks that are done:
 * based on the T -> calc the max XI boundaries
 * find the xi boundaries by plotting and check if data wasn't trimmed

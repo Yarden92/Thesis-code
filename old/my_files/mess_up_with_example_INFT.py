@@ -1,11 +1,11 @@
 import numpy as np
 from ModulationPy import ModulationPy
 
-from my_files.src import NFT, pulse_shaping, visualizer, params
+from old.my_files.src import visualizer, params
+from old.my_files.src import pulse_shaping, NFT
 
 
-def test1():
-
+def messing_with_inft_example():
     # set values
     M = 8000  # xi domain length - default = 2048
     D = 2048  # time domain length - default = 1024
@@ -22,7 +22,7 @@ def test1():
     contspec = alpha / (xivec - beta * 1.0j)
 
     # set discrete spectrum
-    bound_states = [] # default: np.array([1.0j * beta])
+    bound_states = []  # default: np.array([1.0j * beta])
     normconst_or_residues = np.array([-1.0j * alpha / (gamma + beta)])
 
     # print params
@@ -37,7 +37,8 @@ def test1():
         print('\n[V] sucess!')
         print()
 
-def test2():
+
+def example_from_internet_for_pulse_shaping():
     N = 1024  # Number of symbols
     os = 8  # over sampling factor
     # Create modulation. QAM16 makes 4 bits/symbol
@@ -48,7 +49,7 @@ def test2():
     # Generate N complex-integer valued symbols
     sQ = mod1.modulate(sB)
     sQ_upsampled = np.zeros(os * (len(sQ) - 1) + 1, dtype=np.complex64)
-    sQ_upsampled[::os] = sQ # TODO: there is no need for over sampling, theres already parameter (osf in nsev_inverse)
+    sQ_upsampled[::os] = sQ  # TODO: there is no need for over sampling, theres already parameter (osf in nsev_inverse)
     # Create a filter with limited bandwidth. Parameters:
     #      N: Filter length in samples
     #    0.8: Roll off factor alpha
@@ -62,4 +63,4 @@ def test2():
     visualizer.my_plot(q_tag, name=f'q after INFT with Tmax={params.Tmax}')
 
 
-test2()
+example_from_internet_for_pulse_shaping()

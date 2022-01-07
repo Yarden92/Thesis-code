@@ -1,19 +1,14 @@
-import time
-
 import numpy as np
 
-import my_files.src.visualizer
-from my_files.src import NFT
-from my_files.src import data
-from my_files.src import params as p
-from my_files.src import pulse_shaping
-from my_files.src import signal_processing as sp
-from my_files.src import visualizer
+from old.my_files.src import params as p
+from old.my_files.src import pulse_shaping, NFT, data
+from old.my_files.src import signal_processing as sp
+from old.my_files.src import visualizer
 
 
 def simulate_comm_system() -> None:
     """
-    msg ->  [encoder?]  ->  [Modulation + oversampling]   ->  [pulse-shaping] ->  [pre-equalizer] ->  [upsampling] ->  [INFT]  ⤵
+    msg ->  [encoder]  ->  [oversampling]   ->  [pulse-shaping] ->  [pre-equalizer] ->  [upsampling] ->  [INFT]  ⤵
                                                                                                             [channel]
     msg <-  [decoder?]  <-  [Demodulation?] <-  [match-filter] <-  [equalizer]     <- [downsamp]   <-  [NFT]   /
     :param msg_bits: input message - binary vector
@@ -22,6 +17,7 @@ def simulate_comm_system() -> None:
     """
 
     # TODO: multiply the match filter by the filter of rrc
+    # read paper: optics express to see how demondulation is performed - its describing mathematicallly
 
 
 
@@ -29,9 +25,7 @@ def simulate_comm_system() -> None:
 
     x2i = _modulation_(x1i)
     x3i = _upsampling_(x2i)  # zero padding in between
-    x4i = _pulse_shaping_(x3i)
-
-    # TODO: 3: padd x3i with zeros before and after
+    x4i, h_rrc = _pulse_shaping_(x3i)
     x5i = _pre_equalizer_(x4i)  # normalize + zero pad to acceptable M length
     x6i = _INFT_(x5i)
 
@@ -39,7 +33,7 @@ def simulate_comm_system() -> None:
     x5o = _NFT_(x6o)
     x4o = _downsampling_(x5o)  # (nothing) TODO
     x3o = _equalizer_(x4o)  # de-normalize
-    x2o = _de_pulse_shaping_(x3o)  # (nothing) TODO <- what is it? sampling?
+    x2o = _de_pulse_shaping_(x3o, h_rrc)  # (nothing) TODO <- what is it? sampling?
     x1o = _demodulation_(x2o)
 
 
@@ -59,7 +53,7 @@ def _modulation_(msg_bits):
 
 def _pre_equalizer_(x: np.ndarray) -> np.ndarray:
     """
-    normalizing + bpf + zero padding
+    length fix + normalizing
     :param x: signal vector
     :return: processed signal vector
     """
@@ -79,15 +73,16 @@ def _pre_equalizer_(x: np.ndarray) -> np.ndarray:
 
 
 def _pulse_shaping_(x):
-    y = pulse_shaping.pulse_shaping(x, p.Ts, p.over_sampling, len(x), p.roll_off)
+    y, h = pulse_shaping.pulse_shaping(x, p.Ts, p.over_sampling, int(len(x) / 1), p.roll_off)
     if p.plot_vec_after_creation:
         xi_vec = NFT.create_xivec(p.Tmax, N_xi=len(y))
+        # visualizer.multi_plot([xi_vec])
         visualizer.my_plot(xi_vec, np.real(y),
                            legend=['Real{X}'],
                            # xi_vec,np.imag(signal),
                            # legend=['Real{X}','Imag{X}'],
                            name='signal after pulse shaping=X(xi) * h(xi)', xlabel='xi')
-    return y
+    return y, h
 
 
 def _upsampling_(x):
@@ -130,10 +125,14 @@ def _equalizer_(x):
     return x
 
 
-def _de_pulse_shaping_(x):
+def _de_pulse_shaping_(x, h_rrc):
     # y = pulse_shaping.pulse_shaping(x)
+    # x = pulse_shaping.depulse_shaping(x, p.Ts, p.over_sampling, int(len(x)/1), p.roll_off)
+    y = pulse_shaping.match_filter(x, h_rrc)
+
     if p.plot_vec_after_creation:
     #     my_files.src.visualizer.eye_diagram(x, sps=p.sps)
+        visualizer.my_plot(y, name='signal after match filter with rrc')
         visualizer.plot_constellation_map_with_points(x, p.m_qam, 'after depulse shaping')
     return x
 
@@ -156,4 +155,6 @@ def obsoleted_doing_INFT_in_chuncks(Tmax, parameters, signal):
 
 
 if __name__ == "__main__":
+    # visualizer.multi_plot([{'args': ([0, 1], [0, 1]), 'name': 'drawing1'}, {'args': ([0, 1], [0, 1]), 'name': 'drawing2'}])
+
     simulate_comm_system()
