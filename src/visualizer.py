@@ -104,3 +104,20 @@ class Visualizer:
         import json
         json_ob = json.loads(jsonable_str)
         print(json.dumps(json_ob, indent=4))
+
+    @staticmethod
+    def plot_bers(us, bers_vecs, legends=None):
+        plt.figure(figsize=[10, 5])
+        for bers in bers_vecs:
+            mean = bers.mean(axis=-1)
+            std = bers.std(axis=-1)
+            plt.semilogx(us, bers)
+            # plt.fill_between(us,mean-std,mean+std,alpha=0.4)
+
+        plt.xlabel('normalizing factor'), plt.ylabel('BER')
+        plt.title('BER vs normalizing factor')
+        plt.grid(which='both', axis='y')
+        plt.grid(which='major', axis='x')
+        # plt.ylim(top=1,bottom=3e-4)
+        if legends: plt.legend(legends)
+        plt.show()

@@ -1,3 +1,6 @@
 [submodule "lib/packages/eyediagram"]
 	path = lib/packages/eyediagram
 	url = https://github.com/WarrenWeckesser/eyediagram
+[submodule "myFNFTpy"]
+	path = myFNFTpy
+	url = https://github.com/Yarden92/myFNFTpy.git

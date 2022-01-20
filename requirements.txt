@@ -6,3 +6,4 @@ ModulationPy
 cython
 scikit-commpy
 tqdm
+plotly
