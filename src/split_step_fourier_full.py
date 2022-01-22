@@ -19,7 +19,7 @@ class SplitStepFourier:
                  Po=.00064,
                  alpha=0,
                  gamma=0.003,
-                 to=125e-12,
+                 t0=125e-12,
                  C=-2,
                  b2=-20e-27,
                  dt=1e-12,

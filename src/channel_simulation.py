@@ -18,11 +18,11 @@ class ChannelSimulator:
         return int(np.log2(self.m_qam))  # samples per symbol (4)
 
     def __init__(self,
-                 m_qam=16,
-                 num_symbols=64,
-                 normalization_factor=1e-3,
-                 Tmax=30,
-                 channel_func=SplitStepFourier(),
+                 m_qam: int = 16,
+                 num_symbols: float = 64,
+                 normalization_factor: float = 1e-3,
+                 Tmax: float = 30,
+                 channel_func: SplitStepFourier = SplitStepFourier(),
                  verbose=True):
         # ~~~~~~~~~~~~~~~~~~~~~~~ Network Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.m_qam = m_qam
@@ -33,7 +33,7 @@ class ChannelSimulator:
 
         # ~~~~~~~~~~~~~~~~~~~~~~ Channel Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.channel_func = channel_func
-        # TODO: tunnel / insert here the channel params
+        print(f'number of iterations in split step algo: {self.channel_func.N}')
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.verbose = verbose

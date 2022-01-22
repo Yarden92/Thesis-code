@@ -77,11 +77,16 @@ class ChannelBlocks:
     def gen_nft_params(self, x, Tmax):  # step 5.1
         # some basic params for NFT
         N_xi = len(x)  # (=M)
-        N_time = int(2 ** np.floor(np.log2(N_xi / 2)))  # (=D)
+        N_time = int(2 ** np.floor(np.log2(N_xi)))  # (=D)
         tvec = np.linspace(-Tmax, Tmax, N_time)
-        rv, xi = nsev_inverse_xi_wrapper(N_time, tvec[0], tvec[-1], N_xi)
+        rv, xi = nsev_inverse_xi_wrapper(N_time, tvec[0], tvec[-1], N_xi,display_c_msg=False)
         xivec = xi[0] + np.arange(N_xi) * (xi[1] - xi[0]) / (N_xi - 1)
         BW = xivec.max()
+
+        if self.verbose:
+            print(f't  ∈ [{tvec[0]:.2f}:{tvec[-1]:.2f}]   ,\t N_time (=D) = {N_time}\n'
+                  f'xi ∈ [{xivec[0]:.2f}:{xivec[-1]:.2f}] ,\t N_xi   (=M) = {N_xi}\n'
+                  f'BW = {BW:.2f}')
 
         return N_xi, N_time, tvec, xivec, BW
 
@@ -95,7 +100,7 @@ class ChannelBlocks:
         dst = 0  # default is None
 
         res = nsev_inverse(xivec, tvec, contspec, bound_states, discspec,
-                           cst=cst, dst=dst)
+                           cst=cst, dst=dst,display_c_msg=False)
 
         assert res['return_value'] == 0, "INFT failed"
 
@@ -114,11 +119,14 @@ class ChannelBlocks:
         y = channel_func(x)
 
         if self.verbose:
-            Visualizer.my_plot(np.abs(y),name=f'|x(t)|')
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+            Visualizer.my_plot(np.abs(y), name=f'|x(t)|', xlabel='t', ax=ax1,
+                               hold=1)
+            Visualizer.my_plot(np.real(y), name=f'real(x(t))', ax=ax2)
         return y
 
     def nft(self, x, tvec, xivec, BW, N_xi, L_rrc, ref_y=None):  # step 7
-        res = nsev(x, tvec, Xi1=-BW, Xi2=BW, M=N_xi)
+        res = nsev(x, tvec, Xi1=-BW, Xi2=BW, M=N_xi,display_c_msg=False)
         assert res['return_value'] == 0, "NFT failed"
         y = res['cont_ref']  # r[xi,L]
         if self.verbose:

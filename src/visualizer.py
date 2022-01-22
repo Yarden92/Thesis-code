@@ -72,7 +72,7 @@ class Visualizer:
         print(title, f'- len={len(bits)}')
         mat = np.int8(np.reshape(bits, (-1, M)))
         print(mat)
-        print('\n')
+        # print('\n')
 
     @staticmethod
     def eye_diagram(x: np.ndarray, sps: int) -> None:
