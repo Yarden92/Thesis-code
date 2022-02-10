@@ -4,5 +4,5 @@ joblib
 threadpoolctl
 ModulationPy
 cython
-scikit-commpy
+scikit-commpy==0.6.0 # newer version doesn't compile on mac M1
 tqdm

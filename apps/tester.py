@@ -8,7 +8,7 @@ from src.split_step_fourier import SplitStepFourier
 from src.visualizer import Visualizer
 
 
-def test_channel_debug():
+def test1_channel_debug():
     cs = ChannelSimulator(m_qam=16,
                           num_symbols=64,
                           normalization_factor=1,
@@ -22,7 +22,7 @@ def test_channel_debug():
     print(f'ber = {ber}, N_errors = {num_errors}')
 
 
-def test_multi_channel_iterations():
+def test2_multi_channel_iterations():
     cs = ChannelSimulator(m_qam=16, verbose=False, channel_func=SplitStepFourier())
 
     num_realisations = 2
@@ -45,7 +45,7 @@ def test_multi_channel_iterations():
 
 
 
-def test_split():
+def test3_split():
     cs = ChannelSimulator(m_qam=16,
                           num_symbols=64,
                           normalization_factor=0.001,
@@ -54,6 +54,32 @@ def test_split():
     ber, num_errors = cs.iterate_through_channel()
     print(f'ber = {ber}, N_errors = {num_errors}')
 
+def test4_import():
+    from ModulationPy import ModulationPy
+    from commpy.filters import rrcosfilter
+    help('modules ModulationPy')
+
+    print('success')
+
+def test5_full_run():
+    cs = ChannelSimulator(verbose=False)
+    cs.iterate_through_channel()
+
+def test_os():
+    x = np.array([1,2,3,4])
+    os = 3
+    y = over_sample(x,os)
+    print(y)
+
+def over_sample(x, over_sampling):  # step 2
+    y = np.zeros(over_sampling * len(x), dtype=np.complex64)
+    y[::over_sampling] = x
+
+    Visualizer.my_plot(np.real(y[0:50]), name='zero padded - i (real)', function='stem')
+    print(f'vec length = {len(y)}, over_sampling period = {over_sampling}')
+
+    return y
 
 if __name__ == '__main__':
-    test_multi_channel_iterations()
+    test5_full_run()
+

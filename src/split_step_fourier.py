@@ -11,23 +11,23 @@ class SplitStepFourier:
                  b2=-20e-27,
                  gamma=0.003,
                  t0=125e-12,
-                 last_step=1.51e-3,
-                 dt=1e-12,
+                 z_n=1.51,
                  h=10000
                  ):
         self.gamma = gamma
         self.b2 = b2
-        self.dt = dt
         self.h = h
 
+        self.dt = None  # will be set later in simulator.. not on beginning. # TODO: calculate on beginning instead
+
         self.alph = alpha / (4.343)
-        self.N = np.int64((1 + last_step * (t0 ** 2) / np.absolute(b2)) // self.h)
+        self.N = np.int64((1 + z_n * (t0 ** 2) / np.absolute(b2)) // self.h)
 
         if self.N < 1:
             warnings.warn(f"there are not enough ({self.N}) steps in split algo do at least one of the following: \n"
                           f"\t1) reduce h\n"
                           f"\t2) enlarge t0\n"
-                          f"\t3) enlarge last step\n")
+                          f"\t3) enlarge z_n\n")
 
     @classmethod
     def with_params_for_example(cls):
@@ -36,11 +36,14 @@ class SplitStepFourier:
             b2=-20e-27,
             gamma=0.003,
             t0=125e-12,
-            last_step=1.51,
+            z_n=1.51,
             # steps=np.arange(0.1, 1.51, 0.1),
-            dt=1e-12,
+            # dt=1e-12,
             h=1000
         )
+
+    def set_dt(self, dt):
+        self.dt = dt
 
     def start_minimal(self, x: np.ndarray) -> np.ndarray:
         Nt = np.max(x.shape)
@@ -75,9 +78,9 @@ def tester():
         b2=-20e-27,
         gamma=0.003,
         t0=125e-12,
-        last_step=1.51,
+        z_n=1.51,
         # steps=np.arange(0.1, 1.51, 0.1),
-        dt=1e-12,
+        # dt=1e-12,
         h=100
     )
     Po = .00064
@@ -89,7 +92,7 @@ def tester():
     x = Ao * np.exp(-((1 + 1j * (-C)) / 2.0) * (tau_vec / to) ** 2)
     x = np.array(x)
 
-    y = ssf(x)
+    y = ssf(x,dt=1e-12)
 
     ssf.plot_input(tau_vec, x)
     ssf.plot_output(tau_vec, y)

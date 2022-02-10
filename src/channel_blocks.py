@@ -3,7 +3,7 @@ from ModulationPy import ModulationPy
 from matplotlib import pyplot as plt
 
 from myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
-from lib.rrcos import rrcosfilter
+from commpy.filters import rrcosfilter
 from src.visualizer import Visualizer
 
 
@@ -31,7 +31,7 @@ class ChannelBlocks:
         return y, modem
 
     def over_sample(self, x, over_sampling):  # step 2
-        y = np.zeros(over_sampling * (len(x) - 1) + 1, dtype=np.complex64)
+        y = np.zeros(over_sampling * len(x), dtype=np.complex64)
         y[::over_sampling] = x
         if self.verbose:
             Visualizer.my_plot(np.real(y[0:50]), name='zero padded - i (real)', function='stem')
@@ -46,27 +46,28 @@ class ChannelBlocks:
         if desired_len - lenx < 100:
             desired_len = int(2 ** (1 + np.ceil(np.log2(lenx))))  # the next next power of 2
 
-        L_rrc = int(np.ceil(desired_len - lenx)) + 1
+        N_rrc = int(np.ceil(desired_len - lenx)) + 1
         alpha: float = roll_off  # default = 0.25
         fs = over_sampling / Ts
-        h_ind, h_rrc = rrcosfilter(L_rrc, alpha, Ts, fs)
+        h_ind, h_rrc = rrcosfilter(N_rrc, alpha, Ts, fs)
         y = np.convolve(h_rrc, x)  # Waveform with PSF
 
         if self.verbose:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
             Visualizer.my_plot(np.real(h_rrc), name='h_rrc filter', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(h_rrc[L_rrc // 2:L_rrc // 2 + 24] ** 2), name='h_rrc^2 - zoomed in', ax=ax2)
+            Visualizer.my_plot(np.real(h_rrc[N_rrc // 2:N_rrc // 2 + 24] ** 2), name='h_rrc^2 - zoomed in', ax=ax2)
 
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
             Visualizer.my_plot(np.real(y[:]), name='X(xi) * h(xi)', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(y[:L_rrc]), name='zoom in', ax=ax2)
+            Visualizer.my_plot(np.real(y[:N_rrc]), name='zoom in', ax=ax2)
 
-            print(f'filter len = {L_rrc}, signal len = {len(y)}')
-        return y, L_rrc, h_rrc
+            print(f'filter len = {N_rrc}, signal len = {len(y)}')
+        return y, N_rrc, h_rrc
 
-    def pre_equalize(self, x, normalization_factor):  # step 4
+    def pre_equalize(self, x, normalization_factor, P_0):  # step 4
         # normalize vector:
-        y = normalization_factor * x
+        x1 = normalization_factor * x
+        y = x1 * np.sqrt(P_0)
         if self.verbose:
             # visualizer.my_plot(xi_axis, np.real(y),
             Visualizer.my_plot(np.real(y), legend=['Real{X}'], name='signal after pre equalizer', xlabel='xi')
@@ -74,21 +75,22 @@ class ChannelBlocks:
 
         return y
 
-    def gen_nft_params(self, x, Tmax):  # step 5.1
+    def gen_nft_params(self, x, t0):  # step 5.1
         # some basic params for NFT
         N_xi = len(x)  # (=M)
         N_time = int(2 ** np.floor(np.log2(N_xi)))  # (=D)
-        tvec = np.linspace(-Tmax, Tmax, N_time)
+        tvec = np.linspace(-t0, t0, N_time)
         rv, xi = nsev_inverse_xi_wrapper(N_time, tvec[0], tvec[-1], N_xi,display_c_msg=False)
         xivec = xi[0] + np.arange(N_xi) * (xi[1] - xi[0]) / (N_xi - 1)
         BW = xivec.max()
+        dt = tvec[1]-tvec[0]
 
         if self.verbose:
-            print(f't  ∈ [{tvec[0]:.2f}:{tvec[-1]:.2f}]   ,\t N_time (=D) = {N_time}\n'
-                  f'xi ∈ [{xivec[0]:.2f}:{xivec[-1]:.2f}] ,\t N_xi   (=M) = {N_xi}\n'
-                  f'BW = {BW:.2f}')
+            print(f't  ∈ [{tvec[0]*1e12:.2f}:{tvec[-1]*1e12:.2f}] ps    ,\t N_time (=D) = {N_time}\n'
+                  f'xi ∈ [{xivec[0]/1e9:.2f}:{xivec[-1]/1e9:.2f}] GHz ,\t N_xi   (=M) = {N_xi}\n'
+                  f'BW = {BW/1e9:.2f} GHz')
 
-        return N_xi, N_time, tvec, xivec, BW
+        return N_xi, N_time, tvec, xivec, BW, dt
 
     def inft(self, x, tvec, xivec):  # step 5.2
         # INFT
@@ -108,15 +110,16 @@ class ChannelBlocks:
 
         if self.verbose:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(tvec, np.abs(y), name=f'|x(t)|', xlabel='t', ax=ax1,
+            Visualizer.my_plot(tvec*1e12, np.abs(y), name=f'|x(t)|', xlabel='t [ps]', ax=ax1,
                                hold=1)
             Visualizer.my_plot(np.real(y), name=f'real(x(t))', ax=ax2)
             print(f'length of INFT(x) = {len(y)}')
 
         return y
 
-    def channel(self, x, channel_func):  # step 6
-        y = channel_func(x)
+    def channel(self, x, channel_func, P_0):  # step 6
+        x1 = channel_func(x)
+        y = x1 / np.sqrt(P_0)
 
         if self.verbose:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -125,7 +128,7 @@ class ChannelBlocks:
             Visualizer.my_plot(np.real(y), name=f'real(x(t))', ax=ax2)
         return y
 
-    def nft(self, x, tvec, xivec, BW, N_xi, L_rrc, ref_y=None):  # step 7
+    def nft(self, x, tvec, xivec, BW, N_xi, N_rrc, ref_y=None):  # step 7
         res = nsev(x, tvec, Xi1=-BW, Xi2=BW, M=N_xi,display_c_msg=False)
         assert res['return_value'] == 0, "NFT failed"
         y = res['cont_ref']  # r[xi,L]
@@ -135,12 +138,12 @@ class ChannelBlocks:
                                name=f'real{{X(xi)}}, (BW={BW:.0f})',
                                ylabel='real{X(xi)}', xlabel='xi', ax=ax1, hold=1)
 
-            Visualizer.my_plot(np.real(y)[:L_rrc], name='zoom in', ax=ax2)
+            Visualizer.my_plot(np.real(y)[:N_rrc], name='zoom in', ax=ax2)
             if ref_y is not None:
                 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
                 Visualizer.my_plot(xivec, np.real(ref_y), name='reference before INFT',
                                    xlabel='xi', ax=ax1, hold=1)
-                Visualizer.my_plot(np.real(ref_y)[:L_rrc], name='reference zoom in', ax=ax2)
+                Visualizer.my_plot(np.real(ref_y)[:N_rrc], name='reference zoom in', ax=ax2)
         return y
 
     def equalizer(self, x, normalization_factor):  # step 8
@@ -152,19 +155,19 @@ class ChannelBlocks:
         y2 = y1 * equalizer_func
         return y2
 
-    def match_filter(self, x, h_rrc, L_rrc, over_sampling, m_qam=None, sps=None):  # step 9
+    def match_filter(self, x, h_rrc, N_rrc, over_sampling, m_qam=None, sps=None):  # step 9
         y1 = np.convolve(x, h_rrc)
 
         # sampling the analog vector into discrete bits
-        start = L_rrc
-        stop = - L_rrc + over_sampling
+        start = N_rrc
+        stop = - N_rrc + over_sampling
         step = over_sampling
         y2 = y1[start:stop:step] / over_sampling
 
         if self.verbose:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
             Visualizer.my_plot(np.real(y1), name='analog signal after another conv', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(y1[0:L_rrc * 2]), name='zoom in', ax=ax2)
+            Visualizer.my_plot(np.real(y1[0:N_rrc * 2]), name='zoom in', ax=ax2)
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
             Visualizer.my_plot(np.real(y2), name='sampled bits', function='stem', ax=ax1, hold=1)
             Visualizer.my_plot(np.real(y2)[0:50], name='zoom in', function='stem', ax=ax2)
