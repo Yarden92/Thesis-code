@@ -11,6 +11,7 @@ class SplitStepFourier:
                  b2=-20e-27,
                  gamma=0.003,
                  t0=125e-12,
+                 dt=1e-12,
                  z_n=1.51,
                  h=10000
                  ):
@@ -18,7 +19,7 @@ class SplitStepFourier:
         self.b2 = b2
         self.h = h
 
-        self.dt = None  # will be set later in simulator.. not on beginning. # TODO: calculate on beginning instead
+        self.dt = dt
 
         self.alph = alpha / (4.343)
         self.N = np.int64((1 + z_n * (t0 ** 2) / np.absolute(b2)) // self.h)
@@ -42,8 +43,8 @@ class SplitStepFourier:
             h=1000
         )
 
-    def set_dt(self, dt):
-        self.dt = dt
+    # def set_dt(self, dt):
+    #     self.dt = dt
 
     def start_minimal(self, x: np.ndarray) -> np.ndarray:
         Nt = np.max(x.shape)
@@ -92,7 +93,7 @@ def tester():
     x = Ao * np.exp(-((1 + 1j * (-C)) / 2.0) * (tau_vec / to) ** 2)
     x = np.array(x)
 
-    y = ssf(x,dt=1e-12)
+    y = ssf(x, dt=1e-12)
 
     ssf.plot_input(tau_vec, x)
     ssf.plot_output(tau_vec, y)

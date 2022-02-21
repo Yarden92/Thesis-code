@@ -3,6 +3,8 @@ import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
 
+from src.signal_processing import SP
+
 
 class Visualizer:
     @staticmethod
@@ -91,6 +93,18 @@ class Visualizer:
             plt.plot(np.real(sub_x))
         plt.title('eye diagram')
         plt.show()
+
+    @staticmethod
+    def print_signal_specs(x: np.ndarray, t_vec: np.ndarray, th = None) -> None:
+        power = SP.signal_power(x)
+        print(f'signal power = {power:.2e}')
+
+        th = th or SP.peak(x) * 0.01
+        tmin = t_vec[np.min(np.where(np.abs(x) > th))]
+        tmax = t_vec[np.max(np.where(np.abs(x) > th))]
+
+        print(f'signal bw = [{tmin:.2e}:{tmax:.2e}]')
+
 
     @staticmethod
     def print_nft_options(res_ob: dict) -> None:
