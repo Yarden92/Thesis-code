@@ -13,7 +13,7 @@ class ChannelSimulator:
 
     @property
     def length_of_msg(self):
-        return int(self.num_symbols * self.sps)  # N_t
+        return self.num_symbols * self.sps  # N_t
 
     @property
     def sps(self):
@@ -23,7 +23,7 @@ class ChannelSimulator:
                  m_qam: int = 16,
                  num_symbols: float = 64,
                  normalization_factor: float = 1e-3,
-                 p_0: float = 0.00064,
+                 # p_0: float = 0.00064,
                  dt: float = 1e-12,
                  channel_func: SplitStepFourier = None,
                  verbose=True,
@@ -38,7 +38,7 @@ class ChannelSimulator:
         self.dt = dt
 
         # ~~~~~~~~~~~~~~~~~~~~~~ Channel Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.P_0 = p_0
+        # self.P_0 = p_0
         self.channel_func = channel_func or SplitStepFourier()
         print(f'number of iterations in split step algo: {self.channel_func.N}')
 
@@ -113,14 +113,9 @@ class ChannelSimulator:
         self.x[3], self.N_rrc, self.h_rrc = self.cb.pulse_shape(self.x[2], self.roll_off, self.over_sampling, self.Ts)
 
         if self.verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(np.real(self.h_rrc), name='h_rrc filter', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(self.h_rrc[self.N_rrc // 2:self.N_rrc // 2 + 24] ** 2),
-                               name='h_rrc^2 - zoomed in', ax=ax2)
-
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(np.real(self.x[3][:]), name='X(xi) * h(xi)', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(self.x[3][:self.N_rrc]), name='zoom in', ax=ax2)
+            zm = range(self.N_rrc // 2, self.N_rrc // 2 + 24)
+            Visualizer.twin_zoom_plot('|h_rrc filter|^2', np.abs(self.h_rrc) ** 2, zm)
+            Visualizer.twin_zoom_plot('real{X(xi) * h(xi)}', np.real(self.x[3]), range(0, self.N_rrc))
 
             print(f'filter len = {self.N_rrc}, signal len = {len(self.x[3])}')
 
@@ -143,9 +138,11 @@ class ChannelSimulator:
             f"test pulse shaping failed, there are {num_errors} errors instead of 0"
 
         if self.test_verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(np.real(xx41), name='analog signal after another conv', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(xx41[:N_rrc * 2]), name='zoom in', ax=ax2)
+            Visualizer.twin_zoom_plot('analog signal after another conv', np.real(xx41), range(0, N_rrc * 2))
+
+            # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+            # Visualizer.my_plot(np.real(xx41), name='analog signal after another conv', ax=ax1, hold=1)
+            # Visualizer.my_plot(np.real(xx41[:N_rrc * 2]), name='zoom in', ax=ax2)
 
             Visualizer.my_plot(np.real(xx42[0:50]), name='sampled bits', function='stem')
 
@@ -166,48 +163,31 @@ class ChannelSimulator:
 
         if self.verbose:
             # TODO: print signal in xi domain with xi_vec axis, just like the prints after inft
-            fig, (ax1, ax2) = plt.subplots(1,2, figsize=(11,4))
-            Visualizer.my_plot(self.xivec, np.abs(self.x[4]), name=f'|X(xi)|',xlabel='xi [Hz]',ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(self.x[4]), name='Real{X}', xlabel='index',ax=ax2)
+            Visualizer.twin_zoom_plot('|X(xi)|', np.abs(self.x[4]), range(4000, 4200), self.xivec, xlabel='xi')
             print(f'signal len = {len(self.x[4])}')
 
     def step5_inft(self):
-        self.x[5] = self.cb.inft(self.x[4], self.tvec, self.xivec, self.P_0)
+        self.x[5] = self.cb.inft(self.x[4], self.tvec, self.xivec)  # , self.P_0)
 
         if self.verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(self.tvec * 1e0, np.abs(self.x[5]), name=f'|x(t)|', xlabel='t [s]', ax=ax1,
-                               hold=1)
-            Visualizer.my_plot(np.real(self.x[5]), name=f'real(x(t))', ax=ax2)
             print(f'length of INFT(x) = {len(self.x[5])}')
-
-
             Visualizer.print_signal_specs(self.x[5], self.tvec)
+            Visualizer.twin_zoom_plot('real{X(xi)}', np.real(self.x[5]), range(4000, 4200),self.tvec,'t')
 
     def step6_channel(self):
-        self.x[6] = self.cb.channel(self.x[5], self.channel_func, self.P_0)
+        self.x[6] = self.cb.channel(self.x[5], self.channel_func)  # , self.P_0)
 
         if self.verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(self.tvec, np.abs(self.x[6]), name=f'|x(t)|', xlabel='t[s]', ax=ax1,
-                               hold=1)
-            Visualizer.my_plot(np.real(self.x[6]), name=f'real(x(t))',xlabel='index', ax=ax2)
+            Visualizer.twin_zoom_plot('real X(xi)', np.real(self.x[6]), range(4000, 4200))
 
     def step7_nft(self):
         self.x[7] = self.cb.nft(self.x[6], self.tvec, self.BW, self.N_xi)
 
         if self.verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(self.xivec, np.real(self.x[7]),
-                               name=f'real{{X(xi)}}, (BW={self.BW:.0f})',
-                               ylabel='real{X(xi)}', xlabel='xi', ax=ax1, hold=1)
-
-            Visualizer.my_plot(np.real(self.x[7])[:self.N_rrc], name='zoom in', ax=ax2)
+            zm = range(0, self.N_rrc)
+            Visualizer.twin_zoom_plot('real {X(xi)}', np.real(self.x[7]), zm, self.xivec, 'xi[Hz]')
             if self.x[4] is not None:
-                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-                Visualizer.my_plot(self.xivec, np.real(self.x[4]), name='reference before INFT',
-                                   xlabel='xi', ax=ax1, hold=1)
-                Visualizer.my_plot(np.real(self.x[4])[:self.N_rrc], name='reference zoom in', ax=ax2)
+                Visualizer.twin_zoom_plot('ref before INFT', np.real(self.x[4]),zm, self.xivec, 'xi[Hz]')
 
     def step8_equalize(self):
         self.x[8] = self.cb.equalizer(self.x[7], self.normalization_factor)
@@ -215,12 +195,9 @@ class ChannelSimulator:
     def step9_match_filter(self):
         self.x[9], y1 = self.cb.match_filter(self.x[8], self.h_rrc, self.N_rrc, self.over_sampling)
         if self.verbose:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(np.real(y1), name='analog signal after another conv', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(y1[0:self.N_rrc * 2]), name='zoom in', ax=ax2)
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-            Visualizer.my_plot(np.real(self.x[9]), name='sampled bits', function='stem', ax=ax1, hold=1)
-            Visualizer.my_plot(np.real(self.x[9])[0:50], name='zoom in', function='stem', ax=ax2)
+            Visualizer.twin_zoom_plot('analog signal after another conv (real)', np.real(y1), range(0, 2*self.N_rrc))
+            Visualizer.twin_zoom_plot('sampled bits (real)', np.real(self.x[9]), range(0, 50), function='stem')
+
             Visualizer.plot_constellation_map_with_points(self.x[9], self.m_qam, 'after depulse shaping')
             Visualizer.eye_diagram(self.x[9], sps=self.sps)
             print(f'num of sampled symbols = {len(self.x[9])} ')

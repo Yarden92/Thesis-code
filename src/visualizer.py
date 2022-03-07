@@ -11,10 +11,10 @@ class Visualizer:
     def plot_constellation_map_grid(modem: ModulationPy):
         size = 'small' if modem.M <= 16 else 'x-small' if modem.M == 64 else 'xx-small'
         logM = np.log2(modem.M)
-        limits = logM if modem.M <= 16 else 1.5 * logM if modem.M == 64 else 2.25 * logM
+        limits = logM if modem.M <= 16 else 1.5*logM if modem.M == 64 else 2.25*logM
 
         const = modem.code_book
-        fig = plt.figure(figsize=(6, 4), dpi=150)
+        fig = plt.figure(figsize=(6, 4), dpi=100)
         for i in list(const):
             x = np.real(const[i])
             y = np.imag(const[i])
@@ -69,6 +69,16 @@ class Visualizer:
         if not hold: plt.show()
 
     @staticmethod
+    def twin_zoom_plot(title: str, full_y, zoom_indices, x_vec=None, xlabel='index', function='plot'):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title: fig.suptitle(title)
+        if x_vec is None: x_vec = np.arange(len(full_y))
+        Visualizer.my_plot(x_vec, full_y, name=f'full scale', xlabel=xlabel, ax=ax1, function=function, hold=True)
+        Visualizer.my_plot(x_vec[zoom_indices], full_y[zoom_indices], name=f'crop in', xlabel=xlabel, ax=ax2,
+                           function=function)
+        # return fig, (ax1, ax2)
+
+    @staticmethod
     def print_bits(bits, M, title='the bits are:'):
         print('\n_______________________________________________')
         print(title, f'- len={len(bits)}')
@@ -85,26 +95,25 @@ class Visualizer:
         :return: None (new eye-diagram plot will be generated)
         """
         fig = plt.figure()
-        num_plots = int(len(x) / sps)
+        num_plots = int(len(x)/sps)
         for i in range(num_plots):
-            index1 = i * sps
-            index2 = (i + 1) * sps
+            index1 = i*sps
+            index2 = (i + 1)*sps
             sub_x = x[index1:index2]
             plt.plot(np.real(sub_x))
         plt.title('eye diagram')
         plt.show()
 
     @staticmethod
-    def print_signal_specs(x: np.ndarray, t_vec: np.ndarray, th = None) -> None:
+    def print_signal_specs(x: np.ndarray, t_vec: np.ndarray, th=None) -> None:
         power = SP.signal_power(x)
         print(f'signal power = {power:.2e}')
 
-        th = th or SP.peak(x) * 0.01
+        th = th or SP.peak(x)*0.01
         tmin = t_vec[np.min(np.where(np.abs(x) > th))]
         tmax = t_vec[np.max(np.where(np.abs(x) > th))]
 
         print(f'signal bw = [{tmin:.2e}:{tmax:.2e}]')
-
 
     @staticmethod
     def print_nft_options(res_ob: dict) -> None:

@@ -3,9 +3,9 @@ from ModulationPy import ModulationPy
 from commpy.filters import rrcosfilter
 
 from myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
-
-
 # TODO: take out prints into channel simulator, rather than channel blocks
+from src.split_step_fourier import SplitStepFourier
+
 
 class ChannelBlocks:
 
@@ -49,14 +49,14 @@ class ChannelBlocks:
         # N_xi = len(x)  # (=M)
         N_time = int(2 ** np.floor(np.log2(N_xi)))  # (=D)
         tvec = np.arange(start=-N_time / 2, stop=N_time / 2) * dt  # np.linspace(-t0, t0, N_time)
-        rv, xi = nsev_inverse_xi_wrapper(N_time, tvec[0], tvec[-1], N_xi, display_c_msg=False)
+        rv, xi = nsev_inverse_xi_wrapper(N_time, tvec[0], tvec[-1], N_xi, display_c_msg=True)
         xivec = xi[0] + np.arange(N_xi) * (xi[1] - xi[0]) / (N_xi - 1)
         BW = xivec.max()
         # dt = tvec[1]-tvec[0]
 
         return N_xi, N_time, tvec, xivec, BW
 
-    def inft(self, x, tvec, xivec, P_0):  # step 5.2
+    def inft(self, x, tvec, xivec):  # , P_0):  # step 5.2
         # INFT
         contspec = x
         bound_states = []  # np.array([0.7j, 1.7j])
@@ -71,16 +71,11 @@ class ChannelBlocks:
         assert res['return_value'] == 0, "INFT failed"
 
         x1 = res['q']  # q[t,0]
+        return x1
 
-        y = x1 * np.sqrt(P_0)
-
-        return y
-
-    def channel(self, x, channel_func, P_0):  # step 6
+    def channel(self, x, channel_func: SplitStepFourier):  # , P_0):  # step 6
         x1 = channel_func(x)
-        y = x1 / np.sqrt(P_0)
-
-        return y
+        return x1
 
     def nft(self, x, tvec, BW, N_xi):  # step 7
         res = nsev(x, tvec, Xi1=-BW, Xi2=BW, M=N_xi, display_c_msg=False)
@@ -120,4 +115,3 @@ class ChannelBlocks:
         ber = num_errors / length_of_msg
 
         return ber, num_errors
-
