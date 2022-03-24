@@ -3,7 +3,7 @@ import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
 
-from src.signal_processing import SP
+from src.general_methods.signal_processing import SP
 
 
 class Visualizer:
@@ -79,10 +79,27 @@ class Visualizer:
         # return fig, (ax1, ax2)
 
     @staticmethod
+    def data_trio_plot(input, output, pred, zoom_indices, title: str = None, x_vec=None, xlabel='index',
+                       function='plot'):
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
+        if title: fig.suptitle(title)
+        if x_vec is None: x_vec = np.arange(len(input))
+
+        x = x_vec[zoom_indices]
+        y1 = input[zoom_indices]
+        y2 = output[zoom_indices]
+        y3 = pred[zoom_indices]
+
+        Visualizer.my_plot(x, y1, name=f'input', xlabel=xlabel, ax=ax1, function=function, hold=True)
+        Visualizer.my_plot(x, y2, name=f'output', xlabel=xlabel, ax=ax2, function=function, hold=True)
+        Visualizer.my_plot(x, y3, name=f'pred', xlabel=xlabel, ax=ax3, function=function)
+
+    @staticmethod
     def print_bits(bits, M, title='the bits are:'):
         print('\n_______________________________________________')
         print(title, f'- len={len(bits)}')
-        mat = np.int8(np.reshape(bits, (-1, M)))
+        # mat = np.int8(np.reshape(bits, (-1, M)))
+        mat = np.reshape(bits, (-1, M))
         print(mat)
         # print('\n')
 

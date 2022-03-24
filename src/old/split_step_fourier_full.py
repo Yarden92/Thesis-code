@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt, cm
 from tqdm import tqdm
 
-from src.visualizer import Visualizer
+from src.general_methods.visualizer import Visualizer
 
 
 # Customize the z axis.

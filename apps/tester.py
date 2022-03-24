@@ -2,10 +2,10 @@ import warnings
 
 import numpy as np
 
-from src import multi_run
-from src.channel_simulation import ChannelSimulator
-from src.split_step_fourier import SplitStepFourier
-from src.visualizer import Visualizer
+from src.general_methods import multi_run
+from src.optics.channel_simulation import ChannelSimulator
+from src.optics.split_step_fourier import SplitStepFourier
+from src.general_methods.visualizer import Visualizer
 
 
 def test1_channel_debug():
@@ -23,7 +23,7 @@ def test1_channel_debug():
 
 
 def test2_multi_channel_iterations():
-    cs = ChannelSimulator(m_qam=16, verbose=False, channel_func=SplitStepFourier())
+    cs = ChannelSimulator(m_qam=16, verbose=False, ssf=SplitStepFourier())
 
     num_realisations = 2
     us_vec = multi_run.create_us_vec(n_steps=10, min_u=-6, max_u=-1)
@@ -49,14 +49,12 @@ def test3_split():
     cs = ChannelSimulator(m_qam=16,
                           num_symbols=64,
                           normalization_factor=0.001,
-                          channel_func=SplitStepFourier(alpha=0),
+                          ssf=SplitStepFourier(alpha=0),
                           verbose=False)
     ber, num_errors = cs.iterate_through_channel()
     print(f'ber = {ber}, N_errors = {num_errors}')
 
 def test4_import():
-    from ModulationPy import ModulationPy
-    from commpy.filters import rrcosfilter
     help('modules ModulationPy')
 
     print('success')

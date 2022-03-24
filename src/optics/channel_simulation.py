@@ -1,9 +1,11 @@
+import json
+
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src.channel_blocks import ChannelBlocks
-from src.split_step_fourier import SplitStepFourier
-from src.visualizer import Visualizer
+from src.general_methods.visualizer import Visualizer
+from src.optics.channel_blocks import ChannelBlocks
+from src.optics.split_step_fourier import SplitStepFourier
 
 
 class ChannelSimulator:
@@ -11,21 +13,12 @@ class ChannelSimulator:
     over_sampling = 8  # sampling rate
     roll_off = 0.25  # filter roll-off factor
 
-    @property
-    def length_of_msg(self):
-        return self.num_symbols * self.sps  # N_t
-
-    @property
-    def sps(self):
-        return int(np.log2(self.m_qam))  # samples per symbol (4)
-
     def __init__(self,
                  m_qam: int = 16,
                  num_symbols: float = 64,
                  normalization_factor: float = 1e-3,
-                 # p_0: float = 0.00064,
                  dt: float = 1e-12,
-                 channel_func: SplitStepFourier = None,
+                 ssf: SplitStepFourier = None,
                  verbose=True,
                  test_verbose=False
                  ):
@@ -39,8 +32,8 @@ class ChannelSimulator:
 
         # ~~~~~~~~~~~~~~~~~~~~~~ Channel Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # self.P_0 = p_0
-        self.channel_func = channel_func or SplitStepFourier()
-        print(f'number of iterations in split step algo: {self.channel_func.N}')
+        self.ssf = ssf or SplitStepFourier()
+        print(f'number of iterations in split step algo: {self.ssf.N}')
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.verbose = verbose
@@ -48,8 +41,8 @@ class ChannelSimulator:
         self.cb = ChannelBlocks()
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ Outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.x = [np.array([])] * 11  # outputs from 11 steps
-        self.modem = None
+        self.x = [np.array([])]*11  # outputs from 11 steps
+        self._modem = None
         self.h_rrc = None  # filter
         self.N_rrc = None  # filter len
 
@@ -59,6 +52,46 @@ class ChannelSimulator:
         self.tvec = None
         self.xivec = None
         self.BW = 0
+
+    @property
+    def length_of_msg(self):
+        return self.num_symbols*self.sps  # N_t
+
+    @property
+    def sps(self):
+        return int(np.log2(self.m_qam))  # samples per symbol (4)
+
+    @property
+    def modem(self):
+        if self._modem is None:
+            self._modem = self.cb.generate_modem(self.m_qam)
+        return self._modem
+
+    # _______________________________________________________________________
+
+    def params_to_dict(self):
+        return {
+            'm_qam': self.m_qam,
+            'num_symbols': self.num_symbols,
+            'normalization_factor': self.normalization_factor,
+            'dt': self.dt,
+            'ssf': self.ssf.params_to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, _dict: dict):
+        return cls(
+            m_qam=_dict['m_qam'],
+            num_symbols=_dict['num_symbols'],
+            normalization_factor=_dict['normalization_factor'],
+            dt=_dict['dt'],
+            ssf=SplitStepFourier.from_dict(_dict['ssf']),
+            verbose=False,
+            test_verbose=False
+        )
+
+    def __str__(self):
+        return json.dumps(self.params_to_dict(), indent=4)
 
     def iterate_through_channel(self):
         self.step0_gen_msg()
@@ -75,13 +108,19 @@ class ChannelSimulator:
 
         return self.evaluate()
 
+    def gen_io_data(self) -> (np.ndarray, np.ndarray):
+        _ = self.iterate_through_channel()
+        x = self.x[9]  # dirty
+        y = self.x[1]  # clean
+        return x, y
+
     def step0_gen_msg(self):
         self.x[0] = self.cb.generate_message(self.length_of_msg)
         if self.verbose:
             Visualizer.print_bits(self.x[0], self.sps, 'message before channel')
 
     def step1_modulate(self):
-        self.x[1], self.modem = self.cb.modulate(self.x[0], self.m_qam)
+        self.x[1] = self.cb.modulate(self.x[0], self.modem)
         if self.verbose:
             Visualizer.plot_constellation_map_with_points(self.x[1], self.m_qam, 'clean before channel')
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -101,7 +140,7 @@ class ChannelSimulator:
         if self.test_verbose:
             Visualizer.print_bits(x0_reconst, self.sps, 'test reconstructed msg')
             Visualizer.print_bits(self.x[0], self.sps, 'message before channel')
-            print(f'ber = {num_errors / self.length_of_msg} = {num_errors}/{self.length_of_msg}')
+            print(f'ber = {num_errors/self.length_of_msg} = {num_errors}/{self.length_of_msg}')
 
     def step2_over_sample(self):
         self.x[2] = self.cb.over_sample(self.x[1], self.over_sampling)
@@ -110,10 +149,11 @@ class ChannelSimulator:
             print(f'vec length = {len(self.x[2])}, over_sampling period = {self.over_sampling}')
 
     def step3_pulse_shaping(self):
-        self.x[3], self.N_rrc, self.h_rrc = self.cb.pulse_shape(self.x[2], self.roll_off, self.over_sampling, self.Ts)
+        self.x[3], self.N_rrc, self.h_rrc = self.cb.pulse_shape(self.x[2], self.roll_off, self.over_sampling,
+                                                                self.Ts)
 
         if self.verbose:
-            zm = range(self.N_rrc // 2, self.N_rrc // 2 + 24)
+            zm = range(self.N_rrc//2, self.N_rrc//2 + 24)
             Visualizer.twin_zoom_plot('|h_rrc filter|^2', np.abs(self.h_rrc) ** 2, zm)
             Visualizer.twin_zoom_plot('real{X(xi) * h(xi)}', np.real(self.x[3]), range(0, self.N_rrc))
 
@@ -130,7 +170,7 @@ class ChannelSimulator:
         start = N_rrc
         stop = - N_rrc
         step = self.over_sampling
-        xx42 = xx41[start:stop:step] / self.over_sampling
+        xx42 = xx41[start:stop:step]/self.over_sampling
         x0_reconst = self.modem.demodulate(xx42)
         num_errors = (x0_reconst != self.x[0]).sum()
 
@@ -138,7 +178,7 @@ class ChannelSimulator:
             f"test pulse shaping failed, there are {num_errors} errors instead of 0"
 
         if self.test_verbose:
-            Visualizer.twin_zoom_plot('analog signal after another conv', np.real(xx41), range(0, N_rrc * 2))
+            Visualizer.twin_zoom_plot('analog signal after another conv', np.real(xx41), range(0, N_rrc*2))
 
             # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
             # Visualizer.my_plot(np.real(xx41), name='analog signal after another conv', ax=ax1, hold=1)
@@ -154,15 +194,14 @@ class ChannelSimulator:
 
         if self.verbose:
             print(
-                f'xi ∈ [{self.xivec[0] / 1e9:.2f}:{self.xivec[-1] / 1e9:.2f}] GHz ,\t N_xi   (=M) = {self.N_xi}\n'
-                f't  ∈ [{self.tvec[0] * 1e12:.2f}:{self.tvec[-1] * 1e12:.2f}] ps    ,\t N_time (=D) = {self.N_time}\n'
-                f'BW = {self.BW / 1e9:.2f} GHz'
+                f'xi ∈ [{self.xivec[0]/1e9:.2f}:{self.xivec[-1]/1e9:.2f}] GHz ,\t N_xi   (=M) = {self.N_xi}\n'
+                f't  ∈ [{self.tvec[0]*1e12:.2f}:{self.tvec[-1]*1e12:.2f}] ps    ,\t N_time (=D) = {self.N_time}\n'
+                f'BW = {self.BW/1e9:.2f} GHz'
             )
 
         self.x[4] = self.cb.pre_equalize(self.x[3], self.normalization_factor)
 
         if self.verbose:
-            # TODO: print signal in xi domain with xi_vec axis, just like the prints after inft
             Visualizer.twin_zoom_plot('|X(xi)|', np.abs(self.x[4]), range(4000, 4200), self.xivec, xlabel='xi')
             print(f'signal len = {len(self.x[4])}')
 
@@ -172,10 +211,10 @@ class ChannelSimulator:
         if self.verbose:
             print(f'length of INFT(x) = {len(self.x[5])}')
             Visualizer.print_signal_specs(self.x[5], self.tvec)
-            Visualizer.twin_zoom_plot('real{X(xi)}', np.real(self.x[5]), range(4000, 4200),self.tvec,'t')
+            Visualizer.twin_zoom_plot('real{X(xi)}', np.real(self.x[5]), range(4000, 4200), self.tvec, 't')
 
     def step6_channel(self):
-        self.x[6] = self.cb.channel(self.x[5], self.channel_func)  # , self.P_0)
+        self.x[6] = self.cb.channel(self.x[5], self.ssf)  # , self.P_0)
 
         if self.verbose:
             Visualizer.twin_zoom_plot('real X(xi)', np.real(self.x[6]), range(4000, 4200))
@@ -187,7 +226,7 @@ class ChannelSimulator:
             zm = range(0, self.N_rrc)
             Visualizer.twin_zoom_plot('real {X(xi)}', np.real(self.x[7]), zm, self.xivec, 'xi[Hz]')
             if self.x[4] is not None:
-                Visualizer.twin_zoom_plot('ref before INFT', np.real(self.x[4]),zm, self.xivec, 'xi[Hz]')
+                Visualizer.twin_zoom_plot('ref before INFT', np.real(self.x[4]), zm, self.xivec, 'xi[Hz]')
 
     def step8_equalize(self):
         self.x[8] = self.cb.equalizer(self.x[7], self.normalization_factor)
@@ -195,7 +234,8 @@ class ChannelSimulator:
     def step9_match_filter(self):
         self.x[9], y1 = self.cb.match_filter(self.x[8], self.h_rrc, self.N_rrc, self.over_sampling)
         if self.verbose:
-            Visualizer.twin_zoom_plot('analog signal after another conv (real)', np.real(y1), range(0, 2*self.N_rrc))
+            Visualizer.twin_zoom_plot('analog signal after another conv (real)', np.real(y1),
+                                      range(0, 2*self.N_rrc))
             Visualizer.twin_zoom_plot('sampled bits (real)', np.real(self.x[9]), range(0, 50), function='stem')
 
             Visualizer.plot_constellation_map_with_points(self.x[9], self.m_qam, 'after depulse shaping')

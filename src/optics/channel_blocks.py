@@ -4,7 +4,7 @@ from commpy.filters import rrcosfilter
 
 from myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
 # TODO: take out prints into channel simulator, rather than channel blocks
-from src.split_step_fourier import SplitStepFourier
+from src.optics.split_step_fourier import SplitStepFourier
 
 
 class ChannelBlocks:
@@ -13,10 +13,12 @@ class ChannelBlocks:
         y = np.random.choice([0, 1], size=length_of_msg)  # generate random message - binary vec [0,1,0,...]
         return y
 
-    def modulate(self, x, m_qam):  # step 1
-        modem = ModulationPy.QAMModem(m_qam, soft_decision=False)
+    def generate_modem(self, m_qam):
+        return ModulationPy.QAMModem(m_qam, soft_decision=False)
+
+    def modulate(self, x, modem: ModulationPy.QAMModem):  # step 1
         y = modem.modulate(x)  # r[xi,0] = [1+j,-1+j,1-j,...]
-        return y, modem
+        return y
 
     def over_sample(self, x, over_sampling):  # step 2
         y = np.zeros(over_sampling * len(x), dtype=np.complex64)
@@ -73,8 +75,8 @@ class ChannelBlocks:
         x1 = res['q']  # q[t,0]
         return x1
 
-    def channel(self, x, channel_func: SplitStepFourier):  # , P_0):  # step 6
-        x1 = channel_func(x)
+    def channel(self, x, ssf: SplitStepFourier):  # , P_0):  # step 6
+        x1 = ssf(x)
         return x1
 
     def nft(self, x, tvec, BW, N_xi):  # step 7
