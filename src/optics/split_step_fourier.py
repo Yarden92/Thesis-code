@@ -25,7 +25,8 @@ class SplitStepFourier:
 
         self.dt = dt
 
-        self.N = np.int64((1 + z_n*(t0 ** 2)/np.absolute(b2))//self.h)
+        # self.N = np.int64((1 + z_n*(t0 ** 2)/np.absolute(b2))//self.h)
+        self.N = int(z_n / self.h)
         print(f'SSF params: N = {self.N}, P_0 = {self.P_0}')
 
         if self.N < 1:
