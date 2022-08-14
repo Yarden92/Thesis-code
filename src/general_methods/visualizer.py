@@ -79,11 +79,12 @@ class Visualizer:
         # return fig, (ax1, ax2)
 
     @staticmethod
-    def data_trio_plot(input, output, pred, zoom_indices, title: str = None, x_vec=None, xlabel='index',
+    def data_trio_plot(input, output, pred, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
                        function='plot'):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
         if title: fig.suptitle(title)
         if x_vec is None: x_vec = np.arange(len(input))
+        if zoom_indices is None: zoom_indices = x_vec
 
         x = x_vec[zoom_indices]
         y1 = input[zoom_indices]
@@ -151,7 +152,7 @@ class Visualizer:
         for bers in bers_vecs:
             mean = bers.mean(axis=-1)
             std = bers.std(axis=-1)
-            plt.semilogx(us, bers)
+            plt.semilogy(us, bers)
             # plt.fill_between(us,mean-std,mean+std,alpha=0.4)
 
         plt.xlabel('normalizing factor'), plt.ylabel('BER')
@@ -160,4 +161,9 @@ class Visualizer:
         plt.grid(which='major', axis='x')
         # plt.ylim(top=1,bottom=3e-4)
         if legends: plt.legend(legends)
+        plt.show()
+
+    @staticmethod
+    def plot_loss_vec(loss_vec):
+        plt.plot(loss_vec)
         plt.show()

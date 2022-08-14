@@ -27,18 +27,22 @@ class ChannelBlocks:
 
     def pulse_shape(self, x, roll_off, over_sampling, Ts):  # step 3
         # design the filter length to complete x to be power of 2
-        lenx = len(x)
-        desired_len = int(2 ** np.ceil(np.log2(lenx)))  # the next power of 2
-        if desired_len - lenx < 100:
-            desired_len = int(2 ** (1 + np.ceil(np.log2(lenx))))  # the next next power of 2
-
-        N_rrc = int(np.ceil(desired_len - lenx)) + 1
-        alpha: float = roll_off  # default = 0.25
-        fs = over_sampling / Ts
-        h_ind, h_rrc = rrcosfilter(N_rrc, alpha, Ts, fs)
+        N_rrc, h_rrc = self.gen_h_rrc(len(x), roll_off, over_sampling, Ts)
         y = np.convolve(h_rrc, x)  # Waveform with PSF
 
         return y, N_rrc, h_rrc
+
+    def gen_h_rrc(self, len_x, roll_off, over_sampling, Ts):
+        desired_len = int(2 ** np.ceil(np.log2(len_x)))  # the next power of 2
+        if desired_len - len_x < 100:
+            desired_len = int(2 ** (1 + np.ceil(np.log2(len_x))))  # the next next power of 2
+
+        N_rrc = int(np.ceil(desired_len - len_x)) + 1
+        alpha: float = roll_off  # default = 0.25
+        fs = over_sampling / Ts
+        h_ind, h_rrc = rrcosfilter(N_rrc, alpha, Ts, fs)
+
+        return N_rrc, h_rrc
 
     def pre_equalize(self, x, normalization_factor):  # step 4
         # normalize vector:

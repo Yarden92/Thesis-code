@@ -12,7 +12,8 @@ class SplitStepFourier:
                  t0=125e-12,
                  dt=1e-12,
                  z_n=1.51,
-                 h=10000
+                 h=10000,
+                 verbose=False
                  ):
         self.gamma = gamma
         self.b2 = b2
@@ -27,7 +28,8 @@ class SplitStepFourier:
 
         # self.N = np.int64((1 + z_n*(t0 ** 2)/np.absolute(b2))//self.h)
         self.N = int(z_n / self.h)
-        print(f'SSF params: N = {self.N}, P_0 = {self.P_0}')
+        if verbose:
+            print(f'SSF params: N = {self.N}, P_0 = {self.P_0}')
 
         if self.N < 1:
             warnings.warn(f"there are not enough ({self.N}) steps in split algo do at least one of the following: \n"
@@ -46,7 +48,7 @@ class SplitStepFourier:
         }
 
     @classmethod
-    def from_dict(cls, _dict: dict):
+    def from_dict(cls, _dict: dict,verbose=False):
         return cls(
             b2=_dict['b2'],
             gamma=_dict['gamma'],
@@ -54,6 +56,7 @@ class SplitStepFourier:
             dt=_dict['dt'],
             z_n=_dict['z_n'],
             h=_dict['h'],
+            verbose=verbose
         )
 
     def __call__(self, x) -> np.ndarray:

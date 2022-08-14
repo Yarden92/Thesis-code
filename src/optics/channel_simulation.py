@@ -33,7 +33,8 @@ class ChannelSimulator:
         # ~~~~~~~~~~~~~~~~~~~~~~ Channel Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # self.P_0 = p_0
         self.ssf = ssf or SplitStepFourier()
-        print(f'number of iterations in split step algo: {self.ssf.N}')
+        if verbose:
+            print(f'number of iterations in split step algo: {self.ssf.N}')
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.verbose = verbose
@@ -43,8 +44,8 @@ class ChannelSimulator:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ Outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.x = [np.array([])]*11  # outputs from 11 steps
         self._modem = None
-        self.h_rrc = None  # filter
-        self.N_rrc = None  # filter len
+        self._h_rrc = None  # filter
+        self._N_rrc = None  # filter len
 
         # NFT Params
         self.N_xi = 0  # (=M)
@@ -67,6 +68,20 @@ class ChannelSimulator:
             self._modem = self.cb.generate_modem(self.m_qam)
         return self._modem
 
+    @property
+    def N_rrc(self):
+        if self._N_rrc is None:
+            self._N_rrc, self._h_rrc = self.cb.gen_h_rrc(self.num_symbols*self.over_sampling, self.roll_off,
+                                                         self.over_sampling, self.Ts)
+        return self._N_rrc
+
+    @property
+    def h_rrc(self):
+        if self._h_rrc is None:
+            self._N_rrc, self._h_rrc = self.cb.gen_h_rrc(self.num_symbols*self.over_sampling, self.roll_off,
+                                                         self.over_sampling, self.Ts)
+        return self._h_rrc
+
     # _______________________________________________________________________
 
     def params_to_dict(self):
@@ -79,21 +94,22 @@ class ChannelSimulator:
         }
 
     @classmethod
-    def from_dict(cls, _dict: dict):
+    def from_dict(cls, _dict: dict, verbose=False):
         return cls(
             m_qam=_dict['m_qam'],
             num_symbols=_dict['num_symbols'],
             normalization_factor=_dict['normalization_factor'],
             dt=_dict['dt'],
-            ssf=SplitStepFourier.from_dict(_dict['ssf']),
-            verbose=False,
-            test_verbose=False
+            ssf=SplitStepFourier.from_dict(_dict['ssf'], verbose),
+            verbose=verbose,
+            test_verbose=verbose
         )
 
     def __str__(self):
         return json.dumps(self.params_to_dict(), indent=4)
 
     def iterate_through_channel(self):
+        # returns [ber, num_errors]
         self.step0_gen_msg()
         self.step1_modulate()
         self.step2_over_sample()
@@ -108,10 +124,17 @@ class ChannelSimulator:
 
         return self.evaluate()
 
+    def steps8_to_10(self, x):
+        self.x[7] = x
+        self.step8_equalize()
+        self.step9_match_filter()
+        self.step10_demodulate()
+        return self.x[10]
+
     def gen_io_data(self) -> (np.ndarray, np.ndarray):
         _ = self.iterate_through_channel()
-        x = self.x[9]  # dirty
-        y = self.x[1]  # clean
+        x = self.x[7]  # dirty
+        y = self.x[4]  # clean
         return x, y
 
     def step0_gen_msg(self):
@@ -149,8 +172,8 @@ class ChannelSimulator:
             print(f'vec length = {len(self.x[2])}, over_sampling period = {self.over_sampling}')
 
     def step3_pulse_shaping(self):
-        self.x[3], self.N_rrc, self.h_rrc = self.cb.pulse_shape(self.x[2], self.roll_off, self.over_sampling,
-                                                                self.Ts)
+        self.x[3], self._N_rrc, self._h_rrc = self.cb.pulse_shape(self.x[2], self.roll_off, self.over_sampling,
+                                                                  self.Ts)
 
         if self.verbose:
             zm = range(self.N_rrc//2, self.N_rrc//2 + 24)
