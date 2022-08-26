@@ -76,7 +76,23 @@ class Visualizer:
         Visualizer.my_plot(x_vec, full_y, name=f'full scale', xlabel=xlabel, ax=ax1, function=function, hold=True)
         Visualizer.my_plot(x_vec[zoom_indices], full_y[zoom_indices], name=f'crop in', xlabel=xlabel, ax=ax2,
                            function=function)
-        # return fig, (ax1, ax2)
+
+    @staticmethod
+    def twin_zoom_plot_vec(title: str, y_vecs, legends, zm_indx, x_vec=None, xlabel='index', function='plot'):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title: fig.suptitle(title)
+        if x_vec is None: x_vec = np.arange(len(y_vecs))
+        Visualizer.my_plot(x_vec, y_vecs, name='full scale', xlabel=xlabel, ax=ax1, function=function, hold=True,
+                           legend=legends)
+        Visualizer.my_plot(x_vec[zm_indx], y_vecs[:, zm_indx], name='crop in', xlabel=xlabel, ax=ax1, function=function,
+                           legend=legends)
+
+        for i, (y, l) in enumerate(zip(y_vecs, legends)):
+            hold = i != len(y_vecs) - 1
+            Visualizer.my_plot(x_vec, y, name=f'full scale', xlabel=xlabel, ax=ax1, legend=l, function=function,
+                               hold=True)
+            Visualizer.my_plot(x_vec[zm_indx], y[zm_indx], name=f'crop in', xlabel=xlabel, ax=ax2, legend=l,
+                               function=function, hold=hold)
 
     @staticmethod
     def data_trio_plot(input, output, pred, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
@@ -91,9 +107,11 @@ class Visualizer:
         y2 = output[zoom_indices]
         y3 = pred[zoom_indices]
 
-        Visualizer.my_plot(x, y1, name=f'input', xlabel=xlabel, ax=ax1, function=function, hold=True)
-        Visualizer.my_plot(x, y2, name=f'output', xlabel=xlabel, ax=ax2, function=function, hold=True)
-        Visualizer.my_plot(x, y3, name=f'pred', xlabel=xlabel, ax=ax3, function=function)
+        Visualizer.my_plot(x, y1, name=f'input', xlabel=xlabel, ax=ax1, function=function, legend=['real', 'imag'],
+                           hold=True)
+        Visualizer.my_plot(x, y2, name=f'output', xlabel=xlabel, ax=ax2, function=function, legend=['real', 'imag'],
+                           hold=True)
+        Visualizer.my_plot(x, y3, name=f'pred', xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
 
     @staticmethod
     def print_bits(bits, M, title='the bits are:'):
@@ -164,6 +182,13 @@ class Visualizer:
         plt.show()
 
     @staticmethod
-    def plot_loss_vec(loss_vec):
-        plt.plot(loss_vec)
+    def plot_loss_vec(train_loss_vec, valid_loss_vec):
+        assert len(train_loss_vec) == len(valid_loss_vec), "train and valid loss vectors must have the same length"
+        x = range(len(train_loss_vec))
+        plt.semilogy(x, train_loss_vec, label='train')
+        plt.semilogy(x, valid_loss_vec, label='valid')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend()
+        plt.grid(True)
         plt.show()

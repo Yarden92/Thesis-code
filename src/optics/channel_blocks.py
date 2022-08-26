@@ -2,7 +2,7 @@ import numpy as np
 from ModulationPy import ModulationPy
 from commpy.filters import rrcosfilter
 
-from myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
+from src.optics.myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, nsev
 # TODO: take out prints into channel simulator, rather than channel blocks
 from src.optics.split_step_fourier import SplitStepFourier
 
