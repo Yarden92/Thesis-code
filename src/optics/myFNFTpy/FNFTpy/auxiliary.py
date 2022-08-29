@@ -27,6 +27,7 @@ Christoph Mahnke, 2018, 2019
 
 """
 import os
+from pathlib import Path
 from warnings import warn
 from .typesdef import *
 
@@ -49,9 +50,9 @@ def get_lib_path():
     """
     #libstr = "/usr/local/lib/libfnft.so.0.2.2-dev"
 #     libstr = "/usr/local/lib/libfnft.so.0.4.1"
-    fnftpy_root_dir = os.path.dirname(os.path.abspath(__file__))
-    thesis_root_dir = os.path.dirname(os.path.dirname(fnftpy_root_dir))  # This is your Project Root
-    libstr = f"{thesis_root_dir}/lib/FNFT-mac/lib/libfnft.dylib"
+    fnftpy_root_dir = Path(__file__).parent.parent
+    thesis_root_dir = fnftpy_root_dir.parent.parent.parent
+    libstr = f"{thesis_root_dir}/lib/FNFT-linux/lib/libfnft.so"
 
 
     return libstr
