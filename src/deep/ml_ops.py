@@ -10,6 +10,7 @@ from src.deep import data_loaders
 from src.deep.metrics import Metrics
 from src.deep.models import SingleMuModel3Layers
 from src.deep.data_loaders import OpticDataset
+from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
 
 
@@ -23,7 +24,7 @@ class Trainer:
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
-        self.mu, self.std = Metrics.calc_statistics_for_dataset(train_dataset)
+        self.mu, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
