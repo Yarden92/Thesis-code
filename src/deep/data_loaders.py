@@ -1,16 +1,16 @@
 import json
 import os
 from abc import ABC
+from datetime import time, datetime
 from glob import glob
 from typing import Union
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from torch.utils.data.dataset import T_co
 from tqdm import tqdm
 
-from src.deep.metrics import Metrics
+from src.deep.standalone_methods import GeneralMethods
 
 
 class OpticDataset(Dataset, ABC):
@@ -30,14 +30,14 @@ class OpticDataset(Dataset, ABC):
 
 def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_val_ratio=0.8):
     n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
-    divider_index = int(n_total*train_val_ratio)
+    divider_index = int(n_total * train_val_ratio)
     train_indices = range(0, divider_index)
     val_indices = range(divider_index, n_total)
     train_ds = dataset_type(data_dir_path, train_indices)
     val_ds = dataset_type(data_dir_path, val_indices)
-    mu,std = Metrics.calc_statistics_for_dataset(train_ds)
-    train_ds.set_scale(mu,std)
-    val_ds.set_scale(mu,std)
+    mu, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
+    train_ds.set_scale(mu, std)
+    val_ds.set_scale(mu, std)
     return train_ds, val_ds
 
 
@@ -51,8 +51,7 @@ class SingleMuDataSet(OpticDataset):
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
         self.n = len(self.data_indices)
 
-
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index):
         # x = np.load(f'{self.data_dir_path}/{index}_{file_methods.x_file_name}')
         # y = np.load(f'{self.data_dir_path}/{index}_{file_methods.y_file_name}')
 
@@ -60,7 +59,7 @@ class SingleMuDataSet(OpticDataset):
 
         x, y = read_xy(self.data_dir_path, file_id)
 
-        x, y = Metrics.normalize_xy(x, y, self.mu, self.std)
+        x, y = GeneralMethods.normalize_xy(x, y, self.mu, self.std)
 
         x = complex_numpy_to_torch(x)
         y = complex_numpy_to_torch(y)
@@ -68,8 +67,6 @@ class SingleMuDataSet(OpticDataset):
         x, y = x.T, y.T
 
         return x, y
-
-
 
     def __len__(self) -> int:
         return self.n
@@ -131,11 +128,14 @@ def save_xy(dir, x, y, i):
         np.save(f, y)
 
 
-def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm):
-    vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
-    assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    pbar = tqdm(total=len(mu_vec)*data_len)
-    for mu in mu_vec:
+def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None):
+    vec_lens = num_symbols * cs.over_sampling + cs.N_rrc - 1
+    assert vec_lens == num_symbols * 8 * 2, "the formula is not correct! check again"
+    pbar = tqdm(total=len(mu_vec) * data_len)
+    if logger_path:
+        os.makedirs(logger_path, exist_ok=True)
+    file_path = f'{logger_path}/{get_ts_filename()}'
+    for mu_i, mu in enumerate(mu_vec):
         dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
         os.makedirs(dir, exist_ok=True)
         cs.normalization_factor = mu
@@ -144,6 +144,28 @@ def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm):
             x, y = cs.gen_io_data()
             save_xy(dir, x, y, i)
             pbar.update()
+            if logger_path: log_status(file_path,mu,mu_i,len(mu_vec),i,data_len,pbar)
+
+
+def log_status(file_path, mu, mu_i, mu_N, sample_i, N_samples, pbar):
+    timestamp = get_ts()
+    elapsed = pbar.format_dict["elapsed"]
+    rate = pbar.format_dict["rate"]
+    remaining = (pbar.total - pbar.n) / rate if rate and pbar.total else 0  # Seconds*
+    remains = pbar.format_interval(remaining)
+    line = f'{timestamp} | saved mu={mu} ({mu_i}/{mu_N}), sample {sample_i}/{N_samples} | ' \
+           f'remains: {remains}\n'
+
+    with open(file_path, 'a') as f:
+        f.write(line)
+
+
+def get_ts():
+    return datetime.now().strftime("%Y-%m-%d (%H:%M:%S)")
+
+
+def get_ts_filename():
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
 x_file_name = 'data_x.npy'

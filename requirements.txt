@@ -9,4 +9,5 @@ tqdm
 jupyter
 torch
 pyrallis
+wandb
 # jupyterlab

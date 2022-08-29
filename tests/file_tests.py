@@ -1,16 +1,17 @@
 import os
 
 import numpy as np
+import torch
+from torch import nn
 from tqdm import tqdm
-
-import src.deep.data_loaders
-from src.deep.data_loaders import SingleMuDataSet, FilesReadWrite
-from src.general_methods.visualizer import Visualizer
-from src.optics.channel_simulation import ChannelSimulator
-from src.optics.split_step_fourier import SplitStepFourier
+import wandb
 
 from src.deep import data_loaders
-from src.deep.data_loaders import SingleMuDataSet
+from src.deep.data_loaders import FilesReadWrite, SingleMuDataSet
+from src.deep.ml_ops import Trainer
+from src.deep.models import SingleMuModel3Layers
+from src.optics.split_step_fourier import SplitStepFourier
+
 from src.deep.metrics import Metrics
 
 from src.optics.channel_simulation import ChannelSimulator
@@ -30,13 +31,11 @@ def test1():
 
 
 def test2_data_generation():
-    # test generated data
     # config
-    # config
-    data_len = 10  # for each mu
-    mu_len = 3
+    data_len = 3  # for each mu
+    mu_len = 4
     num_symbols = 512
-    dir = f'data/qam1024_{data_len}x{mu_len}'
+    dir = f'../data/qam1024_{data_len}x{mu_len}'
     # mu = 1e-3
     # mu_vec = [1e-3, 1e-2, 1e-1, 0.5, 0.9]
     mu_vec = np.linspace(start=0.0005, stop=0.07, num=mu_len)
@@ -53,7 +52,34 @@ def test2_data_generation():
                               h=200
                           ),
                           verbose=False)
-    src.deep.data_loaders.gen_data(data_len, num_symbols, mu_vec, cs, dir)
+    # generate the date
+    data_loaders.gen_data(data_len, num_symbols, mu_vec, cs, dir, tqdm=tqdm)
+
+    #
+    # # test generated data
+    # # config
+    # # config
+    # data_len = 10  # for each mu
+    # mu_len = 3
+    # num_symbols = 512
+    # dir = f'data/qam1024_{data_len}x{mu_len}'
+    # # mu = 1e-3
+    # # mu_vec = [1e-3, 1e-2, 1e-1, 0.5, 0.9]
+    # mu_vec = np.linspace(start=0.0005, stop=0.07, num=mu_len)
+    # cs = ChannelSimulator(m_qam=1024,
+    #                       num_symbols=num_symbols,
+    #                       normalization_factor=0,  # will be overwritten during runtime
+    #                       dt=1,
+    #                       ssf=SplitStepFourier(
+    #                           b2=-20e-27,
+    #                           gamma=0.003,
+    #                           t0=125e-12,
+    #                           dt=1,
+    #                           z_n=1000e3,
+    #                           h=200
+    #                       ),
+    #                       verbose=False)
+    # src.deep.data_loaders.gen_data(data_len, num_symbols, mu_vec, cs, dir)
 
 
 def test3_ber_vs_mu():
@@ -100,5 +126,34 @@ def test5_data_analyzer():
     Visualizer.twin_zoom_plot_vec('vec[0]', np.array([np.real(x), np.real(y)]).T, ['x', 'y'], zm)
 
 
+def test6_wandb():
+    wandb.init(project="Thesis", entity="yarden92")
+    epochs = 10
+    lr = 1e-3
+    batch_size = 128
+    wandb.config = {
+        "learning_rate": lr,
+        "epochs": epochs,
+        "batch_size": batch_size
+    }
+
+    l_metric = nn.MSELoss()  # or L1Loss
+    model = SingleMuModel3Layers()
+    dir = '../data/datasets/qam1024_100x10/100_samples_mu=0.008'
+    train_dataset, val_dataset = data_loaders.get_train_val_datasets(dir, SingleMuDataSet, train_val_ratio=0.8)
+    optim = torch.optim.Adam(model.parameters(), lr=lr)
+    trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim)
+
+    trainer.test_single_item(0, verbose=True)
+
+    trainer.train(num_epochs=epochs, mini_batch_size=batch_size, verbose_level=1)
+
+    trainer.test_single_item(0, f'after {trainer.train_state_vec.num_epochs} epochs')
+
+    trainer.compare_ber(tqdm=tqdm)
+
+    trainer.plot_loss_vec()
+
+
 if __name__ == '__main__':
-    test3_ber_vs_mu()
+    test6_wandb()

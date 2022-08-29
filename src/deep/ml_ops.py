@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import torch.optim
+import wandb
 from torch import nn, Tensor
 from tqdm import tqdm
 
@@ -48,6 +49,7 @@ class Trainer:
             # train_loss_i: float = np.array(running_loss_vec).mean()
 
             # self.add_state(train_loss_i, val_loss_i)
+            wandb.log({"loss": train_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
             # self.loss_vec.append(np.mean(running_loss_vec))
             # self.num_epoch_trained += 1

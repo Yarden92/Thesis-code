@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-import src.deep.standalone_methods
+from src.deep.standalone_methods import GeneralMethods
 from src.deep.data_loaders import OpticDataset, FilesReadWrite
 from src.optics.channel_simulation import ChannelSimulator
 
@@ -16,8 +16,7 @@ class Metrics:
         assert cs is not None or conf is not None, "either cs or conf should be given"
         # check if x is torch
         if isinstance(x, torch.Tensor):
-            x, y = src.deep.standalone_methods.torch_to_complex_numpy(
-                x), src.deep.standalone_methods.torch_to_complex_numpy(y)
+            x, y = GeneralMethods.torch_to_complex_numpy(x), GeneralMethods.torch_to_complex_numpy(y)
         cs = cs or ChannelSimulator.from_dict(conf)
         msg_in = cs.steps8_to_10(y)
         msg_out = cs.steps8_to_10(x)
@@ -82,7 +81,7 @@ class Metrics:
             all_x_read, all_y_read, conf_read = FilesReadWrite.read_folder(dirpath, verbose_level >= 1)
             all_x_read, all_y_read = trim_data(all_x_read, all_y_read, num_x_per_folder)
             sub_ber_vec, num_errors = Metrics.calc_ber_for_folder(all_x_read, all_y_read, conf_read, verbose_level >= 2)
-            ber = np.sum(sub_ber_vec)/len(sub_ber_vec)
+            ber = np.sum(sub_ber_vec) / len(sub_ber_vec)
 
             mu_vec.append(mu)
             ber_vec.append(ber)
@@ -92,16 +91,6 @@ class Metrics:
         ber_vec = np.array(ber_vec)[indices]
 
         return ber_vec, mu_vec
-
-    @staticmethod
-    def calc_statistics_for_dataset(dataset):
-        mu = np.mean([x.mean() for x, _ in dataset])
-        std = np.mean([x.std() for x, _ in dataset])
-        return mu, std
-
-    @staticmethod
-    def normalize_xy(x, y, mu, std):
-        return (x - mu) / std, (y - mu) / std
 
 
 def name_to_mu_val(folder_name: str) -> float:
