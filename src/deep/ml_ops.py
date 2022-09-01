@@ -106,7 +106,7 @@ class Trainer:
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
 
-    def save_model(self, dir_path: str = 'saved_models'):
+    def save_model(self, dir_path: str = 'old_saved_models'):
         # create dir if doesn't exist
         sub_dir_path = f'{dir_path}/model_{self.model.__class__.__name__}_{self.train_state_vec.num_epochs}_epochs'
         os.makedirs(sub_dir_path, exist_ok=True)
@@ -122,6 +122,12 @@ class Trainer:
         trainer_path = sub_dir_path + '/trainer.pt'
         torch.save(self, trainer_path)
 
+    @classmethod
+    def load_trainer_from_file(cls, folder_path: str) -> 'Trainer':
+        trainer_path = folder_path + '/trainer.pt'
+        trainer: Trainer = torch.load(trainer_path)
+        return trainer
+
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)
 
@@ -132,6 +138,7 @@ class Trainer:
         pred = self.model(x)
         x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
         if verbose: print(f'x_np.shape={x_np.shape},y_np.shape={y_np.shape},pred_np.shape={pred_np.shape}')
+        title = title or f'after {self.train_state_vec.num_epochs} epochs'
         Visualizer.data_trio_plot(x_np, y_np, pred_np, title=title)
         if verbose: print(
             f'x power={np.mean(x_np ** 2)}\ny power={np.mean(y_np ** 2)}\npred power={np.mean(pred_np ** 2):.2f}')

@@ -185,10 +185,11 @@ class Visualizer:
     def plot_loss_vec(train_loss_vec, valid_loss_vec):
         assert len(train_loss_vec) == len(valid_loss_vec), "train and valid loss vectors must have the same length"
         x = range(len(train_loss_vec))
-        plt.semilogy(x, train_loss_vec, label='train')
-        plt.semilogy(x, valid_loss_vec, label='valid')
+        plt.plot(x, train_loss_vec, label='train')
+        plt.plot(x, valid_loss_vec, label='valid')
         plt.ylabel('loss')
         plt.xlabel('epoch')
+        plt.ylim(bottom=0)
         plt.legend()
         plt.grid(True)
         plt.show()

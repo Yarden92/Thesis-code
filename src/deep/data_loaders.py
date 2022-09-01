@@ -19,10 +19,14 @@ class OpticDataset(Dataset, ABC):
         self.config = None
         self.mu = 0
         self.std = 1
+        self.root_dir = ''
 
     def set_scale(self, mu, std):
         self.mu = mu
         self.std = std
+
+    def set_root_dir(self, root_dir):
+        self.root_dir = root_dir
 
     def __len__(self):
         return 0
@@ -44,10 +48,10 @@ def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_
 class SingleMuDataSet(OpticDataset):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None) -> None:
         super().__init__(data_dir_path, data_indices)
-        self.data_dir_path = data_dir_path
+        self.data_dir_path = os.path.abspath(data_dir_path)
         self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{x_file_name}')))
 
-        self.config = read_conf(data_dir_path)
+        self.config = read_conf(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
         self.n = len(self.data_indices)
 
