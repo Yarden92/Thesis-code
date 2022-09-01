@@ -128,7 +128,7 @@ def test5_data_analyzer():
 
 def test6_wandb():
     wandb.init(project="Thesis", entity="yarden92")
-    epochs = 10
+    epochs = 100
     lr = 1e-3
     batch_size = 128
     wandb.config = {
