@@ -1,6 +1,8 @@
+import concurrent
 import json
 import os
 from abc import ABC
+from concurrent.futures import ProcessPoolExecutor
 from datetime import time, datetime
 from glob import glob
 from typing import Union
@@ -34,7 +36,7 @@ class OpticDataset(Dataset, ABC):
 
 def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_val_ratio=0.8):
     n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
-    divider_index = int(n_total * train_val_ratio)
+    divider_index = int(n_total*train_val_ratio)
     train_indices = range(0, divider_index)
     val_indices = range(divider_index, n_total)
     train_ds = dataset_type(data_dir_path, train_indices)
@@ -133,9 +135,9 @@ def save_xy(dir, x, y, i):
 
 
 def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None):
-    vec_lens = num_symbols * cs.over_sampling + cs.N_rrc - 1
-    assert vec_lens == num_symbols * 8 * 2, "the formula is not correct! check again"
-    pbar = tqdm(total=len(mu_vec) * data_len)
+    vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
+    assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
+    pbar = tqdm(total=len(mu_vec)*data_len)
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
         print(f'saving logs to {os.path.abspath(logger_path)}')
@@ -150,14 +152,51 @@ def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logg
             x, y = cs.gen_io_data()
             save_xy(dir, x, y, i)
             pbar.update()
-            if logger_path: log_status(file_path,mu,mu_i,len(mu_vec),i,data_len,pbar)
+            if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
+
+
+def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1):
+    vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
+    assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
+    pbar = tqdm(total=len(mu_vec)*data_len)
+    if logger_path:
+        os.makedirs(logger_path, exist_ok=True)
+        print(f'saving logs to {os.path.abspath(logger_path)}')
+        print(f'saving data to {os.path.abspath(root_dir)}')
+    file_path = f'{logger_path}/{get_ts_filename()}'
+
+    print('setting up tasks...')
+    executor = ProcessPoolExecutor(max_workers=max_workers)
+    futures = []
+    for mu_i, mu in enumerate(mu_vec):
+        dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
+        os.makedirs(dir, exist_ok=True)
+        cs.normalization_factor = mu
+        save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
+        for i in range(data_len):
+            f_i = executor.submit(long_task,
+                                  cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar)
+            futures.append(f_i)
+            pbar.update()
+
+    pbar.refresh()
+    print('initiating data generation...')
+    pbar.reset()
+    concurrent.futures.wait(futures)
+
+
+def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar):
+    x, y = cs.gen_io_data()
+    save_xy(dir, x, y, i)
+    pbar.update()
+    if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
 
 
 def log_status(file_path, mu, mu_i, mu_N, sample_i, N_samples, pbar):
     timestamp = get_ts()
     elapsed = pbar.format_dict["elapsed"]
     rate = pbar.format_dict["rate"]
-    remaining = (pbar.total - pbar.n) / rate if rate and pbar.total else 0  # Seconds*
+    remaining = (pbar.total - pbar.n)/rate if rate and pbar.total else 0  # Seconds*
     remains = pbar.format_interval(remaining)
     line = f'{timestamp} | saved mu={mu} ({mu_i}/{mu_N}), sample {sample_i}/{N_samples} | ' \
            f'remains: {remains}\n'

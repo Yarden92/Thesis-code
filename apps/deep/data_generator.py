@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 
 import numpy as np
@@ -17,6 +18,7 @@ class DataConfig:
     qam: int = 1024
     logger_path: str = './logs'
     output_path: str = './data/datasets'
+    max_workers: int = 1
 
 
 def main(config: DataConfig):
@@ -41,8 +43,12 @@ def main(config: DataConfig):
                           verbose=False)
 
     # generate the date
-    data_loaders.gen_data(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
-                          logger_path=config.logger_path)
+    if config.max_workers == 1:
+        data_loaders.gen_data(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
+                              logger_path=config.logger_path)
+    if config.max_workers > 1:
+        data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
+                               logger_path=config.logger_path, max_workers=config.max_workers)
 
 
 if __name__ == '__main__':
