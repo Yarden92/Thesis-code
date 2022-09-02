@@ -30,6 +30,8 @@ def parallel_task(function_pointer, num_tasks=7, num_processes: int = 1, duratio
             duration = np.random.uniform(duration_min, duration_max)
             executor.submit(function_pointer, zero_time, f'task {i}', duration)
 
+        print('finished loading the tasks.')
+
     print(f'all tasks done')
 
 

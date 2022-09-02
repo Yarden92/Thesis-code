@@ -169,28 +169,33 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     # executor = ProcessPoolExecutor(max_workers=max_workers)
     # futures = []
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {}
         for mu_i, mu in enumerate(mu_vec):
             dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
             os.makedirs(dir, exist_ok=True)
             cs.normalization_factor = mu
             save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
             for i in range(data_len):
-                executor.submit(long_task,
-                                      cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar)
-                # futures.append(f_i)
-                pbar.update()
+                f_i = executor.submit(long_task, cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec)
+                futures[f_i] = (mu, i)
 
-    pbar.refresh()
-    print('\ninitiating data generation...')
-    pbar.reset()
-    # concurrent.futures.wait(futures)
+        print('finished setting up tasks, initiating data generation')
+        for future in concurrent.futures.as_completed(futures):
+            (mu, i) = futures[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                print(f'mu={mu}, i={i} generated an exception: {exc}')
+            pbar.update()
+
+    print('\nall done')
 
 
-def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar):
+def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec):
+    # print(f'generating data {i}, mu {mu_i}...')
     x, y = cs.gen_io_data()
     save_xy(dir, x, y, i)
-    pbar.update()
-    if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
+    # if logger_path : log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, None)
 
 
 def log_status(file_path, mu, mu_i, mu_N, sample_i, N_samples, pbar):
