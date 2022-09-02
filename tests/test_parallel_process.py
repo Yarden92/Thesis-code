@@ -24,18 +24,12 @@ def slow_task(zero_time ,title: str = 'unnamed task', duration_sec: float = 60) 
 def parallel_task(function_pointer, num_tasks=7, num_processes: int = 1, duration_min=40, duration_max=60) -> None:
     # loop on n gpus
     zero_time = time()
-
-    executor = ProcessPoolExecutor(max_workers=num_processes)
-    futures = []
-    for i in range(num_tasks):
-        print(f'setting up task {i}')
-        title = f'process {i}'
-        duration = np.random.uniform(duration_min, duration_max)  # [sec]
-        f_i = executor.submit(function_pointer,zero_time, title, duration)
-        futures.append(f_i)
-
     print(f'starting {num_tasks} tasks')
-    concurrent.futures.wait(futures)
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+        for i in range(num_tasks):
+            duration = np.random.uniform(duration_min, duration_max)
+            executor.submit(function_pointer, zero_time, f'task {i}', duration)
+
     print(f'all tasks done')
 
 

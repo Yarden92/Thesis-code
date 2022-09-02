@@ -166,23 +166,24 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     file_path = f'{logger_path}/{get_ts_filename()}'
 
     print('setting up tasks...')
-    executor = ProcessPoolExecutor(max_workers=max_workers)
-    futures = []
-    for mu_i, mu in enumerate(mu_vec):
-        dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
-        os.makedirs(dir, exist_ok=True)
-        cs.normalization_factor = mu
-        save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
-        for i in range(data_len):
-            f_i = executor.submit(long_task,
-                                  cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar)
-            futures.append(f_i)
-            pbar.update()
+    # executor = ProcessPoolExecutor(max_workers=max_workers)
+    # futures = []
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for mu_i, mu in enumerate(mu_vec):
+            dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
+            os.makedirs(dir, exist_ok=True)
+            cs.normalization_factor = mu
+            save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
+            for i in range(data_len):
+                executor.submit(long_task,
+                                      cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar)
+                # futures.append(f_i)
+                pbar.update()
 
     pbar.refresh()
-    print('initiating data generation...')
+    print('\ninitiating data generation...')
     pbar.reset()
-    concurrent.futures.wait(futures)
+    # concurrent.futures.wait(futures)
 
 
 def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec, pbar):
