@@ -138,6 +138,8 @@ def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logg
     pbar = tqdm(total=len(mu_vec) * data_len)
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
+        print(f'saving logs to {os.path.abspath(logger_path)}')
+        print(f'saving data to {os.path.abspath(root_dir)}')
     file_path = f'{logger_path}/{get_ts_filename()}'
     for mu_i, mu in enumerate(mu_vec):
         dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'

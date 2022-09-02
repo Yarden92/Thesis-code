@@ -35,7 +35,7 @@ def test2_data_generation():
     data_len = 3  # for each mu
     mu_len = 4
     num_symbols = 512
-    dir = f'../data/qam1024_{data_len}x{mu_len}'
+    dir = f'../data/datasets/qam1024_{data_len}x{mu_len}'
     # mu = 1e-3
     # mu_vec = [1e-3, 1e-2, 1e-1, 0.5, 0.9]
     mu_vec = np.linspace(start=0.0005, stop=0.07, num=mu_len)
@@ -62,7 +62,7 @@ def test2_data_generation():
     # data_len = 10  # for each mu
     # mu_len = 3
     # num_symbols = 512
-    # dir = f'data/qam1024_{data_len}x{mu_len}'
+    # dir = f'data/datasets/qam1024_{data_len}x{mu_len}'
     # # mu = 1e-3
     # # mu_vec = [1e-3, 1e-2, 1e-1, 0.5, 0.9]
     # mu_vec = np.linspace(start=0.0005, stop=0.07, num=mu_len)
@@ -96,7 +96,7 @@ def test3_ber_vs_mu():
 
 
 def test4_read_subfolder():
-    dir = f'{project_path}/data/qam1024_10x3/10_samples_mu=0.035'
+    dir = f'{project_path}/data/datasets/qam1024_10x3/10_samples_mu=0.035'
     data_id = 0
     zm = range(1700, 2300)
 
@@ -113,7 +113,7 @@ def test4_read_subfolder():
 
 
 def test5_data_analyzer():
-    dir = f'{project_path}/data/qam1024_100x10/100_samples_mu=0.001'
+    dir = f'{project_path}/data/datasets/qam1024_100x10/100_samples_mu=0.001'
     data_id = 0
     zm = range(1700, 2300)
 
