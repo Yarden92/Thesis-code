@@ -1,4 +1,4 @@
 export PYTHONPATH=\"\$PYTHONPATH:\$PWD\"
 conda activate thesis-code
-echo $PYTHONPATH
+echo "$PYTHONPATH"
 conda env list
