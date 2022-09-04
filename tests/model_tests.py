@@ -33,13 +33,8 @@ def test1_model_test():
 
 def test2_model_analyzer():
     trainer = Trainer.load_trainer_from_file('./data/saved_models/model_SingleMuModel3Layers_51_epochs_mu_0.008')
+    trainer.fix_datasets_paths('../../data/datasets')
 
-    # TODO: create function Trainer.fix_datasets_paths(dataset_path)
-    dataset_path = '../../data/datasets'
-    for ds in [trainer.train_dataset, trainer.val_dataset]:
-        extension = ds.data_dir_path.split('/data/datasets')[1]
-        ds.data_dir_path = os.path.abspath(f'{dataset_path}{extension}')
-        print(f'updating path to:\n\t{ds.data_dir_path}')
 
     trainer.test_single_item(0, verbose=True)
 
