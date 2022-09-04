@@ -21,7 +21,7 @@ class Trainer:
                  model: nn.Module = None,
                  l_metric=None,
                  optim=None,
-                 config=None):
+                 params: dict = None):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -29,7 +29,7 @@ class Trainer:
         self.model = model or SingleMuModel3Layers()
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
-        self.config = config or {}
+        self.params = params or {}
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
@@ -53,7 +53,6 @@ class Trainer:
             wandb.log({"train_loss": train_loss_i})
             wandb.log({"val_loss": val_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
-
 
     def epoch_step(self, mini_batch_size, dataset, step):
         # dataset = self.train_dataset if is_train else self.val_dataset
@@ -112,14 +111,13 @@ class Trainer:
         model_path = sub_dir_path + '/model.pt'
         torch.save(self.model.state_dict(), model_path)
 
-
         # save dataloader's conf to the same dir
         dataset_conf_path = sub_dir_path + '/dataset_conf.json'
         data_loaders.save_conf(dataset_conf_path, self.train_dataset.config)
 
         # save trainer's conf to the same dir
         trainer_conf_path = sub_dir_path + '/trainer_conf.json'
-        data_loaders.save_conf(trainer_conf_path, self.config.__dict__)
+        data_loaders.save_conf(trainer_conf_path, self.params)
 
         # save trainer
         trainer_path = sub_dir_path + '/trainer.pt'
@@ -162,6 +160,12 @@ class Trainer:
         ber_vec, num_errors = Metrics.calc_ber_from_model(self.val_dataset, self.model, verbose, tqdm)
         print(f'the trained avg ber is {np.mean(ber_vec)}')
 
+    def fix_datasets_paths(self, dataset_path: str = '../../data/datasets'):
+        for ds in [self.train_dataset, self.val_dataset]:
+            extension = ds.data_dir_path.split('/data/datasets')[1]
+            ds.data_dir_path = os.path.abspath(f'{dataset_path}{extension}')
+            print(f'updating path to:\n\t{ds.data_dir_path}')
+
 
 class TrainStateVector:
     # a single state of the model during training process
@@ -179,7 +183,3 @@ class TrainStateVector:
         self.train_loss_vec.append(train_loss)
         self.val_loss_vec.append(val_loss)
 
-# def split_ds(dataset: OpticDataset, ratio):
-#     train_size = int(len(dataset)*ratio)
-#
-#     return dataset[:train_size], dataset[train_size:]
