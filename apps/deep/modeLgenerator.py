@@ -14,13 +14,13 @@ from src.deep.models import SingleMuModel3Layers
 
 @dataclass
 class TrainConfig:
-    run_name: str = "single_mu_model_3_layers"
-    epochs: int = 3
+    run_name: str = "test_model_10epochs"
+    epochs: int = 10
     lr: float = 1e-3
     batch_size: int = 128
     train_val_ratio: float = 0.8
-    input_data_path: str = '../../data/datasets/qam1024_10x3/10_samples_mu=0.001'
-    output_model_path: str = '../../data/saved_models'
+    input_data_path: str = './data/datasets/qam1024_150x5/150_samples_mu=0.001'
+    output_model_path: str = './data/saved_models'
 
 
 def main(config: TrainConfig):
