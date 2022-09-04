@@ -18,7 +18,7 @@ class DataConfig:
     qam: int = 1024
     logger_path: str = './logs'
     output_path: str = './data/datasets'
-    max_workers: int = 1
+    max_workers: int = 10
 
 
 def main(config: DataConfig):

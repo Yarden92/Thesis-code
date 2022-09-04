@@ -20,14 +20,16 @@ class Trainer:
                  val_dataset: OpticDataset,
                  model: nn.Module = None,
                  l_metric=None,
-                 optim=None):
+                 optim=None,
+                 config=None):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
-        self.mu, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
+        self.mean, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
+        self.config = config or {}
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
@@ -47,19 +49,11 @@ class Trainer:
         for _ in epoch_range:
             train_loss_i = self.epoch_step(mini_batch_size, self.train_dataset, self._step_train)
             val_loss_i = self.epoch_step(mini_batch_size, self.val_dataset, self._step_val)
-            # train_loss_i: float = np.array(running_loss_vec).mean()
 
-            # self.add_state(train_loss_i, val_loss_i)
             wandb.log({"train_loss": train_loss_i})
             wandb.log({"val_loss": val_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
-            # self.loss_vec.append(np.mean(running_loss_vec))
-            # self.num_epoch_trained += 1
 
-    # def add_state(self, train_loss_i: np.float, val_loss_i: np.float):
-    #     state = TrainState(self.model, self.num_epoch_trained, train_loss_i, val_loss_i)
-    #     self.train_state_vec.append(state)
-    #     self.num_epoch_trained += 1
 
     def epoch_step(self, mini_batch_size, dataset, step):
         # dataset = self.train_dataset if is_train else self.val_dataset
@@ -107,17 +101,24 @@ class Trainer:
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
 
-    def save_model(self, dir_path: str = 'old_saved_models'):
-        # create dir if doesn't exist
-        sub_dir_path = f'{dir_path}/model_{self.model.__class__.__name__}_{self.train_state_vec.num_epochs}_epochs'
+    def save_model(self, dir_path: str = 'saved_models'):
+        # create dir if it doesn't exist
+        model_name = self.model.__class__.__name__
+        n_epochs = self.train_state_vec.num_epochs
+        mu = self.train_dataset.mu
+        sub_dir_path = f'{dir_path}/model_{model_name}_{n_epochs}_epochs_mu_{mu}'
         os.makedirs(sub_dir_path, exist_ok=True)
 
         model_path = sub_dir_path + '/model.pt'
         torch.save(self.model.state_dict(), model_path)
 
         # save dataloader's conf to the same dir
-        conf_path = sub_dir_path + '/conf.json'
-        data_loaders.save_conf(conf_path, self.train_dataset.config)
+        dataset_conf_path = sub_dir_path + '/dataset_conf.json'
+        data_loaders.save_conf(dataset_conf_path, self.train_dataset.config)
+
+        # save trainer's conf to the same dir
+        trainer_conf_path = sub_dir_path + '/trainer_conf.json'
+        data_loaders.save_conf(trainer_conf_path, self.config.__dict__)
 
         # save trainer
         trainer_path = sub_dir_path + '/trainer.pt'

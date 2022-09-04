@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from torch import Tensor
 
@@ -13,6 +15,12 @@ class GeneralMethods:
 
     @staticmethod
     def calc_statistics_for_dataset(dataset):
-        mu = np.mean([x.mean() for x, _ in dataset])
+        mean = np.mean([x.mean() for x, _ in dataset])
         std = np.mean([x.std() for x, _ in dataset])
-        return mu, std
+        return mean, std
+
+
+    @staticmethod
+    def name_to_mu_val(dirpath: str) -> float:
+        folder_name = os.path.basename(dirpath)
+        return float(folder_name.split('=')[-1])

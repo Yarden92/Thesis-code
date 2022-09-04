@@ -19,12 +19,12 @@ class OpticDataset(Dataset, ABC):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range]) -> None:
         super().__init__()
         self.config = None
-        self.mu = 0
+        self.mean = 0
         self.std = 1
         self.root_dir = ''
 
-    def set_scale(self, mu, std):
-        self.mu = mu
+    def set_scale(self, mean, std):
+        self.mean = mean
         self.std = std
 
     def set_root_dir(self, root_dir):
@@ -41,9 +41,9 @@ def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_
     val_indices = range(divider_index, n_total)
     train_ds = dataset_type(data_dir_path, train_indices)
     val_ds = dataset_type(data_dir_path, val_indices)
-    mu, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
-    train_ds.set_scale(mu, std)
-    val_ds.set_scale(mu, std)
+    mean, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
+    train_ds.set_scale(mean, std)
+    val_ds.set_scale(mean, std)
     return train_ds, val_ds
 
 
@@ -52,6 +52,7 @@ class SingleMuDataSet(OpticDataset):
         super().__init__(data_dir_path, data_indices)
         self.data_dir_path = os.path.abspath(data_dir_path)
         self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{x_file_name}')))
+        self.mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
 
         self.config = read_conf(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
@@ -120,7 +121,6 @@ def read_conf(dir):
 
 
 def save_conf(path, conf):
-    # os.path.dirname(path).mkdir(exist_ok=True)
     with open(path, 'w') as f:
         json.dump(conf, f, indent=4)
 
@@ -193,9 +193,11 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
 
 def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec):
     # print(f'generating data {i}, mu {mu_i}...')
-    x, y = cs.gen_io_data()
-    save_xy(dir, x, y, i)
-    # if logger_path : log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, None)
+    try:
+        x, y = cs.gen_io_data()
+        save_xy(dir, x, y, i)
+    except Exception as e:
+        print(f'error at mu={mu}, i={i}: {e}')
 
 
 def log_status(file_path, mu, mu_i, mu_N, sample_i, N_samples, pbar):

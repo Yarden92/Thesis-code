@@ -20,25 +20,26 @@ class TrainConfig:
     batch_size: int = 128
     train_val_ratio: float = 0.8
     input_data_path: str = './data/datasets/qam1024_150x5/150_samples_mu=0.001'
-    output_model_path: str = './data/saved_models'
+    output_model_path: str = './data/test_models'
 
 
 def main(config: TrainConfig):
     # config
+    print(f"Running {config.run_name}")
+    print(config)
     wandb.init(project="Thesis", entity="yarden92", name=config.run_name)
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,
         "batch_size": config.batch_size
     }
-
     l_metric = nn.MSELoss()  # or L1Loss
     model = SingleMuModel3Layers()
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SingleMuDataSet,
                                                                      train_val_ratio=config.train_val_ratio)
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
-    trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim)
+    trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim, config=config)
 
     trainer.train(num_epochs=config.epochs, verbose_level=1, _tqdm=tqdm)
     trainer.save_model(config.output_model_path)

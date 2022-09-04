@@ -1,4 +1,3 @@
-import os
 from glob import glob
 import numpy as np
 import torch
@@ -74,10 +73,7 @@ class Metrics:
         # walk through folder [data] and search for folders that named as [10_samples_****]
         mu_vec, ber_vec = [], []
         for dirpath in _tqdm(glob(f'{root_dir}/{sub_name_filter}')):
-            # for dirpath, _, _ in _tqdm(os.walk(root_dir)):
-            #     if sub_name_filter in dirpath:
-            dir_name = os.path.basename(dirpath)
-            mu = name_to_mu_val(dir_name)
+            mu = GeneralMethods.name_to_mu_val(dirpath)
             all_x_read, all_y_read, conf_read = FilesReadWrite.read_folder(dirpath, verbose_level >= 1)
             all_x_read, all_y_read = trim_data(all_x_read, all_y_read, num_x_per_folder)
             sub_ber_vec, num_errors = Metrics.calc_ber_for_folder(all_x_read, all_y_read, conf_read, verbose_level >= 2)
@@ -91,10 +87,6 @@ class Metrics:
         ber_vec = np.array(ber_vec)[indices]
 
         return ber_vec, mu_vec
-
-
-def name_to_mu_val(folder_name: str) -> float:
-    return float(folder_name.split('=')[-1])
 
 
 def trim_data(x, y, n=None):
