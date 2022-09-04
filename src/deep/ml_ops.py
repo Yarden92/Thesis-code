@@ -101,7 +101,7 @@ class Trainer:
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
 
-    def save_model(self, dir_path: str = 'saved_models'):
+    def save_model(self, dir_path: str = 'saved_models', verbose=True):
         # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
         n_epochs = self.train_state_vec.num_epochs
@@ -111,6 +111,7 @@ class Trainer:
 
         model_path = sub_dir_path + '/model.pt'
         torch.save(self.model.state_dict(), model_path)
+
 
         # save dataloader's conf to the same dir
         dataset_conf_path = sub_dir_path + '/dataset_conf.json'
@@ -123,6 +124,9 @@ class Trainer:
         # save trainer
         trainer_path = sub_dir_path + '/trainer.pt'
         torch.save(self, trainer_path)
+
+        if verbose:
+            print(f'Model saved to {sub_dir_path}')
 
     @classmethod
     def load_trainer_from_file(cls, folder_path: str) -> 'Trainer':
