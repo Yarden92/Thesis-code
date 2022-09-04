@@ -26,7 +26,7 @@ class TrainConfig:
 def main(config: TrainConfig):
     # config
     print(f"Running {config.run_name}")
-    print(config)
+    print(config.__dict__)
     wandb.init(project="Thesis", entity="yarden92", name=config.run_name)
     wandb.config = {
         "learning_rate": config.lr,
