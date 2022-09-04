@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 import torch
@@ -26,7 +27,7 @@ class TrainConfig:
 def main(config: TrainConfig):
     # config
     print(f"Running {config.run_name}")
-    print(config.__dict__)
+    print(json.dumps(config.__dict__, indent=4))
     wandb.init(project="Thesis", entity="yarden92", name=config.run_name)
     wandb.config = {
         "learning_rate": config.lr,
