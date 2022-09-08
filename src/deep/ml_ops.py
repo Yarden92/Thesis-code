@@ -106,9 +106,10 @@ class Trainer:
     def save_model(self, dir_path: str = 'saved_models', verbose=True):
         # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
+        ds_size = len(self.train_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
-        sub_dir_path = f'{dir_path}/model_{model_name}_{n_epochs}_epochs_mu_{mu}'
+        sub_dir_path = f'{dir_path}/{model_name}_ds-{ds_size}_epochs-{n_epochs}_mu-{mu}'
         os.makedirs(sub_dir_path, exist_ok=True)
 
         model_path = sub_dir_path + '/model.pt'
