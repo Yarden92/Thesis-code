@@ -39,15 +39,20 @@ class Trainer:
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
         self.params = params or {}
 
+        self.attach_to_device(self.device)
         # move all to device
-        self.model = self.model.to(self.device)
-        self.l_metric = self.l_metric.to(self.device)
-        self.train_dataloader = self.train_dataloader  # WIP
+
         self.val_dataloader = self.val_dataloader  # WIP
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
         self.train_state_vec = TrainStateVector()
+
+    def attach_to_device(self, device):
+        self.model = self.model.to(device)
+        self.l_metric = self.l_metric.to(device)
+        self.train_dataloader = self.train_dataloader  # WIP
+        self.val_dataloader = self.val_dataloader  # WIP
 
     def train(self, num_epochs: int, mini_batch_size: int = 500, verbose_level=0, _tqdm=tqdm):
         # verbose_level:
@@ -129,8 +134,13 @@ class Trainer:
         sub_dir_path = f'{dir_path}/{model_name}_ds-{ds_size}_epochs-{n_epochs}_mu-{mu}'
         os.makedirs(sub_dir_path, exist_ok=True)
 
-        model_path = sub_dir_path + '/model.pt'
-        torch.save(self.model.state_dict(), model_path)
+        # remove device related stuffs
+        self.attach_to_device('cpu')
+
+        # save non device related stuffs
+
+        # model_path = sub_dir_path + '/model.pt'
+        # torch.save(self.model.state_dict(), model_path)
 
         # save dataloader's conf to the same dir
         dataset_conf_path = sub_dir_path + '/dataset_conf.json'
@@ -149,8 +159,31 @@ class Trainer:
 
     @classmethod
     def load_trainer_from_file(cls, folder_path: str) -> 'Trainer':
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # params = data_loaders.read_conf(folder_path + '/trainer_conf.json')
+        # model = params['model'].load_state_dict(torch.load(folder_path + '/model.pt'),map_location=torch.device(device))
+        # cls(
+        #     train_dataset=train_dataset,
+        #     val_dataset=val_dataset,
+        #     model=model,
+        #     device=device,
+        #     batch_size=batch_size,
+        #     l_metric=l_metric,
+        #     optim=optim,
+        #     params=params
+        #
+        # )
         trainer_path = folder_path + '/trainer.pt'
         trainer: Trainer = torch.load(trainer_path)
+        if torch.cuda.is_available():
+            trainer.attach_to_device('cuda')
+
+        # if torch.cuda.is_available():
+        #     trainer: Trainer = torch.load(trainer_path)
+        # else:
+        #
+        #     trainer: Trainer = torch.nn.Module.load_state_dict(torch.load(trainer_path, map_location=torch.device('cpu')))
+
         return trainer
 
     def plot_loss_vec(self):
