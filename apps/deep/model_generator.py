@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import torch
 import wandb
@@ -15,13 +15,14 @@ from src.deep.models import SingleMuModel3Layers
 
 @dataclass
 class TrainConfig:
-    run_name: str = "test_model_10epochs"
-    epochs: int = 10
-    lr: float = 1e-3
-    batch_size: int = 128
-    train_val_ratio: float = 0.8
-    input_data_path: str = './data/datasets/qam1024_150x5/150_samples_mu=0.001'
-    output_model_path: str = './data/test_models'
+    run_name: str = field(default="test_model_10epochs")
+    epochs: int = field(default=10)
+    lr: float = field(default=1e-3)
+    batch_size: int = field(default=128)
+    train_val_ratio: float = field(default=0.8)
+    input_data_path: str = field(default='./data/datasets/qam1024_150x5/150_samples_mu=0.001')
+    output_model_path: str = field(default='./data/test_models')
+    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def main(config: TrainConfig):
