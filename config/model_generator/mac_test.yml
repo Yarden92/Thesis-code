@@ -1,5 +1,5 @@
 run_name : "test_on_mac"
-epochs : 3
+epochs : 2
 lr : 1e-3
 batch_size : 1
 train_val_ratio : 0.8

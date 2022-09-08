@@ -125,75 +125,94 @@ class Trainer:
             mini_batches.append(dataset[i:i + mini_batch_size])
         return mini_batches
 
-    def save(self, dir_path: str = 'saved_models', verbose=True):
-        # save class names
+    def save3(self, dir_path: str = 'saved_models'):
+        # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
-
-        params = {
-            'model_name': model_name,
-            'config': self.params,
-        }
-
-        # create dir if doesnt exists
         ds_size = len(self.train_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
         sub_dir_path = f'{dir_path}/{model_name}_ds-{ds_size}_epochs-{n_epochs}_mu-{mu}'
         os.makedirs(sub_dir_path, exist_ok=True)
 
-        # save all params to json
-        data_loaders.save_conf(sub_dir_path + '/trainer_params.json', params)
-
-        # save dataset instances
-        torch.save(self.train_dataset, sub_dir_path + '/ds_train.pt')
-        torch.save(self.val_dataset, sub_dir_path + '/ds_valid.pt')
-
-        # save l_metric and optim
-        torch.save(self.l_metric, sub_dir_path + '/l_metric.pt')
-        torch.save(self.optim, sub_dir_path + '/optim.pt')
-
-        # save model state
-        torch.save(self.model.state_dict(), sub_dir_path + '/model_state.pt')
+        # save trainer to the same dir
+        torch.save(self, sub_dir_path + '/trainer.pt')
 
     @classmethod
-    def load_from_file(cls, dir_path: str = 'saved_models') -> 'Trainer':
+    def load3(cls, dir_path: str = 'saved_models'):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-        # load dataset instances from files
-        ds_train_path = dir_path + '/ds_train.pt'
-        ds_valid_path = dir_path + '/ds_valid.pt'
-        ds_train = torch.load(ds_train_path)
-        ds_valid = torch.load(ds_valid_path)
-
-        # load params from json
-        params = data_loaders.read_conf(dir_path, 'trainer_params.json')
-
-        # load l_metric and optim
-        l_metric = torch.load(dir_path + '/l_metric.pt')
-        optim = torch.load(dir_path + '/optim.pt')
-
-        # load model  and model state
-        model: nn.Module = globals()[params['model_name']]()
-        model_state_dict = torch.load(dir_path + '/model_state.pt')
-        model.load_state_dict(model_state_dict)
-
-        # generate class instances from class names that were saved
-        # l_metric: nn.Module = globals()[params['l_metric_name']]()
-        # optim: nn.Module = globals()[params['optim_name']](model.parameters(), lr=params['config']['lr'])
+        return torch.load(dir_path + '/trainer.pt', map_location=device)
 
 
-        batch_size = params['config']['batch_size']
-
-        return cls(
-            train_dataset=ds_train,
-            val_dataset=ds_valid,
-            model=model,
-            device=device,
-            batch_size=batch_size,
-            l_metric=l_metric,
-            optim=optim,
-            params=params
-        )
+    # def save(self, dir_path: str = 'saved_models', verbose=True):
+    #     # save class names
+    #     model_name = self.model.__class__.__name__
+    #     # l_metric_name = self.l_metric.__class__.__name__
+    #     optim_name = self.optim.__class__.__name__
+    #
+    #     params = {
+    #         'model_name': model_name,
+    #         # 'l_metric_name': l_metric_name,
+    #         'optim_name': optim_name,
+    #         'config': self.params,
+    #     }
+    #
+    #     # create dir if doesnt exists
+    #     ds_size = len(self.train_dataset)
+    #     n_epochs = self.train_state_vec.num_epochs
+    #     mu = self.train_dataset.mu
+    #     sub_dir_path = f'{dir_path}/{model_name}_ds-{ds_size}_epochs-{n_epochs}_mu-{mu}'
+    #     os.makedirs(sub_dir_path, exist_ok=True)
+    #
+    #     # save all params to json
+    #     data_loaders.save_conf(sub_dir_path + '/trainer_params.json', params)
+    #
+    #     # save dataset instances
+    #     torch.save(self.train_dataset, sub_dir_path + '/ds_train.pt')
+    #     torch.save(self.val_dataset, sub_dir_path + '/ds_valid.pt')
+    #
+    #     # save l_metric and optim
+    #     torch.save(self.l_metric, sub_dir_path + '/l_metric.pt')
+    #     # torch.save(self.optim, sub_dir_path + '/optim.pt')
+    #
+    #     # save model state
+    #     torch.save(self.model.state_dict(), sub_dir_path + '/model_state.pt')
+    #
+    # @classmethod
+    # def load_from_file(cls, dir_path: str = 'saved_models') -> 'Trainer':
+    #     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    #
+    #     # load dataset instances from files
+    #     ds_train = torch.load(dir_path + '/ds_train.pt')
+    #     ds_valid = torch.load(dir_path + '/ds_valid.pt')
+    #
+    #     # load params from json
+    #     params = data_loaders.read_conf(dir_path, 'trainer_params.json')
+    #
+    #     # load l_metric and optim
+    #     l_metric = torch.load(dir_path + '/l_metric.pt')
+    #     optim = torch.load(dir_path + '/optim.pt', map_location=device)
+    #
+    #     # load model  and model state
+    #     model: nn.Module = globals()[params['model_name']]()
+    #     model_state_dict = torch.load(dir_path + '/model_state.pt')
+    #     model.load_state_dict(model_state_dict)
+    #
+    #     # generate class instances from class names that were saved
+    #     # l_metric: nn.Module = globals()[params['l_metric_name']]()
+    #     optim: nn.Module = globals()[params['optim_name']](model.parameters(), lr=params['config']['lr'])
+    #
+    #     batch_size = params['config']['batch_size']
+    #
+    #     return cls(
+    #         train_dataset=ds_train,
+    #         val_dataset=ds_valid,
+    #         model=model,
+    #         device=device,
+    #         batch_size=batch_size,
+    #         l_metric=l_metric,
+    #         optim=optim,
+    #         params=params
+    #     )
 
     # def save_model_old(self, dir_path: str = 'saved_models', verbose=True):
     #     # create dir if it doesn't exist

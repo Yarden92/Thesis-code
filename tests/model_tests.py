@@ -43,5 +43,9 @@ def test2_model_analyzer():
     trainer.compare_ber(tqdm=tqdm)
 
 
+def test3_load_trainer():
+    trainer = Trainer.load_from_file('./data/saved_models/SingleMuModel3Layers_ds-128_epochs-10_mu-0.008')
+    pass
+
 if __name__ == '__main__':
-    test2_model_analyzer()
+    test3_load_trainer()

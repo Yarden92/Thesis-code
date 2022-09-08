@@ -47,7 +47,7 @@ def main(config: TrainConfig):
                       params=config.__dict__)
 
     trainer.train(num_epochs=config.epochs, verbose_level=1, _tqdm=tqdm)
-    trainer.save(config.output_model_path)
+    trainer.save3(config.output_model_path)
 
     print('finished training')
 
