@@ -14,6 +14,10 @@ from tqdm import tqdm
 
 from src.deep.standalone_methods import GeneralMethods
 
+x_file_name = 'data_x.npy'
+y_file_name = 'data_y.npy'
+conf_file_name = 'conf.json'
+
 
 class OpticDataset(Dataset, ABC):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range]) -> None:
@@ -113,8 +117,8 @@ def read_xy(dir: str, i: int):
     return x, y
 
 
-def read_conf(dir):
-    conf_path = f'{dir}/{conf_file_name}'
+def read_conf(dir, _conf_file_name=conf_file_name):
+    conf_path = f'{dir}/{_conf_file_name}'
     with open(conf_path, 'r') as f:
         conf_read = json.load(f)
     return conf_read
@@ -219,11 +223,6 @@ def get_ts():
 
 def get_ts_filename():
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-
-x_file_name = 'data_x.npy'
-y_file_name = 'data_y.npy'
-conf_file_name = 'conf.json'
 
 
 def complex_numpy_to_torch(np_vec: np.ndarray):
