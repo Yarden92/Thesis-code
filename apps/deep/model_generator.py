@@ -18,7 +18,7 @@ class TrainConfig:
     run_name: str = field(default="test_model_10epochs") # name of the run in wandb
     epochs: int = field(default=10)  # num of epochs
     lr: float = field(default=1e-3) # learning rate
-    batch_size: int = field(default=128) # batch size
+    batch_size: int = field(default=1) # batch size
     train_val_ratio: float = field(default=0.8) # train vs val ratio
     input_data_path: str = field(default='./data/datasets/qam1024_150x5/150_samples_mu=0.001') # path to data
     output_model_path: str = field(default='./data/test_models') # path to save model
@@ -41,7 +41,7 @@ def main(config: TrainConfig):
                                                                      train_val_ratio=config.train_val_ratio)
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
-    trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset,
+    trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,
                       model=model, device=config.device,
                       l_metric=l_metric, optim=optim,
                       params=config.__dict__)

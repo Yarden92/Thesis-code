@@ -22,14 +22,16 @@ class Trainer:
                  val_dataset: OpticDataset,
                  model: nn.Module = None,
                  device: str = 'cpu',
+                 batch_size: int = 1,
                  l_metric=None,
                  optim=None,
                  params: dict = None):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
-        self.train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-        self.val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+        assert batch_size == 1, 'batch size other than 1 is not yet supported'
+        self.train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        self.val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
         self.mean, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
         self.device = device
@@ -59,14 +61,14 @@ class Trainer:
         # train
         epoch_range = _tqdm(range(num_epochs)) if _tqdm else range(num_epochs)
         for _ in epoch_range:
-            train_loss_i = self.epoch_step(mini_batch_size, self.train_dataloader, self._step_train, self.train_dataset)
-            val_loss_i = self.epoch_step(mini_batch_size, self.val_dataloader, self._step_val, self.val_dataset)
+            train_loss_i = self.epoch_step(mini_batch_size, self.train_dataloader, self._step_train)
+            val_loss_i = self.epoch_step(mini_batch_size, self.val_dataloader, self._step_val)
 
             wandb.log({"train_loss": train_loss_i})
             wandb.log({"val_loss": val_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
 
-    def epoch_step(self, mini_batch_size, dataloader, step, dataset):
+    def epoch_step(self, mini_batch_size, dataloader, step):
         # dataset = self.train_dataset if is_train else self.val_dataset
         # step = self._step_train if is_train else self._step_val
 
@@ -80,20 +82,20 @@ class Trainer:
         # final_loss = np.mean(running_loss_vec)
 
         # OPTION 2
-        running_loss_vec = np.zeros(len(dataset))
-        final_loss = 0
-        for i, (x, y) in enumerate(dataset):
-            x, y = x.to(self.device), y.to(self.device)
-            loss, pred = step(x, y)
-            final_loss += loss.item()/len(dataset)
-
-        # OPTION 3
+        # running_loss_vec = np.zeros(len(dataset))
         # final_loss = 0
-        # for batch in dataloader:
-        #     x, y = batch
+        # for i, (x, y) in enumerate(dataset):
         #     x, y = x.to(self.device), y.to(self.device)
         #     loss, pred = step(x, y)
-        #     final_loss += loss.item()/len(dataloader)
+        #     final_loss += loss.item()/len(dataset)
+
+        # OPTION 3
+        final_loss = 0
+        for batch in dataloader:
+            x, y = batch
+            x, y = x[0].to(self.device), y[0].to(self.device)
+            loss, pred = step(x, y)
+            final_loss += loss.item()/len(dataloader)
 
         return final_loss
 
