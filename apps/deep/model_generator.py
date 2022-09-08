@@ -42,7 +42,8 @@ def main(config: TrainConfig):
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset,
-                      model=model, l_metric=l_metric, optim=optim,
+                      model=model, device=config.device,
+                      l_metric=l_metric, optim=optim,
                       params=config.__dict__)
 
     trainer.train(num_epochs=config.epochs, verbose_level=1, _tqdm=tqdm)

@@ -19,6 +19,7 @@ class Trainer:
                  train_dataset: OpticDataset,
                  val_dataset: OpticDataset,
                  model: nn.Module = None,
+                 device: str = 'cpu',
                  l_metric=None,
                  optim=None,
                  params: dict = None):
@@ -27,6 +28,8 @@ class Trainer:
         self.val_dataset = val_dataset
         self.mean, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
+        self.device = device
+        self.model = self.model.to(self.device)
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
         self.params = params or {}
