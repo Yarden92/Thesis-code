@@ -1,0 +1,8 @@
+run_name : "test_on_mac"
+epochs : 3
+lr : 1e-3
+batch_size : 128
+train_val_ratio : 0.8
+input_data_path : './data/datasets/qam1024_150x5/150_samples_mu=0.001'
+output_model_path : './data/test_models'
+device : 'cpu'
