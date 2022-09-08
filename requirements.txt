@@ -10,4 +10,4 @@ jupyter
 torch
 pyrallis
 wandb
-# jupyterlab
+gpustat
