@@ -29,10 +29,15 @@ class Trainer:
         self.mean, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
         self.device = device
-        self.model = self.model.to(self.device)
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
         self.params = params or {}
+
+        if "cuda" in self.device:
+            self.model = self.model.cuda()
+            self.l_metric.cuda()
+            self.train_dataset = self.train_dataset.cuda()
+            self.val_dataset = self.val_dataset.cuda()
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
