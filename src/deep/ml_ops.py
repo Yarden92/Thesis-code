@@ -33,11 +33,10 @@ class Trainer:
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
         self.params = params or {}
 
-        if "cuda" in self.device:
-            self.model = self.model.cuda()
-            self.l_metric.cuda()
-            self.train_dataset = self.train_dataset.cuda()
-            self.val_dataset = self.val_dataset.cuda()
+        self.model = self.model.to(self.device)
+        self.l_metric.to(self.device)
+        self.train_dataset = self.train_dataset.to(self.device)
+        self.val_dataset = self.val_dataset.to(self.device)
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
