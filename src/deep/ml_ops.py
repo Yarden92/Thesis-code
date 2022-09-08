@@ -1,9 +1,11 @@
 import os
+from typing import Optional
 
 import numpy as np
 import torch.optim
 import wandb
 from torch import nn, Tensor
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.deep import data_loaders
@@ -26,6 +28,8 @@ class Trainer:
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
+        self.train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+        self.val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
         self.mean, self.std = GeneralMethods.calc_statistics_for_dataset(train_dataset)
         self.model = model or SingleMuModel3Layers()
         self.device = device
@@ -33,10 +37,11 @@ class Trainer:
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
         self.params = params or {}
 
+        # move all to device
         self.model = self.model.to(self.device)
-        self.l_metric.to(self.device)
-        self.train_dataset = self.train_dataset.to(self.device)
-        self.val_dataset = self.val_dataset.to(self.device)
+        self.l_metric = self.l_metric.to(self.device)
+        self.train_dataloader = self.train_dataloader  # WIP
+        self.val_dataloader = self.val_dataloader  # WIP
 
         # self.num_epoch_trained = 0
         # self.loss_vec = []
@@ -54,14 +59,14 @@ class Trainer:
         # train
         epoch_range = _tqdm(range(num_epochs)) if _tqdm else range(num_epochs)
         for _ in epoch_range:
-            train_loss_i = self.epoch_step(mini_batch_size, self.train_dataset, self._step_train)
-            val_loss_i = self.epoch_step(mini_batch_size, self.val_dataset, self._step_val)
+            train_loss_i = self.epoch_step(mini_batch_size, self.train_dataloader, self._step_train, self.train_dataset)
+            val_loss_i = self.epoch_step(mini_batch_size, self.val_dataloader, self._step_val, self.val_dataset)
 
             wandb.log({"train_loss": train_loss_i})
             wandb.log({"val_loss": val_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
 
-    def epoch_step(self, mini_batch_size, dataset, step):
+    def epoch_step(self, mini_batch_size, dataloader, step, dataset):
         # dataset = self.train_dataset if is_train else self.val_dataset
         # step = self._step_train if is_train else self._step_val
 
@@ -75,24 +80,22 @@ class Trainer:
         # final_loss = np.mean(running_loss_vec)
 
         # OPTION 2
-        # running_loss_vec = np.zeros(len(dataset))
+        running_loss_vec = np.zeros(len(dataset))
         final_loss = 0
         for i, (x, y) in enumerate(dataset):
-            # x1,y1 = Metrics.normalize_xy(x, y, self.mu, self.std)
+            x, y = x.to(self.device), y.to(self.device)
             loss, pred = step(x, y)
-            # running_loss_vec[i] += loss.item()/len(dataset)
-            # running_loss_vec[i] += loss.item()
             final_loss += loss.item()/len(dataset)
 
-        return final_loss
+        # OPTION 3
+        # final_loss = 0
+        # for batch in dataloader:
+        #     x, y = batch
+        #     x, y = x.to(self.device), y.to(self.device)
+        #     loss, pred = step(x, y)
+        #     final_loss += loss.item()/len(dataloader)
 
-    def split_to_minibatches(self, dataset, mini_batch_size):
-        # split to minibatches
-        mini_batches = []
-        dataset_type = type(dataset)
-        for i in range(0, len(dataset), mini_batch_size):
-            mini_batches.append(dataset[i:i + mini_batch_size])
-        return mini_batches
+        return final_loss
 
     def _step_train(self, x, y):
         pred = self.model(x)
@@ -106,6 +109,14 @@ class Trainer:
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
+
+    def split_to_minibatches(self, dataset, mini_batch_size):
+        # split to minibatches
+        mini_batches = []
+        dataset_type = type(dataset)
+        for i in range(0, len(dataset), mini_batch_size):
+            mini_batches.append(dataset[i:i + mini_batch_size])
+        return mini_batches
 
     def save_model(self, dir_path: str = 'saved_models', verbose=True):
         # create dir if it doesn't exist
@@ -190,4 +201,3 @@ class TrainStateVector:
         self.num_epochs += 1
         self.train_loss_vec.append(train_loss)
         self.val_loss_vec.append(val_loss)
-
