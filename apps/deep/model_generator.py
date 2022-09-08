@@ -16,7 +16,7 @@ from src.deep.models import SingleMuModel3Layers
 @dataclass
 class TrainConfig:
     run_name: str = field(default="test_model_10epochs")
-    epochs: int = field(default=10)
+    epochs: int = field(default=10) # num of epochs
     lr: float = field(default=1e-3)
     batch_size: int = field(default=128)
     train_val_ratio: float = field(default=0.8)
