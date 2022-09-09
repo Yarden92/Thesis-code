@@ -1,0 +1,24 @@
+epochs : 30
+lr : 1e-3
+batch_size : 1
+train_val_ratio : 0.8
+input_data_path : './data/datasets/qam_1024_5001x20/5001_samples_mu=0.008'
+output_model_path : './data/saved_models'
+device : 'cuda'
+models: '
+{
+  "n_layers": 2,
+  "activation_name": "PReLU"
+};{
+  "n_layers": 2,
+  "activation_name": "PReLU"
+};{
+  "n_layers": 6,
+  "activation_name": "PReLU"
+};{
+  "n_layers": 9,
+  "activation_name": "PReLU"
+};{
+  "n_layers": 15,
+  "activation_name": "log_softmax"
+}'
