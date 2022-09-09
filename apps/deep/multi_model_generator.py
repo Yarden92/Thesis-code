@@ -27,7 +27,7 @@ class ModelConfig:
 
 @dataclass
 class ModelsConfig:
-    models: str = '{}'  # path to models params
+    models: str = '{}'  # string jsons of models '{"n_layers":1,"activation_name":"relu"};{"n_layers"...}'
     epochs: int = 10  # num of epochs
     lr: float = 1e-3  # learning rate
     batch_size: int = 1  # batch size
