@@ -21,7 +21,7 @@ def test1_model_test():
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim)
     trainer.test_single_item(0, verbose=True)
 
-    trainer.train(num_epochs=10, mini_batch_size=10, verbose_level=1)
+    trainer.train(num_epochs=10, mini_batch_size=10)
 
     trainer.test_single_item(0,f'after {trainer.train_state_vec.num_epochs} epochs')
 

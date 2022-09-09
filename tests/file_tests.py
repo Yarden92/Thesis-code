@@ -146,7 +146,7 @@ def test6_wandb():
 
     trainer.test_single_item(0, verbose=True)
 
-    trainer.train(num_epochs=epochs, mini_batch_size=batch_size, verbose_level=1)
+    trainer.train(num_epochs=epochs, mini_batch_size=batch_size)
 
     trainer.test_single_item(0, f'after {trainer.train_state_vec.num_epochs} epochs')
 

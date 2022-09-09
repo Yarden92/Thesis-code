@@ -36,11 +36,12 @@ class Metrics:
         return ber_vec, num_errors
 
     @staticmethod
-    def calc_ber_from_dataset(dataset: OpticDataset, verbose=True, tqdm=None):
+    def calc_ber_from_dataset(dataset: OpticDataset, verbose=True, tqdm=None, num_x_per_folder=None):
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(dataset.config)
-        rng = tqdm(range(len(dataset))) if tqdm else range(len(dataset))
+        N = num_x_per_folder or len(dataset)
+        rng = tqdm(range(N)) if tqdm else range(N)
         for i in rng:
             x, y = dataset[i]
             # x, y = ml_ops.torch_to_complex_numpy(x), ml_ops.torch_to_complex_numpy(y)
@@ -52,14 +53,16 @@ class Metrics:
         return ber_vec, num_errors
 
     @staticmethod
-    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None):
+    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None, max_x=None):
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(dataset.config)
-        if tqdm: dataset = tqdm(dataset)
-        for i, (x, y) in enumerate(dataset):
-            x = model(x)
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs)
+        N = max_x or len(dataset)
+        rng = tqdm(range(N)) if tqdm else range(N)
+        for i in rng:
+            (x, y) = dataset[i]
+            pred = model(x)
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(pred, y, cs)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
             if verbose:

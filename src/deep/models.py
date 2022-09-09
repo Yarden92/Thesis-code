@@ -1,5 +1,7 @@
 import os
+from typing import Optional
 
+import numpy as np
 import torch.optim
 from torch import nn, Tensor
 
@@ -7,52 +9,96 @@ from src.deep.data_loaders import SingleMuDataSet
 
 num_epochs = 3
 
+activations = {
+    'relu': nn.ReLU,
+    'tanh': nn.Tanh,
+    'sigmoid': nn.Sigmoid,
+    'leaky_relu': nn.LeakyReLU,
+    'elu': nn.ELU,
+    'selu': nn.SELU,
+    'celu': nn.CELU,
+    'gelu': nn.GELU,
+    'softplus': nn.Softplus,
+    'softsign': nn.Softsign,
+    'tanhshrink': nn.Tanhshrink,
+    'softmin': nn.Softmin,
+    'softmax': nn.Softmax,
+    'log_softmax': nn.LogSoftmax,
+    'softshrink': nn.Softshrink,
+    'prelu': nn.PReLU,
+    'rrelu': nn.RReLU,
+}
 
-class MultiMuModel(nn.Module):
-    def __init__(self):
+layers = {
+    'linear': nn.Linear,
+    'conv1d': nn.Conv1d,
+    'conv2d': nn.Conv2d,
+    'conv3d': nn.Conv3d,
+}
+
+
+class NLayersModel(nn.Module):
+    def __init__(self, n_layers: int, input_sizes: Optional[list] = None, output_sizes: Optional[list] = None,
+                 kernel_sizes: Optional[list] = None, drop_rates: Optional[list] = None,
+                 activation_name: 'str' = 'PReLU', layer_name: str = 'Conv1d'):
         super().__init__()
-        # TODO TBD
-        raise NotImplementedError
+        self.n_layers = n_layers
+        self.layers = nn.ModuleList()
 
+        layer_type = self.fetch_layer(layer_name)
+        activation_type = self.fetch_activation(activation_name)
 
-class SingleMuModel10Layers(nn.Module):
+        self.input_sizes = input_sizes or self.default_input_sizes(n_layers)
+        self.output_sizes = output_sizes or self.default_output_sizes(n_layers)
+        self.kernel_sizes = kernel_sizes or self.default_kernel_sizes(n_layers)
+        self.drop_rates = drop_rates or self.default_drop_rates(n_layers)
 
-    def __init__(self) -> None:
-        super().__init__()
+        assert len(self.input_sizes) == n_layers, "input_sizes must be None or have length n_layers"
+        assert len(self.output_sizes) == n_layers, "output_sizes must be None or have length n_layers"
+        assert len(self.kernel_sizes) == n_layers, "kernel_sizes must be None or have length n_layers"
+        assert len(self.drop_rates) == n_layers, "drop_rates must be None or have length n_layers"
 
-        self.conv1 = nn.Conv1d(2, 4, kernel_size=1)
-        self.prelu1 = nn.PReLU(4)
-        # self.pool1 = nn.MaxPool1d(2, 2, ceil_mode=True)
-        self.conv2 = nn.Conv1d(4, 8, kernel_size=1)
-        self.prelu2 = nn.PReLU(8)
-        self.conv3 = nn.Conv1d(8, 2, kernel_size=1)
-        self.prelu3 = nn.PReLU(2)
-        self.training = False
+        for in_i, out_i, ker_i, drop_i in zip(self.input_sizes, self.output_sizes, self.kernel_sizes, self.drop_rates):
+            self.layers.append(layer_type(in_i, out_i, kernel_size=ker_i))
+            self.layers.append(activation_type(out_i))
+            self.layers.append(nn.Dropout(drop_i))
 
-    @classmethod
-    def load_pretrained_weights(cls, weights_path):
-        # state_dict_path = os.path.join(os.path.dirname(__file__), weights_path)
-        state_dict = torch.load(weights_path)
-        return cls().load_state_dict(state_dict)
+    def default_drop_rates(self, n_layers):
+        return [0.0]*n_layers
 
-    def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict,
-                              missing_keys, unexpected_keys, error_msgs):
-        super()._load_from_state_dict(state_dict, prefix, local_metadata, strict,
-                                      missing_keys, unexpected_keys, error_msgs)
+    def fetch_layer(self, layer_name):
+        try:
+            layer_type = layers[layer_name.lower()]
+        except KeyError:
+            raise ValueError(f"layer_name must be one of {list(layers.keys())}")
+        return layer_type
+
+    def fetch_activation(self, activation_name):
+        try:
+            activation_type = activations[activation_name.lower()]
+        except KeyError:
+            raise ValueError(f"activation_name must be one of {list(activations.keys())}")
+        return activation_type
 
     def forward(self, x: Tensor):
-        # x = [np.real(x), np.imag(x)]
         x = x.unsqueeze(2)
-        x = self.conv1(x)
-        x = self.prelu1(x)
-        # x = self.pool1(x)
-        x = self.conv2(x)
-        x = self.prelu2(x)
-        x = self.conv3(x)
-        x = self.prelu3(x)
+        for i in range(self.n_layers):
+            x = self.layers[3*i](x)
+            x = self.layers[3*i + 1](x)
+            x = self.layers[3*i + 2](x)
         x = x.squeeze(2)
-        # x = x[0] + x[1]*1j
         return x
+
+    def default_input_sizes(self, n):
+        return 2 ** (np.arange(n) + 1)
+
+    def default_output_sizes(self, n):
+        arr = 2 ** (np.arange(n) + 2)
+        arr[-1] = 2
+        return arr
+
+    def default_kernel_sizes(self, n):
+        return [1]*n
 
 
 class SingleMuModel3Layers(nn.Module):
@@ -62,7 +108,6 @@ class SingleMuModel3Layers(nn.Module):
 
         self.conv1 = nn.Conv1d(2, 4, kernel_size=1)
         self.prelu1 = nn.PReLU(4)
-        # self.pool1 = nn.MaxPool1d(2, 2, ceil_mode=True)
         self.conv2 = nn.Conv1d(4, 8, kernel_size=1)
         self.prelu2 = nn.PReLU(8)
         self.conv3 = nn.Conv1d(8, 2, kernel_size=1)
