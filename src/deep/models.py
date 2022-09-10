@@ -23,7 +23,7 @@ activations = {
     'tanhshrink': nn.Tanhshrink,
     'softmin': nn.Softmin,
     'softmax': nn.Softmax,
-    'log_softmax': nn.LogSoftmax,
+    # 'log_softmax': nn.LogSoftmax, # not working
     'softshrink': nn.Softshrink,
     'prelu': nn.PReLU,
     'rrelu': nn.RReLU,

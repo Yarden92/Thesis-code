@@ -7,18 +7,9 @@ output_model_path : './data/saved_models'
 device : 'cuda'
 models: '
 {
-  "n_layers": 2,
+  "n_layers": 20,
   "activation_name": "PReLU"
 };{
-  "n_layers": 2,
+  "n_layers": 240,
   "activation_name": "PReLU"
-};{
-  "n_layers": 6,
-  "activation_name": "PReLU"
-};{
-  "n_layers": 9,
-  "activation_name": "PReLU"
-};{
-  "n_layers": 15,
-  "activation_name": "log_softmax"
 }'

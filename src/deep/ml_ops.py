@@ -68,8 +68,6 @@ class Trainer:
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
 
     def epoch_step(self, dataloader, step):
-
-        # OPTION 3
         final_loss = 0
         for batch in dataloader:
             x, y = batch
