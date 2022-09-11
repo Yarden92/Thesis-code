@@ -8,6 +8,7 @@ from torch import nn, Tensor
 from src.deep.data_loaders import SingleMuDataSet
 
 num_epochs = 3
+MAX_LAYER_SIZE = 64  # maximum number of channels in each layer
 
 activations = {
     'relu': nn.ReLU,
@@ -38,7 +39,8 @@ layers = {
 
 
 class NLayersModel(nn.Module):
-    def __init__(self, n_layers: int, input_sizes: Optional[list] = None, output_sizes: Optional[list] = None,
+    def __init__(self, n_layers: int,
+                 sizes: Optional[list] = None,
                  kernel_sizes: Optional[list] = None, drop_rates: Optional[list] = None,
                  activation_name: 'str' = 'PReLU', layer_name: str = 'Conv1d'):
         super().__init__()
@@ -48,23 +50,19 @@ class NLayersModel(nn.Module):
         layer_type = self.fetch_layer(layer_name)
         activation_type = self.fetch_activation(activation_name)
 
-        self.input_sizes = input_sizes or self.default_input_sizes(n_layers)
-        self.output_sizes = output_sizes or self.default_output_sizes(n_layers)
+        self.sizes = sizes or self.default_sizes(n_layers)
         self.kernel_sizes = kernel_sizes or self.default_kernel_sizes(n_layers)
         self.drop_rates = drop_rates or self.default_drop_rates(n_layers)
 
-        assert len(self.input_sizes) == n_layers, "input_sizes must be None or have length n_layers"
-        assert len(self.output_sizes) == n_layers, "output_sizes must be None or have length n_layers"
+        assert len(self.sizes) == n_layers + 1 and self.sizes[0] == self.sizes[-1] == 2, \
+            "sizes must be None or have length n_layers+1 and start and end with 2"
         assert len(self.kernel_sizes) == n_layers, "kernel_sizes must be None or have length n_layers"
         assert len(self.drop_rates) == n_layers, "drop_rates must be None or have length n_layers"
 
-        for in_i, out_i, ker_i, drop_i in zip(self.input_sizes, self.output_sizes, self.kernel_sizes, self.drop_rates):
+        for in_i, out_i, ker_i, drop_i in zip(self.sizes[:-1], self.sizes[1:], self.kernel_sizes, self.drop_rates):
             self.layers.append(layer_type(in_i, out_i, kernel_size=ker_i))
             self.layers.append(activation_type(out_i))
             self.layers.append(nn.Dropout(drop_i))
-
-    def default_drop_rates(self, n_layers):
-        return [0.0]*n_layers
 
     def fetch_layer(self, layer_name):
         try:
@@ -89,16 +87,21 @@ class NLayersModel(nn.Module):
         x = x.squeeze(2)
         return x
 
-    def default_input_sizes(self, n):
-        return 2 ** (np.arange(n) + 1)
+    # ------------------------- default values generators -------------------------
+    @staticmethod
+    def default_drop_rates(n_layers):
+        return [0.0]*n_layers
 
-    def default_output_sizes(self, n):
-        arr = 2 ** (np.arange(n) + 2)
-        arr[-1] = 2
-        return arr
-
-    def default_kernel_sizes(self, n):
+    @staticmethod
+    def default_kernel_sizes(n):
         return [1]*n
+
+    @staticmethod
+    def default_sizes(n):
+        arr = 2 ** (np.arange(n + 1) + 1)  # 2,4,8,16,...
+        arr = np.clip(arr, 0, MAX_LAYER_SIZE)  # clip arr to not go above MAX_LAYER_SIZE (for performance issues)
+        arr[-1] = 2  # must starts and end with 2
+        return arr
 
 
 class SingleMuModel3Layers(nn.Module):

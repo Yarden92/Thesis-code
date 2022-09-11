@@ -17,10 +17,9 @@ from src.deep.models import NLayersModel
 @dataclass
 class ModelConfig:
     n_layers: int = 3  # number of layers
-    input_sizes: List[int] = None  # input sizes of each layer
-    output_sizes: List[int] = None  # output sizes of each layer
-    kernel_sizes: List[int] = None  # kernel sizes of each layer
-    drop_rates: List[float] = None  # drop rates of each layer
+    sizes: List[int] = None  # list of sizes of layers (need n_layers+1)
+    kernel_sizes: List[int] = None  # kernel sizes of each layer (need n_layers)
+    drop_rates: List[float] = None  # drop rates of each layer (need n_layers)
     activation_name: str = 'PReLU'  # activation function
     layer_name: str = 'Conv1d'  # layer type
 
@@ -74,9 +73,9 @@ def main(config: ModelsConfig):
     mu = train_dataset.mu
     if config.device == 'auto': config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     for model_config in parse_models_config(config.models):
-        model = NLayersModel(**model_config.__dict__)
         run_name = f'{model_config.n_layers}_layers__{mu}_mu'
         print(f'running model {run_name}')
+        model = NLayersModel(**model_config.__dict__)
         train_model(
             model=model, train_ds=train_dataset, val_ds=val_dataset,
             run_name=run_name, lr=config.lr, epochs=config.epochs, batch_size=config.batch_size,
