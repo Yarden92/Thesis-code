@@ -25,8 +25,6 @@ def main(config: DataConfig):
     # config
 
     dir = f'{config.output_path}/qam{config.qam}_{config.data_len}x{config.mu_len}'
-    # mu = 1e-3
-    # mu_vec = [1e-3, 1e-2, 1e-1, 0.5, 0.9]
     mu_vec = np.linspace(start=0.0005, stop=0.07, num=config.mu_len)
     cs = ChannelSimulator(m_qam=config.qam,
                           num_symbols=config.num_symbols,
