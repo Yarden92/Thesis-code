@@ -112,7 +112,7 @@ class Trainer:
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)
 
-    def test_single_item(self, i: int, title=None, verbose=False):
+    def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         # test the model once before training
         x, y = self.train_dataset[i]
         if verbose: print(f'x.shape={x.shape}, y.shape={y.shape}')
@@ -120,10 +120,9 @@ class Trainer:
         x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
         if verbose: print(f'x_np.shape={x_np.shape},y_np.shape={y_np.shape},pred_np.shape={pred_np.shape}')
         title = title or f'after {self.train_state_vec.num_epochs} epochs'
-        Visualizer.data_trio_plot(x_np, y_np, pred_np, title=title)
+        if plot: Visualizer.data_trio_plot(x_np, y_np, pred_np, title=title)
         if verbose: print(
             f'x power={np.mean(x_np ** 2)}\ny power={np.mean(y_np ** 2)}\npred power={np.mean(pred_np ** 2):.2f}')
-        # if verbose: print(f'mu(x)={np.mean(x_np)}\nstd(x)={np.std(x_np)}\nmu(y)={np.mean(y_np)}\nstd(y)={np.std(y_np)}\nmu(pred)={np.mean(pred_np)}\nstd(pred)={np.std(pred_np)}')
 
         return x_np, y_np, pred_np
 

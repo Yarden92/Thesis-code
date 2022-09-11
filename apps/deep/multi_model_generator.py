@@ -78,7 +78,7 @@ def analyze_model(trainer: Trainer):
     org_ber, model_ber, ber_improvement = trainer.compare_ber()
     wandb.log({'org_ber': org_ber, 'model_ber': model_ber, 'ber_improvement': ber_improvement})
 
-    x, y, preds = trainer.test_single_item(i=0)
+    x, y, preds = trainer.test_single_item(i=0, plot=False)
     indices = np.arange(len(x))
     wandb.log({"sample test from model": wandb.plot.line_series(
         xs=indices,
