@@ -125,6 +125,8 @@ class Trainer:
             f'x power={np.mean(x_np ** 2)}\ny power={np.mean(y_np ** 2)}\npred power={np.mean(pred_np ** 2):.2f}')
         # if verbose: print(f'mu(x)={np.mean(x_np)}\nstd(x)={np.std(x_np)}\nmu(y)={np.mean(y_np)}\nstd(y)={np.std(y_np)}\nmu(pred)={np.mean(pred_np)}\nstd(pred)={np.std(pred_np)}')
 
+        return x_np, y_np, pred_np
+
     def compare_ber(self, verbose=False, tqdm=None, num_x_per_folder=None):
         # compare the original raw BER with the equalized model's BER
 
@@ -139,6 +141,8 @@ class Trainer:
 
         ber_improvement = (org_ber - model_ber)/org_ber
         print(f'the ber improvement is {ber_improvement*100:.2f}%')
+
+        return org_ber, model_ber, ber_improvement
 
     def fix_datasets_paths(self, dataset_path: str = '../../data/datasets', verbose=True):
         for ds in [self.train_dataset, self.val_dataset]:

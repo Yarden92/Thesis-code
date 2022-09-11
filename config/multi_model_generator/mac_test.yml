@@ -7,9 +7,9 @@ output_model_path : './data/test_models'
 device : 'cpu'
 models: '
 {
-  "n_layers": 5,
+  "n_layers": 2,
   "activation_name": "PReLU"
 };{
-  "n_layers": 15,
+  "n_layers": 4,
   "activation_name": "PReLU"
 }'

@@ -3,6 +3,7 @@ import platform
 from dataclasses import dataclass
 from typing import List
 
+import numpy as np
 import pyrallis
 import torch
 
@@ -39,9 +40,8 @@ class ModelsConfig:
 
 def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, epochs: int, batch_size: int, device,
                 output_model_path: str, mu):
-    os = get_platform()
     wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name,
-               tags=[f'mu={mu}', f'{os}', f'{model.n_layers}_layers', f'ds={len(train_ds)}'],
+               tags=[f'mu={mu}', f'{get_platform()}', f'{model.n_layers}_layers', f'ds={len(train_ds)}'],
                reinit=True)
     wandb.config = {
         "learning_rate": lr,
@@ -63,6 +63,29 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
     wandb.finish()
 
     print(f'finished training {run_name}')
+
+    return trainer
+
+
+def analyze_model(trainer: Trainer):
+    wandb.init(project="Thesis_model_scanning", entity="yarden92",
+               tags=[f'mu={trainer.train_dataset.mu}',
+                     f'{get_platform()}',
+                     f'{trainer.model.n_layers}_layers',
+                     f'ds={len(trainer.train_dataset)}'],
+               name=f'{trainer.model.n_layers}_layers__{trainer.train_dataset.mu}_mu__analysis',
+               reinit=True)
+    org_ber, model_ber, ber_improvement = trainer.compare_ber()
+    wandb.log({'org_ber': org_ber, 'model_ber': model_ber, 'ber_improvement': ber_improvement})
+
+    x, y, preds = trainer.test_single_item(i=0)
+    indices = np.arange(len(x))
+    wandb.log({"sample test from model": wandb.plot.line_series(
+        xs=indices,
+        ys=[x, y, preds],
+        keys=["dirty (end of channel)", "clean (before channel)", "pred (after model)"],
+        title="model test",
+        xname="sample index")})
 
 
 def parse_models_config(model_config: str):
@@ -92,11 +115,13 @@ def main(config: ModelsConfig):
         run_name = f'{model_config.n_layers}_layers__{mu}_mu'
         print(f'running model {run_name}')
         model = NLayersModel(**model_config.__dict__)
-        train_model(
+        trainer = train_model(
             model=model, train_ds=train_dataset, val_ds=val_dataset,
             run_name=run_name, lr=config.lr, epochs=config.epochs, batch_size=config.batch_size,
             device=config.device, output_model_path=config.output_model_path, mu=mu
         )
+
+        analyze_model(trainer)
 
     print('finished all models')
 
