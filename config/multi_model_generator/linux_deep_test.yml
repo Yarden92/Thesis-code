@@ -1,4 +1,4 @@
-epochs : 30
+epochs : 50
 lr : 1e-3
 batch_size : 1
 train_val_ratio : 0.8
@@ -11,5 +11,8 @@ models: '
   "activation_name": "PReLU"
 };{
   "n_layers": 10,
+  "activation_name": "PReLU"
+};{
+  "n_layers": 30,
   "activation_name": "PReLU"
 }'
