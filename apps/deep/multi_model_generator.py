@@ -1,4 +1,5 @@
 import json
+import platform
 from dataclasses import dataclass
 from typing import List
 
@@ -37,8 +38,11 @@ class ModelsConfig:
 
 
 def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, epochs: int, batch_size: int, device,
-                output_model_path: str):
-    wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name)
+                output_model_path: str, mu):
+    os = get_platform()
+    wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name,
+               tags=[f'mu={mu}', f'os={os}', f'n_layers={model.n_layers}', ],
+               reinit=True)
     wandb.config = {
         "learning_rate": lr,
         "epochs": epochs,
@@ -60,11 +64,23 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
 
     print(f'finished training {run_name}')
 
+
 def parse_models_config(model_config: str):
     models_strings = model_config.split(';')
     for model_string in models_strings:
         dict = json.loads(model_string)
         yield ModelConfig(**dict)
+
+
+def get_platform():
+    try:
+        os = platform.system()
+        if 'darwin' in os.lower():
+            os = 'Mac'
+    except:
+        os = 'unknown'
+
+    return os
 
 
 def main(config: ModelsConfig):
@@ -79,7 +95,7 @@ def main(config: ModelsConfig):
         train_model(
             model=model, train_ds=train_dataset, val_ds=val_dataset,
             run_name=run_name, lr=config.lr, epochs=config.epochs, batch_size=config.batch_size,
-            device=config.device, output_model_path=config.output_model_path
+            device=config.device, output_model_path=config.output_model_path, mu=mu
         )
 
     print('finished all models')
