@@ -41,7 +41,7 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
                 output_model_path: str, mu):
     os = get_platform()
     wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name,
-               tags=[f'mu={mu}', f'os={os}', f'n_layers={model.n_layers}', f'ds={len(train_ds)}'],
+               tags=[f'mu={mu}', f'{os}', f'{model.n_layers}_layers', f'ds={len(train_ds)}'],
                reinit=True)
     wandb.config = {
         "learning_rate": lr,

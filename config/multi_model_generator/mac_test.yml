@@ -2,14 +2,14 @@ epochs : 2
 lr : 1e-3
 batch_size : 1
 train_val_ratio : 0.8
-input_data_path : './data/datasets/qam1024_150x5/150_samples_mu=0.001'
+input_data_path : './data/datasets/qam1024_160x20/160_samples_mu=0.001'
 output_model_path : './data/test_models'
 device : 'cpu'
 models: '
 {
-  "n_layers": 20,
+  "n_layers": 5,
   "activation_name": "PReLU"
 };{
-  "n_layers": 40,
+  "n_layers": 15,
   "activation_name": "PReLU"
 }'
