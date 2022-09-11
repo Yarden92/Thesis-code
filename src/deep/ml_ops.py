@@ -73,7 +73,7 @@ class Trainer:
             x, y = batch
             x, y = x[0].to(self.device), y[0].to(self.device)
             loss, pred = step(x, y)
-            print(f'loss={loss.item()}')
+            # print(f'loss={loss.item()}')
             final_loss += loss.item()/len(dataloader)
 
         return final_loss
