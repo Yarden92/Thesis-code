@@ -53,7 +53,8 @@ class Metrics:
         return ber_vec, num_errors
 
     @staticmethod
-    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None, max_x=None):
+    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None, max_x=None,device='auto'):
+        if device == 'auto': device = 'cuda' if torch.cuda.is_available() else 'cpu'
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(dataset.config)
@@ -61,6 +62,7 @@ class Metrics:
         rng = tqdm(range(N)) if tqdm else range(N)
         for i in rng:
             (x, y) = dataset[i]
+            x = x.to(device)
             pred = model(x)
             ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(pred, y, cs)
             ber_vec.append(ber_i)

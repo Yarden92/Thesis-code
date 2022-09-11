@@ -114,7 +114,7 @@ class Trainer:
 
     def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         # test the model once before training
-        x, y = self.train_dataset[i]
+        x, y = self.val_dataset[i]
         if verbose: print(f'x.shape={x.shape}, y.shape={y.shape}')
         pred = self.model(x)
         x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
@@ -131,12 +131,13 @@ class Trainer:
 
         ber_vec, num_errors = Metrics.calc_ber_from_dataset(self.val_dataset, verbose, tqdm, num_x_per_folder)
         org_ber = np.mean(ber_vec)
-        print(f'the original avg ber is {org_ber}')
+        print(f'the original avg ber (of validation set) is {org_ber}')
 
         # calc ber after training
-        ber_vec, num_errors = Metrics.calc_ber_from_model(self.val_dataset, self.model, verbose, tqdm, num_x_per_folder)
+        ber_vec, num_errors = Metrics.calc_ber_from_model(self.val_dataset, self.model, verbose, tqdm, num_x_per_folder,
+                                                          self.device)
         model_ber = np.mean(ber_vec)
-        print(f'the trained avg ber is {model_ber}')
+        print(f'the trained avg ber (of validation set) is {model_ber}')
 
         ber_improvement = (org_ber - model_ber)/org_ber
         print(f'the ber improvement is {ber_improvement*100:.2f}%')

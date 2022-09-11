@@ -107,10 +107,10 @@ def get_platform():
 
 
 def main(config: ModelsConfig):
+    if config.device == 'auto': config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SingleMuDataSet,
                                                                      train_val_ratio=config.train_val_ratio)
     mu = train_dataset.mu
-    if config.device == 'auto': config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     for model_config in parse_models_config(config.models):
         run_name = f'{model_config.n_layers}_layers__{mu}_mu'
         print(f'running model {run_name}')
