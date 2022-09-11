@@ -97,7 +97,7 @@ class Trainer:
         ds_size = len(self.train_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
-        sub_dir_path = f'{dir_path}/{model_name}__ds-{ds_size}__epochs-{n_epochs}_mu-{mu}'
+        sub_dir_path = f'{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs'
         os.makedirs(sub_dir_path, exist_ok=True)
 
         # save trainer to the same dir
