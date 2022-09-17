@@ -1,0 +1,8 @@
+data_len: 15  # for each mu
+mu_len: 3
+num_symbols: 512
+qam: 1024
+logger_path: './logs'
+output_path: './data/datasets/iq'
+max_workers: 10
+data_type: 1

@@ -20,6 +20,7 @@ class DataConfig:
     logger_path: str = './logs'
     output_path: str = './data/datasets/iq'
     max_workers: int = 10
+    data_type: int = 0  # 0 for spectrum, 1 for iq_samples
 
 
 def main(config: DataConfig):
