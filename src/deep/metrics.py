@@ -40,7 +40,7 @@ class Metrics:
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(dataset.config)
-        N = num_x_per_folder or len(dataset)
+        N = min(num_x_per_folder or len(dataset), len(dataset))
         rng = tqdm(range(N)) if tqdm else range(N)
         for i in rng:
             x, y = dataset[i]
@@ -53,7 +53,7 @@ class Metrics:
         return ber_vec, num_errors
 
     @staticmethod
-    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None, max_x=None,device='auto'):
+    def calc_ber_from_model(dataset: OpticDataset, model, verbose=True, tqdm=None, max_x=None, device='auto'):
         if device == 'auto': device = 'cuda' if torch.cuda.is_available() else 'cpu'
         num_errors = 0
         ber_vec = []
@@ -82,7 +82,7 @@ class Metrics:
             all_x_read, all_y_read, conf_read = FilesReadWrite.read_folder(dirpath, verbose_level >= 1)
             all_x_read, all_y_read = trim_data(all_x_read, all_y_read, num_x_per_folder)
             sub_ber_vec, num_errors = Metrics.calc_ber_for_folder(all_x_read, all_y_read, conf_read, verbose_level >= 2)
-            ber = np.sum(sub_ber_vec) / len(sub_ber_vec)
+            ber = np.sum(sub_ber_vec)/len(sub_ber_vec)
 
             mu_vec.append(mu)
             ber_vec.append(ber)
