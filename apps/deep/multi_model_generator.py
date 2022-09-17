@@ -60,7 +60,6 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
     trainer.train(num_epochs=epochs)
     trainer.save3(output_model_path)
 
-    wandb.finish()
 
     print(f'finished training {run_name}')
 
@@ -68,13 +67,13 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
 
 
 def analyze_model(trainer: Trainer):
-    wandb.init(project="Thesis_model_scanning", entity="yarden92",
-               tags=[f'mu={trainer.train_dataset.mu}',
-                     f'{get_platform()}',
-                     f'{trainer.model.n_layers}_layers',
-                     f'ds={len(trainer.train_dataset)}'],
-               name=f'{trainer.model.n_layers}_layers__{trainer.train_dataset.mu}_mu__analysis',
-               reinit=True)
+    # wandb.init(project="Thesis_model_scanning", entity="yarden92",
+    #            tags=[f'mu={trainer.train_dataset.mu}',
+    #                  f'{get_platform()}',
+    #                  f'{trainer.model.n_layers}_layers',
+    #                  f'ds={len(trainer.train_dataset)}'],
+    #            name=f'{trainer.model.n_layers}_layers__{trainer.train_dataset.mu}_mu__analysis',
+    #            reinit=True)
     org_ber, model_ber, ber_improvement = trainer.compare_ber()
     wandb.log({'org_ber': org_ber, 'model_ber': model_ber, 'ber_improvement': ber_improvement})
 
