@@ -4,7 +4,7 @@ run the following commands (dont copy):
   scp -r yarcoh@132.72.49.187:projects/thesis-code4/data/... ~/Desktop/projects/thesis_stuff/Thesis-code/data/...
 """
 echo "here are the datasets:"
-ssh yarcoh@132.72.49.187 du -hd1 ./projects/thesis-code4/data/datasets
+ssh yarcoh@132.72.49.187 du -hd2 ./projects/thesis-code4/data/datasets
 
 echo "\nand here are the models:"
 ssh yarcoh@132.72.49.187 du -hd1 ./projects/thesis-code4/data/saved_models
