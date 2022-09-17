@@ -163,7 +163,6 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
               type=DataType.spectrum):
     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    pbar = tqdm(total=len(mu_vec)*data_len)
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
         print(f'saving logs to {os.path.abspath(logger_path)}')
@@ -186,7 +185,8 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
                 f_i = executor.submit(_gen_data_i, cs, dir, i, mu, type)
                 futures[f_i] = (mu, i)
 
-        print('finished setting up tasks, initiating data generation')
+        print('initiating data generation...')
+        pbar = tqdm(total=len(mu_vec)*data_len)
         for future in concurrent.futures.as_completed(futures):
             (mu, i) = futures[future]
             try:
