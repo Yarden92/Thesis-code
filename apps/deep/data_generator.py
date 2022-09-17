@@ -21,13 +21,15 @@ class DataConfig:
     output_path: str = './data/datasets/iq'
     max_workers: int = 10
     data_type: int = 0  # 0 for spectrum, 1 for iq_samples
+    mu_start: float = 0.0005
+    mu_end: float = 0.07
 
 
 def main(config: DataConfig):
     # config
 
     dir = f'{config.output_path}/qam{config.qam}_{config.data_len}x{config.mu_len}'
-    mu_vec = np.linspace(start=0.0005, stop=0.07, num=config.mu_len)
+    mu_vec = np.linspace(start=config.mu_start, stop=config.mu_end, num=config.mu_len)
     cs = ChannelSimulator(m_qam=config.qam,
                           num_symbols=config.num_symbols,
                           normalization_factor=0,  # will be overwritten during runtime

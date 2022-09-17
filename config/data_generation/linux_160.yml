@@ -1,4 +1,4 @@
-data_len: 160  # for each mu
+data_len: 30  # for each mu
 mu_len: 20
 num_symbols: 512
 qam: 1024
@@ -6,3 +6,5 @@ logger_path: './logs'
 output_path: './data/datasets/iq'
 max_workers: 64
 data_type: 1
+mu_start: 0.00005
+mu_end: 0.01
