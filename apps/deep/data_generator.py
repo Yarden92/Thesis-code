@@ -6,6 +6,7 @@ import pyrallis
 from tqdm import tqdm
 
 from src.deep import data_loaders
+from src.deep.standalone_methods import DataType
 from src.optics.channel_simulation import ChannelSimulator
 from src.optics.split_step_fourier import SplitStepFourier
 
@@ -17,7 +18,7 @@ class DataConfig:
     num_symbols: int = 512
     qam: int = 1024
     logger_path: str = './logs'
-    output_path: str = './data/datasets'
+    output_path: str = './data/datasets/iq'
     max_workers: int = 10
 
 
@@ -42,7 +43,7 @@ def main(config: DataConfig):
 
     # generate the date
     data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
-                           logger_path=config.logger_path, max_workers=config.max_workers)
+                           logger_path=config.logger_path, max_workers=config.max_workers, type=DataType.iq_samples)
 
 
 if __name__ == '__main__':

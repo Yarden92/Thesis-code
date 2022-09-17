@@ -3,6 +3,7 @@ import json
 import numpy as np
 from matplotlib import pyplot as plt
 
+from src.deep.standalone_methods import DataType
 from src.general_methods.visualizer import Visualizer
 from src.optics.channel_blocks import ChannelBlocks
 from src.optics.split_step_fourier import SplitStepFourier
@@ -131,10 +132,23 @@ class ChannelSimulator:
         self.step10_demodulate()
         return self.x[10]
 
-    def gen_io_data(self) -> (np.ndarray, np.ndarray):
+    def steps10(self, x):
+        self.x[9] = x
+        self.step10_demodulate()
+        return self.x[10]
+
+
+    def gen_io_data(self, type=DataType.spectrum) -> (np.ndarray, np.ndarray):
         _ = self.iterate_through_channel()
-        x = self.x[7]  # dirty
-        y = self.x[4]  # clean
+        if type == DataType.spectrum:
+            x = self.x[7]  # dirty
+            y = self.x[4]  # clean
+        elif type == DataType.iq_samples:
+            x = self.x[9]
+            y = self.x[1]
+        else:
+            raise ValueError(f'unknown type: {type}, choose one of DataType\'s values')
+
         return x, y
 
     def step0_gen_msg(self):

@@ -3,22 +3,28 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from src.deep.standalone_methods import GeneralMethods
+from src.deep.standalone_methods import GeneralMethods, DataType
 from src.deep.data_loaders import OpticDataset, FilesReadWrite
 from src.optics.channel_simulation import ChannelSimulator
 
 
 class Metrics:
     @staticmethod
-    def calc_ber_for_single_vec(x, y, cs=None, conf=None):
+    def calc_ber_for_single_vec(x, y, cs=None, conf=None, datatype=DataType.spectrum):
         # x,y can be either complex numpy or 2D torch
         assert cs is not None or conf is not None, "either cs or conf should be given"
         # check if x is torch
         if isinstance(x, torch.Tensor):
             x, y = GeneralMethods.torch_to_complex_numpy(x), GeneralMethods.torch_to_complex_numpy(y)
         cs = cs or ChannelSimulator.from_dict(conf)
-        msg_in = cs.steps8_to_10(y)
-        msg_out = cs.steps8_to_10(x)
+        if datatype == DataType.spectrum:
+            msg_in = cs.steps8_to_10(y)
+            msg_out = cs.steps8_to_10(x)
+        elif datatype == DataType.iq_samples:
+            msg_in = cs.steps10(y)
+            msg_out = cs.steps10(x)
+        else:
+            raise ValueError(f'unknown type: {type}, choose one of DataType\'s values')
         ber_i, num_errors_i = cs.cb.calc_ber(msg_in, msg_out, cs.length_of_msg, cs.sps)
         return ber_i, num_errors_i
 
@@ -27,8 +33,10 @@ class Metrics:
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(conf_read)
+        datatype = conf_read['data_type'] if 'data_type' in conf_read else DataType.spectrum
+
         for i, (x, y) in enumerate(zip(all_x_read, all_y_read)):
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs)
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs, datatype=datatype)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
             if verbose:
@@ -45,7 +53,7 @@ class Metrics:
         for i in rng:
             x, y = dataset[i]
             # x, y = ml_ops.torch_to_complex_numpy(x), ml_ops.torch_to_complex_numpy(y)
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs)
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs, datatype=dataset.config['data_type'])
             ber_vec.append(ber_i)
             num_errors += num_errors_i
             if verbose:

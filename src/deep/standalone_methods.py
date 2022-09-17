@@ -1,7 +1,9 @@
 import os
+from enum import IntEnum
 
 import numpy as np
 from torch import Tensor
+
 
 class GeneralMethods:
     @staticmethod
@@ -11,7 +13,7 @@ class GeneralMethods:
 
     @staticmethod
     def normalize_xy(x, y, mu, std):
-        return (x - mu) / std, (y - mu) / std
+        return (x - mu)/std, (y - mu)/std
 
     @staticmethod
     def calc_statistics_for_dataset(dataset):
@@ -19,8 +21,16 @@ class GeneralMethods:
         std = np.mean([x.std() for x, _ in dataset])
         return mean, std
 
-
     @staticmethod
     def name_to_mu_val(dirpath: str) -> float:
         folder_name = os.path.basename(dirpath)
         return float(folder_name.split('=')[-1])
+
+
+class DataType(IntEnum):
+    spectrum = 0
+    iq_samples = 1
+
+    @classmethod
+    def _missing_(cls, value):
+        return cls.spectrum
