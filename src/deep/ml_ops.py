@@ -105,12 +105,26 @@ class Trainer:
         os.makedirs(sub_dir_path, exist_ok=True)
 
         # save trainer to the same dir
+        torch.save(self.model.state_dict(), sub_dir_path + 'model_state_dict.pt')
+        # save model class name
+        with open(sub_dir_path + 'model_class_name.txt', 'w') as f:
+            f.write(self.model.__class__.__name__)
+        model_bkp = self.model
+        self.model = None
         torch.save(self, sub_dir_path + '/trainer.pt')
+        self.model = model_bkp
 
     @classmethod
     def load3(cls, dir_path: str = 'saved_models'):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        return torch.load(dir_path + '/trainer.pt', map_location=device)
+        trainer = torch.load(dir_path + '/trainer.pt', map_location=device)
+        model_state_dict = torch.load(dir_path + '/model_state_dict.pt', map_location=device)
+        # load model class name
+        with open(dir_path + '/model_class_name.txt', 'r') as f:
+            model_class_name = f.read()
+        model_class = eval(model_class_name)
+        trainer.model = model_class()
+        trainer.model.load_state_dict(model_state_dict)
 
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)
@@ -167,7 +181,7 @@ class TrainStateVector:
         self.val_loss_vec = []
 
     def add(self, model: nn.Module, train_loss: float, val_loss: float):
-        self.models.append(model)  # TODO: this is not good, we need to take excplicitly the weights not the pointer.
+        self.models.append(model.state_dict())
         self.num_epochs += 1
         self.train_loss_vec.append(train_loss)
         self.val_loss_vec.append(val_loss)

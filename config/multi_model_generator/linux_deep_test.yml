@@ -1,12 +1,22 @@
-epochs : 50
-lr : 1e-3
-batch_size : 1
-train_val_ratio : 0.8
-input_data_path : './data/datasets/spectrum/qam1024_5001x20/5001_samples_mu=0.008'
-output_model_path : './data/saved_models'
-device : 'cuda'
+epochs: 50
+lr: 1e-3
+batch_size: 1
+train_val_ratio: 0.8
+input_data_path: './data/datasets/spectrum/qam1024_5001x20/5001_samples_mu=0.008'
+output_model_path: './data/saved_models'
+device: 'cuda'
 models: '
 {
-  "n_layers": 30,
-  "activation_name": "PReLU"
+  "n_layers": 4,
+  "activation_name": "PReLU",
+  "sizes": [2,16,8,4, 2]
+
+};{
+  "n_layers": 6,
+  "activation_name": "PReLU",
+  "sizes": [2,2,2,2,2,2,2]
+};{
+  "n_layers": 8,
+  "activation_name": "PReLU",
+  "sizes": [2,4,8,16,32,16,8,4, 2]
 }'

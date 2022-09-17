@@ -50,10 +50,11 @@ class Metrics:
         cs = ChannelSimulator.from_dict(dataset.config)
         N = min(num_x_per_folder or len(dataset), len(dataset))
         rng = tqdm(range(N)) if tqdm else range(N)
+        datatype = dataset.config['data_type'] if 'data_type' in dataset.config else DataType.spectrum
         for i in rng:
             x, y = dataset[i]
             # x, y = ml_ops.torch_to_complex_numpy(x), ml_ops.torch_to_complex_numpy(y)
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs, datatype=dataset.config['data_type'])
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs, datatype=datatype)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
             if verbose:

@@ -8,8 +8,10 @@ device : 'cpu'
 models: '
 {
   "n_layers": 2,
-  "activation_name": "PReLU"
+  "activation_name": "PReLU",
+  "sizes": [2,128, 2]
 };{
   "n_layers": 4,
-  "activation_name": "PReLU"
+  "activation_name": "PReLU",
+  "sizes": [2, 16, 64, 16, 2]
 }'

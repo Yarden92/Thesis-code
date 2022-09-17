@@ -39,15 +39,8 @@ class ModelsConfig:
 
 
 def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, epochs: int, batch_size: int, device,
-                output_model_path: str, mu):
-    wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name,
-               tags=[f'mu={mu}', f'{get_platform()}', f'{model.n_layers}_layers', f'ds={len(train_ds)}'],
-               reinit=True)
-    wandb.config = {
-        "learning_rate": lr,
-        "epochs": epochs,
-        "batch_size": batch_size
-    }
+                output_model_path: str):
+
 
     l_metric = nn.MSELoss()  # or L1Loss
     optim = torch.optim.Adam(model.parameters(), lr=lr)
@@ -115,11 +108,21 @@ def main(config: ModelsConfig):
         run_name = f'{model_config.n_layers}_layers__{mu}_mu'
         print(f'running model {run_name}')
         model = NLayersModel(**model_config.__dict__)
-        trainer = train_model(
-            model=model, train_ds=train_dataset, val_ds=val_dataset,
-            run_name=run_name, lr=config.lr, epochs=config.epochs, batch_size=config.batch_size,
-            device=config.device, output_model_path=config.output_model_path, mu=mu
-        )
+        wandb.init(project="Thesis_model_scanning", entity="yarden92", name=run_name,
+                   tags=[f'mu={mu}', f'{get_platform()}', f'{model.n_layers}_layers', f'ds={len(train_dataset)}'],
+                   reinit=True)
+        wandb.config = {
+            "learning_rate": config.lr,
+            "epochs": config.epochs,
+            "batch_size": config.batch_size
+        }
+        # log model to wandb
+        # wandb.log({"model": wandb.Histogram(np.array(model.state_dict()))})
+
+
+        trainer = train_model(model=model, train_ds=train_dataset, val_ds=val_dataset, run_name=run_name, lr=config.lr,
+                              epochs=config.epochs, batch_size=config.batch_size, device=config.device,
+                              output_model_path=config.output_model_path)
 
         analyze_model(trainer)
 
