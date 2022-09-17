@@ -89,7 +89,7 @@ class Trainer:
         return loss, pred
 
     def _step_val(self, x, y):
-        x = x.to(self.device)
+        x, y = x.to(self.device), y.to(self.device)
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
