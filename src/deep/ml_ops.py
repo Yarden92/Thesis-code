@@ -71,6 +71,7 @@ class Trainer:
         final_loss = 0
         for batch in dataloader:
             x, y = batch
+            x, y = x[0], y[0]
             # x, y = x[0].to(self.device), y[0].to(self.device)
             loss, pred = step(x, y)
             # print(f'loss={loss.item()}')
