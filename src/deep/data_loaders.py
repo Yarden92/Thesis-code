@@ -138,25 +138,25 @@ def save_xy(dir, x, y, i):
         np.save(f, y)
 
 
-def gen_data(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None):
-    vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
-    assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    pbar = tqdm(total=len(mu_vec)*data_len)
-    if logger_path:
-        os.makedirs(logger_path, exist_ok=True)
-        print(f'saving logs to {os.path.abspath(logger_path)}')
-        print(f'saving data to {os.path.abspath(root_dir)}')
-    file_path = f'{logger_path}/{get_ts_filename()}'
-    for mu_i, mu in enumerate(mu_vec):
-        dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
-        os.makedirs(dir, exist_ok=True)
-        cs.normalization_factor = mu
-        save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
-        for i in range(data_len):
-            x, y = cs.gen_io_data()
-            save_xy(dir, x, y, i)
-            pbar.update()
-            if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
+# def gen_data_old(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None):
+#     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
+#     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
+#     pbar = tqdm(total=len(mu_vec)*data_len)
+#     if logger_path:
+#         os.makedirs(logger_path, exist_ok=True)
+#         print(f'saving logs to {os.path.abspath(logger_path)}')
+#         print(f'saving data to {os.path.abspath(root_dir)}')
+#     file_path = f'{logger_path}/{get_ts_filename()}'
+#     for mu_i, mu in enumerate(mu_vec):
+#         dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
+#         os.makedirs(dir, exist_ok=True)
+#         cs.normalization_factor = mu
+#         save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
+#         for i in range(data_len):
+#             x, y = cs.gen_io_data()
+#             save_xy(dir, x, y, i)
+#             pbar.update()
+#             if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
 
 
 def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1):
@@ -180,7 +180,7 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
             cs.normalization_factor = mu
             save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
             for i in range(data_len):
-                f_i = executor.submit(long_task, cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec)
+                f_i = executor.submit(_gen_data_i, cs, dir, i, mu)
                 futures[f_i] = (mu, i)
 
         print('finished setting up tasks, initiating data generation')
@@ -195,7 +195,8 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     print('\nall done')
 
 
-def long_task(cs, data_len, dir, file_path, i, logger_path, mu, mu_i, mu_vec):
+
+def _gen_data_i(cs, dir, i, mu):
     # print(f'generating data {i}, mu {mu_i}...')
     try:
         x, y = cs.gen_io_data()

@@ -53,7 +53,7 @@ def test2_data_generation():
                           ),
                           verbose=False)
     # generate the date
-    data_loaders.gen_data(data_len, num_symbols, mu_vec, cs, dir, tqdm=tqdm)
+    data_loaders.gen_data_old(data_len, num_symbols, mu_vec, cs, dir, tqdm=tqdm)
 
     #
     # # test generated data

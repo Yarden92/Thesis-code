@@ -41,12 +41,8 @@ def main(config: DataConfig):
                           verbose=False)
 
     # generate the date
-    if config.max_workers == 1:
-        data_loaders.gen_data(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
-                              logger_path=config.logger_path)
-    if config.max_workers > 1:
-        data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
-                               logger_path=config.logger_path, max_workers=config.max_workers)
+    data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
+                           logger_path=config.logger_path, max_workers=config.max_workers)
 
 
 if __name__ == '__main__':
