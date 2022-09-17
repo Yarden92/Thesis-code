@@ -115,6 +115,7 @@ class Trainer:
     def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         # test the model once before training
         x, y = self.val_dataset[i]
+        x.to(self.device)
         if verbose: print(f'x.shape={x.shape}, y.shape={y.shape}')
         pred = self.model(x)
         x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
