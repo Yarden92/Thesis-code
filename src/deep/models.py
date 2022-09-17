@@ -152,6 +152,7 @@ def test():
 
     for epoch in range(num_epochs):
         for x, y in dataset:
+            x = x.to(device)
             pred = model(x)
             loss: Tensor = l_metric(y, pred)
             optim.zero_grad()

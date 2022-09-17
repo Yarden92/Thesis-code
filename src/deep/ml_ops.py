@@ -71,7 +71,7 @@ class Trainer:
         final_loss = 0
         for batch in dataloader:
             x, y = batch
-            x, y = x[0].to(self.device), y[0].to(self.device)
+            # x, y = x[0].to(self.device), y[0].to(self.device)
             loss, pred = step(x, y)
             # print(f'loss={loss.item()}')
             final_loss += loss.item()/len(dataloader)
@@ -79,6 +79,7 @@ class Trainer:
         return final_loss
 
     def _step_train(self, x, y):
+        x = x.to(self.device)
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)
         self.optim.zero_grad()
@@ -87,6 +88,7 @@ class Trainer:
         return loss, pred
 
     def _step_val(self, x, y):
+        x = x.to(self.device)
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
@@ -115,8 +117,8 @@ class Trainer:
     def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         # test the model once before training
         x, y = self.val_dataset[i]
-        x.to(self.device)
         if verbose: print(f'x.shape={x.shape}, y.shape={y.shape}')
+        x = x.to(self.device)
         pred = self.model(x)
         x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
         if verbose: print(f'x_np.shape={x_np.shape},y_np.shape={y_np.shape},pred_np.shape={pred_np.shape}')
