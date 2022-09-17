@@ -80,7 +80,7 @@ class Trainer:
         return final_loss
 
     def _step_train(self, x, y):
-        x = x.to(self.device)
+        x, y = x.to(self.device), y.to(self.device)
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)
         self.optim.zero_grad()
