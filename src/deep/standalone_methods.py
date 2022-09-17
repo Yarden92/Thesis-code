@@ -6,11 +6,7 @@ from torch import Tensor
 class GeneralMethods:
     @staticmethod
     def torch_to_complex_numpy(tensor: Tensor):
-        try:
-            tensor = tensor.cpu()
-        except:
-            print('tensor is already on cpu')
-        np_vec = tensor.detach().numpy()
+        np_vec = tensor.cpu().detach().numpy()
         return np_vec[:, 0] + 1j*np_vec[:, 1]
 
     @staticmethod

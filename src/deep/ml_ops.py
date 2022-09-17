@@ -121,7 +121,8 @@ class Trainer:
         if verbose: print(f'x.shape={x.shape}, y.shape={y.shape}')
         x = x.to(self.device)
         pred = self.model(x)
-        x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
+        # x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
+        x_np, y_np, pred_np = [GeneralMethods.torch_to_complex_numpy(t) for t in [x, y, pred]]
         if verbose: print(f'x_np.shape={x_np.shape},y_np.shape={y_np.shape},pred_np.shape={pred_np.shape}')
         title = title or f'after {self.train_state_vec.num_epochs} epochs'
         if plot: Visualizer.data_trio_plot(x_np, y_np, pred_np, title=title)

@@ -80,12 +80,13 @@ def analyze_model(trainer: Trainer):
 
     x, y, preds = trainer.test_single_item(i=0, plot=False)
     indices = np.arange(len(x))
-    wandb.log({"sample test from model": wandb.plot.line_series(
-        xs=indices,
-        ys=[x, y, preds],
-        keys=["dirty (end of channel)", "clean (before channel)", "pred (after model)"],
-        title="model test",
-        xname="sample index")})
+    for y, title in [(x, 'x (dirty)'), (y, 'y (clean)'), (preds, 'preds')]:
+        wandb.log({title: wandb.plot.line_series(
+            xs=indices,
+            ys=[y.real, y.imag],
+            keys=['real', 'imag'],
+            title=title,
+            xname="sample index")})
 
 
 def parse_models_config(model_config: str):
