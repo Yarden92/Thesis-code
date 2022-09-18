@@ -27,7 +27,7 @@ class DataAnalyzer():
         mu_vec = []
         conf_list = []
         for sub_name in os.listdir(self.path):
-            if sub_name.startswith('_'): continue
+            if not self._is_valid_subfolder(sub_name): continue
             sub_path = f"{self.path}/{sub_name}"
             conf = read_conf(sub_path)
             mu_vec.append(conf['normalization_factor'])
@@ -84,7 +84,6 @@ class DataAnalyzer():
                 xname="index")})
 
         print(f'uploaded to wandb mu={mu}, i={data_id}')
-
 
     def plot_single_sample(self, mu: float, data_id: int, is_save=True):
         # read folder and plot one of the data samples
@@ -151,6 +150,12 @@ class DataAnalyzer():
         num_samples = self.params['num_samples']
         sub_name = f"{num_samples}_samples_mu={mu:.3f}"
         return sub_name
+
+    def _is_valid_subfolder(self, sub_name):
+        if sub_name.startswith('_'): return False
+        if sub_name.startswith('.'): return False
+        if '=' not in sub_name: return False
+        return True
 
 
 if __name__ == '__main__':
