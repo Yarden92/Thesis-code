@@ -15,7 +15,7 @@ analyzation_dir = '_analyzation'
 class DataAnalyzer():
     def __init__(self, data_folder_path: str, _tqdm=tqdm):
         self.path = data_folder_path.rstrip('/')
-        self.base_name = os.path.basename(data_folder_path)
+        self.base_name = os.path.basename(self.path)
         self.params = self.fetch_params()
         self.is_wandb_init = False
         self.ber_vec = None
