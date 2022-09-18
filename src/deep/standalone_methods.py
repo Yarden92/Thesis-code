@@ -1,4 +1,5 @@
 import os
+import platform
 from enum import IntEnum
 
 import numpy as np
@@ -24,7 +25,10 @@ class GeneralMethods:
     @staticmethod
     def name_to_mu_val(dirpath: str) -> float:
         folder_name = os.path.basename(dirpath)
-        return float(folder_name.split('=')[-1])
+        mu = float(folder_name.split('=')[-1])
+        return mu
+
+
 
 
 class DataType(IntEnum):
@@ -34,3 +38,14 @@ class DataType(IntEnum):
     @classmethod
     def _missing_(cls, value):
         return cls.spectrum
+
+
+def get_platform():
+    try:
+        os = platform.system()
+        if 'darwin' in os.lower():
+            os = 'Mac'
+    except:
+        os = 'unknown'
+
+    return os

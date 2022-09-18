@@ -1,5 +1,4 @@
 import json
-import platform
 from dataclasses import dataclass
 from typing import List
 
@@ -14,6 +13,7 @@ from src.deep import data_loaders
 from src.deep.data_loaders import SingleMuDataSet
 from src.deep.ml_ops import Trainer
 from src.deep.models import NLayersModel
+from src.deep.standalone_methods import get_platform
 
 
 @dataclass
@@ -86,17 +86,6 @@ def parse_models_config(model_config: str):
     for model_string in models_strings:
         dict = json.loads(model_string)
         yield ModelConfig(**dict)
-
-
-def get_platform():
-    try:
-        os = platform.system()
-        if 'darwin' in os.lower():
-            os = 'Mac'
-    except:
-        os = 'unknown'
-
-    return os
 
 
 def main(config: ModelsConfig):

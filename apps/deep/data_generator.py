@@ -24,7 +24,6 @@ class DataConfig:
     mu_start: float = 0.0005
     mu_end: float = 0.07
 
-
 def main(config: DataConfig):
     # config
 

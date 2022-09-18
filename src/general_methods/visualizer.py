@@ -66,16 +66,17 @@ class Visualizer:
         if ylabel:  ax.set_ylabel(ylabel)
         if legend:  ax.legend(legend)
         if custom_keyval: getattr(ax, custom_keyval[0])(custom_keyval[1])
-        if not hold: plt.show()
+        if output_name: plt.savefig(output_name)
+        if not hold and not output_name: plt.show()
 
     @staticmethod
-    def twin_zoom_plot(title: str, full_y, zoom_indices, x_vec=None, xlabel='index', function='plot'):
+    def twin_zoom_plot(title: str, full_y, zoom_indices, x_vec=None, xlabel='index', function='plot', output_name=None):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
         if title: fig.suptitle(title)
         if x_vec is None: x_vec = np.arange(len(full_y))
         Visualizer.my_plot(x_vec, full_y, name=f'full scale', xlabel=xlabel, ax=ax1, function=function, hold=True)
         Visualizer.my_plot(x_vec[zoom_indices], full_y[zoom_indices], name=f'crop in', xlabel=xlabel, ax=ax2,
-                           function=function)
+                           function=function, output_name=output_name)
 
     @staticmethod
     def twin_zoom_plot_vec(title: str, y_vecs, legends, zm_indx, x_vec=None, xlabel='index', function='plot'):
@@ -165,7 +166,7 @@ class Visualizer:
         print(json.dumps(json_ob, indent=4))
 
     @staticmethod
-    def plot_bers(us, bers_vecs, legends=None):
+    def plot_bers(us, bers_vecs, legends=None, output_path=None):
         plt.figure(figsize=[10, 5])
         for bers in bers_vecs:
             mean = bers.mean(axis=-1)
@@ -179,7 +180,10 @@ class Visualizer:
         plt.grid(which='major', axis='x')
         # plt.ylim(top=1,bottom=3e-4)
         if legends: plt.legend(legends)
-        plt.show()
+        if output_path:
+            plt.savefig(output_path)
+        else:
+            plt.show()
 
     @staticmethod
     def plot_loss_vec(train_loss_vec, valid_loss_vec):
