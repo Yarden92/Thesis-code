@@ -47,6 +47,51 @@ class DataAnalyzer():
         }
         return params
 
+    # -------------- plots --------------
+
+    def plot_single_sample(self, mu: float, data_id: int, is_save=True):
+        # read folder and plot one of the data samples
+        sub_name = self._get_subfolder_name(mu)
+        x, y = self._get_xy(data_id, sub_name)
+        out_path = f'{self.path}/{analyzation_dir}/{sub_name}'
+        os.makedirs(out_path, exist_ok=True)
+
+        is_spectrum = self.params['conf']['data_type'] == 0
+
+        zm = range(1700, 2300) if is_spectrum else range(0, 50)
+        func = 'plot' if is_spectrum else 'stem'
+
+        for v, name in [[x, 'x'], [y, 'y']]:
+            Visualizer.twin_zoom_plot(
+                title=name,
+                full_y=np.real(v),
+                zoom_indices=zm,
+                function=func,
+                output_name=f'{out_path}/{name}_real.png' if is_save else None
+            )
+
+        x_power = np.mean(np.abs(x) ** 2)
+        print(f'x_power={x_power}')
+
+        print(f'images saved to {out_path}')
+
+    def plot_full_ber_graph(self, n=5, is_save=True):
+        # n is the number of x's permutations to take from each folder
+        self._calc_full_ber(n)
+        out_dir = f'{self.path}/{analyzation_dir}'
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = f'{out_dir}/ber_vs_mu.png'
+
+        Visualizer.plot_bers(
+            us=self.mu_vec,
+            bers_vecs=[self.ber_vec],
+            output_path=out_path if is_save else None
+        )
+
+        print(f'ber vs mu saved to {out_path}')
+
+    # ------------ wandb ------------
+
     def _init_wandb(self):
         if self.is_wandb_init: return
         data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
@@ -85,51 +130,7 @@ class DataAnalyzer():
 
         print(f'uploaded to wandb mu={mu}, i={data_id}')
 
-    def plot_single_sample(self, mu: float, data_id: int, is_save=True):
-        # read folder and plot one of the data samples
-        sub_name = self._get_subfolder_name(mu)
-        x, y = self._get_xy(data_id, sub_name)
-        out_path = f'{self.path}/{analyzation_dir}/{sub_name}'
-        os.makedirs(out_path, exist_ok=True)
-
-        is_spectrum = self.params['conf']['data_type'] == 0
-
-        zm = range(1700, 2300) if is_spectrum else range(0, 50)
-        func = 'plot' if is_spectrum else 'stem'
-
-        for v, name in [[x, 'x'], [y, 'y']]:
-            Visualizer.twin_zoom_plot(
-                title=name,
-                full_y=np.real(v),
-                zoom_indices=zm,
-                function=func,
-                output_name=f'{out_path}/{name}_real.png' if is_save else None
-            )
-
-        x_power = np.mean(np.abs(x) ** 2)
-        print(f'x_power={x_power}')
-
-        print(f'images saved to {out_path}')
-
-    def _get_xy(self, data_id, sub_name):
-        dir = self.path + '/' + sub_name
-        dataset = SingleMuDataSet(dir)
-        print(f'the folder {dir} contains {len(dataset)} samples')
-        x, y = dataset.get_numpy_xy(data_id)
-        return x, y
-
-    def plot_full_ber_graph(self, n=5, is_save=True):
-        # n is the number of x's permutations to take from each folder
-        self._calc_full_ber(n)
-        out_path = f'{self.path}/{analyzation_dir}/ber_vs_mu.png'
-
-        Visualizer.plot_bers(
-            us=self.mu_vec,
-            bers_vecs=[self.ber_vec],
-            output_path=out_path if is_save else None
-        )
-
-        print(f'ber vs mu saved to {out_path}')
+    # ------------ private ------------
 
     def calc_ber_for_subfolder(self, mu, n=5):
         # n is the number of x's permutations to take from each folder
@@ -156,6 +157,13 @@ class DataAnalyzer():
         if sub_name.startswith('.'): return False
         if '=' not in sub_name: return False
         return True
+
+    def _get_xy(self, data_id, sub_name):
+        dir = self.path + '/' + sub_name
+        dataset = SingleMuDataSet(dir)
+        print(f'the folder {dir} contains {len(dataset)} samples')
+        x, y = dataset.get_numpy_xy(data_id)
+        return x, y
 
 
 if __name__ == '__main__':
