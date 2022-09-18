@@ -105,9 +105,9 @@ class Trainer:
         os.makedirs(sub_dir_path, exist_ok=True)
 
         # save trainer to the same dir
-        torch.save(self.model.state_dict(), sub_dir_path + 'model_state_dict.pt')
+        torch.save(self.model.state_dict(), sub_dir_path + '/model_state_dict.pt')
         # save model class name
-        with open(sub_dir_path + 'model_class_name.txt', 'w') as f:
+        with open(sub_dir_path + '/model_class_name.txt', 'w') as f:
             f.write(self.model.__class__.__name__)
         model_bkp = self.model
         self.model = None
