@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from src.deep.data.data_methods import DataMethods
 from src.deep.standalone_methods import GeneralMethods, DataType
 from src.deep.data_loaders import OpticDataset, FilesReadWrite
 from src.optics.channel_simulation import ChannelSimulator
@@ -88,7 +89,7 @@ class Metrics:
         # walk through folder [data] and search for folders that named as [10_samples_****]
         mu_vec, ber_vec = [], []
         for dirpath in _tqdm(glob(f'{root_dir}/{sub_name_filter}')):
-            if os.path.basename(dirpath).startswith('_'): continue
+            if not DataMethods.is_valid_subfolder(os.path.basename(dirpath)): continue
             mu = GeneralMethods.name_to_mu_val(dirpath)
             all_x_read, all_y_read, conf_read = FilesReadWrite.read_folder(dirpath, verbose_level >= 1)
             all_x_read, all_y_read = trim_data(all_x_read, all_y_read, num_x_per_folder)

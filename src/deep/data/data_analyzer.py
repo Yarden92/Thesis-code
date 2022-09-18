@@ -4,6 +4,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 
+from src.deep.data.data_methods import DataMethods
 from src.deep.data_loaders import SingleMuDataSet, read_conf
 from src.deep.metrics import Metrics
 from src.deep.standalone_methods import get_platform, DataType
@@ -27,7 +28,7 @@ class DataAnalyzer():
         mu_vec = []
         conf_list = []
         for sub_name in os.listdir(self.path):
-            if not self._is_valid_subfolder(sub_name): continue
+            if not DataMethods.is_valid_subfolder(sub_name): continue
             sub_path = f"{self.path}/{sub_name}"
             conf = read_conf(sub_path)
             mu_vec.append(conf['normalization_factor'])
@@ -152,11 +153,11 @@ class DataAnalyzer():
         sub_name = f"{num_samples}_samples_mu={mu:.3f}"
         return sub_name
 
-    def _is_valid_subfolder(self, sub_name):
-        if sub_name.startswith('_'): return False
-        if sub_name.startswith('.'): return False
-        if '=' not in sub_name: return False
-        return True
+    # def _is_valid_subfolder(self, sub_name):
+    #     if sub_name.startswith('_'): return False
+    #     if sub_name.startswith('.'): return False
+    #     if '=' not in sub_name: return False
+    #     return True
 
     def _get_xy(self, data_id, sub_name):
         dir = self.path + '/' + sub_name
