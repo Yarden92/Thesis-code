@@ -50,8 +50,9 @@ class DataAnalyzer():
 
     # -------------- plots --------------
 
-    def plot_single_sample(self, mu: float, data_id: int, is_save=True):
+    def plot_single_sample(self, mu: float = None, data_id: int = 0, is_save=True):
         # read folder and plot one of the data samples
+        if mu is None: mu = self.params['mu_start']
         sub_name = self._get_subfolder_name(mu)
         x, y = self._get_xy(data_id, sub_name)
         out_path = f'{self.path}/{analyzation_dir}/{sub_name}'

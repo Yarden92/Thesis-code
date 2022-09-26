@@ -87,6 +87,21 @@ class NLayersModel(nn.Module):
         x = x.squeeze(2)
         return x
 
+    def print_architecture(self, x: Tensor):
+        # print(self)
+        # for i in range(self.n_layers):
+        #     print(f"Layer {i+1}: {self.layers[3*i]}")
+        #     print(f"Activation {i+1}: {self.layers[3*i + 1]}")
+        #     print(f"Dropout {i+1}: {self.layers[3*i + 2]}")
+        # print(f"Output layer: {self.layers[-1]}")
+
+        # print size of x after each layer
+        x = x.unsqueeze(2)
+        print(f"Input size layer 0: {x.shape}")
+        for i in range(self.n_layers*3):
+            x = self.layers[i](x)
+            print(f"Size after layer {i + 1}: {x.shape}")
+
     # ------------------------- default values generators -------------------------
     @staticmethod
     def default_drop_rates(n_layers):
@@ -102,6 +117,33 @@ class NLayersModel(nn.Module):
         arr = np.clip(arr, 0, MAX_LAYER_SIZE)  # clip arr to not go above MAX_LAYER_SIZE (for performance issues)
         arr[-1] = 2  # must starts and end with 2
         return arr
+
+
+class PaperNNforNFTmodel(nn.Module):
+    def __init__(self, input_size = 8192, k=10):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self._1_conv = nn.Conv1d(in_channels=1, out_channels=10, kernel_size=k, stride=1, dilation=2)
+        self._1_tanh = nn.Tanh()
+        self._2_conv = nn.Conv1d(in_channels=10, out_channels=10, kernel_size=k, stride=1, dilation=2)
+        self._2_tanh = nn.Tanh()
+        self._3_conv = nn.Conv1d(in_channels=10, out_channels=4, kernel_size=k, stride=1, dilation=2)
+        self._3_relu = nn.ReLU()
+        self._4_fc = nn.Linear(in_features=4*(input_size-3*(2*(k-1))), out_features=input_size)
+        self._4_relu = nn.ReLU()
+
+    def forward(self, x: Tensor):
+        x = x.unsqueeze(1).unsqueeze(1).T
+        x = self._1_conv(x)
+        x = self._1_tanh(x)
+        x = self._2_conv(x)
+        x = self._2_tanh(x)
+        x = self._3_conv(x)
+        x = self._3_relu(x)
+        x = x.flatten()
+        x = self._4_fc(x)
+        x = self._4_relu(x)
+        return x
 
 
 class SingleMuModel3Layers(nn.Module):

@@ -63,9 +63,6 @@ class SingleMuDataSet(OpticDataset):
         self.n = len(self.data_indices)
 
     def __getitem__(self, index):
-        # x = np.load(f'{self.data_dir_path}/{index}_{file_methods.x_file_name}')
-        # y = np.load(f'{self.data_dir_path}/{index}_{file_methods.y_file_name}')
-
         file_id = self.data_indices[index]
 
         x, y = read_xy(self.data_dir_path, file_id)
@@ -84,6 +81,33 @@ class SingleMuDataSet(OpticDataset):
 
     def get_numpy_xy(self, i):
         x, y = read_xy(self.data_dir_path, i)
+        return x, y
+
+
+class SeparatedRealImagDataset(SingleMuDataSet):
+    def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None, is_real=True) -> None:
+        super(SeparatedRealImagDataset, self).__init__(data_dir_path, data_indices)
+        self.is_real = is_real
+
+    def set_is_real(self, is_real):
+        self.is_real = is_real
+
+    def __getitem__(self, index):
+        file_id = self.data_indices[index]
+
+        x, y = read_xy(self.data_dir_path, file_id)
+
+        x, y = GeneralMethods.normalize_xy(x, y, self.mu, self.std)
+
+        if self.is_real:
+            x = numpy_to_torch(x.real)
+            y = numpy_to_torch(y.real)
+        else:
+            x = numpy_to_torch(x.imag)
+            y = numpy_to_torch(y.imag)
+
+        x, y = x.T, y.T
+
         return x, y
 
 
@@ -163,6 +187,7 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
               type=DataType.spectrum):
     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
+    assert mu_vec[1] - mu_vec[0] > 0.0005, "mu_vec resolution is too low, folders will overlap"
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
         print(f'saving logs to {os.path.abspath(logger_path)}')
@@ -231,3 +256,6 @@ def get_ts_filename():
 def complex_numpy_to_torch(np_vec: np.ndarray):
     x = np.array([np.real(np_vec), np.imag(np_vec)])
     return torch.from_numpy(x).float()
+
+def numpy_to_torch(np_vec: np.ndarray):
+    return torch.from_numpy(np_vec).float()

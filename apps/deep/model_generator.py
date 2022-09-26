@@ -10,7 +10,7 @@ from tqdm import tqdm
 from src.deep import data_loaders
 from src.deep.data_loaders import SingleMuDataSet
 from src.deep.ml_ops import Trainer
-from src.deep.models import SingleMuModel3Layers
+from src.deep import models
 
 
 @dataclass
@@ -36,7 +36,9 @@ def main(config: TrainConfig):
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
-    model = SingleMuModel3Layers()
+    model = models.SingleMuModel3Layers()
+    # model_real = models.PaperNNforNFTmodel()
+    # model_imag = models.PaperNNforNFTmodel()
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SingleMuDataSet,
                                                                      train_val_ratio=config.train_val_ratio)
 
@@ -45,7 +47,7 @@ def main(config: TrainConfig):
                       model=model, device=config.device,
                       l_metric=l_metric, optim=optim,
                       params=config.__dict__)
-
+    trainer.model.print_architecture(train_dataset[0])
     trainer.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer.save3(config.output_model_path)
 

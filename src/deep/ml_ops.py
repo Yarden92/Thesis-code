@@ -94,14 +94,14 @@ class Trainer:
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
 
-    def save3(self, dir_path: str = 'saved_models'):
+    def save3(self, dir_path: str = 'saved_models', endings: str=''):
         # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
         if model_name == 'NLayersModel': model_name = f'{self.model.n_layers}_layers_model'
         ds_size = len(self.train_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
-        sub_dir_path = f'{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs'
+        sub_dir_path = f'{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs{endings}'
         os.makedirs(sub_dir_path, exist_ok=True)
 
         # save trainer to the same dir
@@ -115,7 +115,7 @@ class Trainer:
         self.model = model_bkp
 
     @classmethod
-    def load3(cls, dir_path: str = 'saved_models'):
+    def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         trainer = torch.load(dir_path + '/trainer.pt', map_location=device)
         model_state_dict = torch.load(dir_path + '/model_state_dict.pt', map_location=device)
@@ -125,6 +125,8 @@ class Trainer:
         model_class = eval(model_class_name)
         trainer.model = model_class()
         trainer.model.load_state_dict(model_state_dict)
+
+        return trainer
 
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)

@@ -6,6 +6,7 @@ import pyrallis
 from tqdm import tqdm
 
 from src.deep import data_loaders
+from src.deep.data.data_analyzer import DataAnalyzer
 from src.deep.standalone_methods import DataType
 from src.optics.channel_simulation import ChannelSimulator
 from src.optics.split_step_fourier import SplitStepFourier
@@ -23,6 +24,8 @@ class DataConfig:
     data_type: int = 0  # 0 for spectrum, 1 for iq_samples
     mu_start: float = 0.0005
     mu_end: float = 0.07
+    is_analyze_after: bool = False
+
 
 def main(config: DataConfig):
     # config
@@ -46,6 +49,15 @@ def main(config: DataConfig):
     # generate the date
     data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
                            logger_path=config.logger_path, max_workers=config.max_workers, type=DataType.iq_samples)
+
+    if config.is_analyze_after:
+        analyze_data(dir)
+
+
+def analyze_data(path: str):
+    data_analyzer = DataAnalyzer(path)
+    data_analyzer.plot_full_ber_graph(n=30, is_save=True)
+    data_analyzer.wandb_log_ber_vs_mu(n=30)
 
 
 if __name__ == '__main__':

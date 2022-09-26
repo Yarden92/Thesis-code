@@ -5,6 +5,8 @@ train_val_ratio : 0.8
 input_data_path : './data/datasets/qam1024_160x20/160_samples_mu=0.008'
 output_model_path : './data/test_models'
 device : 'cpu'
+wandb_project: 'Thesis_model_scanning_test2'
+
 models: '
 {
   "n_layers": 2,
