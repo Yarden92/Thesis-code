@@ -62,7 +62,7 @@ def main(config: PaperModelConfig):
     trainer_real.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_real.save3(config.output_model_path, '__real')
     print('finish training real part')
-    analyze_model(trainer_real)
+    # analyze_model(trainer_real) #TODO fix it
     del trainer_real
 
     print('training imaginary part')
