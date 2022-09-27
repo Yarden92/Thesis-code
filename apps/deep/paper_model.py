@@ -34,6 +34,11 @@ def main(config: PaperModelConfig):
     model_real = models.PaperNNforNFTmodel()
     model_imag = models.PaperNNforNFTmodel()
 
+    if config.device == 'cuda':
+        device1, device2 = 'cuda:0', 'cuda:1'
+    else:
+        device1, device2 = 'cpu', 'cpu'
+
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
                                                                      train_val_ratio=config.train_val_ratio)
 
@@ -42,12 +47,12 @@ def main(config: PaperModelConfig):
 
     # train
     trainer_real = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,
-                           model=model_real, device=config.device,
+                           model=model_real, device=device1,
                            l_metric=l_metric, optim=optim_real,
                            params=config.__dict__)
 
     trainer_imag = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,
-                           model=model_imag, device=config.device,
+                           model=model_imag, device=device2,
                            l_metric=l_metric, optim=optim_imag,
                            params=config.__dict__)
 
