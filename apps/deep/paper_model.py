@@ -21,11 +21,12 @@ class PaperModelConfig:
     input_data_path: str = './data/datasets/qam1024_160x20/160_samples_mu=0.001'
     output_model_path: str = './data/test_models'
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
+    wandb_project: str = 'thesis_model_scan_test'
 
 
 def main(config: PaperModelConfig):
     print(f"Running paper model")
-    wandb.init(project="thesis_model_scan_test", entity="yarden92", name='paper_model_real')
+    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_real')
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,
@@ -66,7 +67,7 @@ def main(config: PaperModelConfig):
     del trainer_real
 
     print('training imaginary part')
-    wandb.init(project="thesis_model_scan_test", entity="yarden92", name='paper_model_imag', reinit=True)
+    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_imag', reinit=True)
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,

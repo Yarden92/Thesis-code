@@ -1,7 +1,8 @@
-epochs : 50
-lr : 1e-3
-batch_size : 1
-train_val_ratio : 0.8
-input_data_path : './data/datasets/spectrum/qam1024_160x20/160_samples_mu=0.008'
-output_model_path : './data/saved_models'
-device : 'cuda'
+epochs: 50
+lr: 1e-3
+batch_size: 1
+train_val_ratio: 0.8
+input_data_path: './data/datasets/spectrum/qam1024_5001x20/5001_samples_mu=0.008'
+output_model_path: './data/saved_models'
+device: 'cuda'
+wandb_project: 'Thesis_model_scanning'
