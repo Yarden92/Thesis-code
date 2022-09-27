@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch
 
 import wandb
+from apps.deep.multi_model_generator import analyze_model
 from src.deep import models, data_loaders
 from src.deep.data_loaders import SeparatedRealImagDataset
 from src.deep.ml_ops import Trainer
@@ -24,7 +25,7 @@ class PaperModelConfig:
 
 def main(config: PaperModelConfig):
     print(f"Running paper model")
-    wandb.init(project="thesis_model_scan_test", entity="yarden92", name='paper_model')
+    wandb.init(project="thesis_model_scan_test", entity="yarden92", name='paper_model_real')
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,
@@ -60,8 +61,18 @@ def main(config: PaperModelConfig):
     train_dataset.set_is_real(True), val_dataset.set_is_real(True)
     trainer_real.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_real.save3(config.output_model_path, '__real')
+    print('finish training real part')
+    analyze_model(trainer_real)
+    del trainer_real
 
     print('training imaginary part')
+    wandb.init(project="thesis_model_scan_test", entity="yarden92", name='paper_model_imag', reinit=True)
+    wandb.config = {
+        "learning_rate": config.lr,
+        "epochs": config.epochs,
+        "batch_size": config.batch_size
+    }
+
     train_dataset.set_is_real(False), val_dataset.set_is_real(False)
     trainer_imag.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_imag.save3(config.output_model_path, '__imag')
