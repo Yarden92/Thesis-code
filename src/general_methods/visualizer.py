@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
 
@@ -179,6 +180,40 @@ class Visualizer:
         plt.grid(which='both', axis='y')
         plt.grid(which='major', axis='x')
         # plt.ylim(top=1,bottom=3e-4)
+        if legends: plt.legend(legends)
+        if output_path:
+            plt.savefig(output_path)
+        else:
+            plt.show()
+
+    @staticmethod
+    def plot_bers_boxplot(us, bers_vecs, legends=None, output_path=None):
+        plt.figure(figsize=[15, 5])
+        plt.boxplot(bers_vecs, labels=us, patch_artist=True,
+                    boxprops=dict(facecolor='pink', color='black'),
+                    medianprops=dict(color='black'),
+                    )
+
+        # seaborn.boxplot(data=bers_vecs,x=us)
+        plt.xlabel('normalizing factor'), plt.ylabel('BER')
+        plt.xticks(rotation=45)
+        plt.title(f'BER vs normalizing factor with {len(bers_vecs)} permutations each')
+        plt.grid(which='both', axis='y')
+        plt.grid(which='major', axis='x')
+        if legends: plt.legend(legends)
+        if output_path:
+            plt.savefig(output_path)
+        else:
+            plt.show()
+
+    @staticmethod
+    def plot_histogram_of_bers(bers_vecs, legends=None, output_path=None):
+        plt.figure(figsize=[15, 5])
+        plt.hist(bers_vecs, bins=100, label=legends)
+        plt.xlabel('BER'), plt.ylabel('count')
+        plt.title(f'BER histogram with {len(bers_vecs)} permutations each')
+        plt.grid(which='both', axis='y')
+        plt.grid(which='major', axis='x')
         if legends: plt.legend(legends)
         if output_path:
             plt.savefig(output_path)
