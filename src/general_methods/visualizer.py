@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
 
@@ -194,7 +193,6 @@ class Visualizer:
                     medianprops=dict(color='black'),
                     )
 
-        # seaborn.boxplot(data=bers_vecs,x=us)
         plt.xlabel('normalizing factor'), plt.ylabel('BER')
         plt.xticks(rotation=45)
         plt.title(f'BER vs normalizing factor with {len(bers_vecs)} permutations each')
