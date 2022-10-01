@@ -1,3 +1,5 @@
+import json
+
 import torch.optim
 import wandb
 from torch.utils.data import DataLoader
@@ -107,6 +109,11 @@ class Trainer:
         self.model = None
         torch.save(self, sub_dir_path + '/trainer.pt')
         self.model = model_bkp
+
+        # save params to a readable json file (for manual inspection)
+        with open(sub_dir_path + '/params.json', 'w') as f:
+            json.dump(self.params, f, indent=4)
+
 
     @classmethod
     def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':

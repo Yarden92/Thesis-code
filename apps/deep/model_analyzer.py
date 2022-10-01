@@ -20,18 +20,17 @@ def main(config: ModelAnalyzerConfig):
 
 
 class ModelAnalyzer:
-    def __init__(self, trainer: Trainer,
-                 run_name: str = "model_analyzer", model_name: str = None):
+    def __init__(self, trainer: Trainer, run_name: str = None):
         self.trainer = trainer
         self.wandb_project = self.trainer.params['wandb_project']
         self.run_name = run_name
-        self.model_name = model_name
-        self.ds_len = len(self.trainer.train_dataset)+len(self.trainer.val_dataset)
+        self.model_name = self.trainer.model._get_name()
+        self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
         self.mu = self.trainer.train_dataset.mu
         self._init_wandb()
 
     def _init_wandb(self):
-        if wandb.run is not None: # if already logged in
+        if wandb.run is not None:  # if already logged in
             return
 
         wandb.init(project=self.wandb_project, entity="yarden92", name=self.run_name,
