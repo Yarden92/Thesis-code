@@ -120,7 +120,7 @@ class NLayersModel(nn.Module):
 
 
 class PaperNNforNFTmodel(nn.Module):
-    def __init__(self, input_size = 8192, k=10):
+    def __init__(self, input_size=8192, k=10):
         super().__init__()
         self.layers = nn.ModuleList()
         self._1_conv = nn.Conv1d(in_channels=1, out_channels=10, kernel_size=k, stride=1, dilation=2)
@@ -129,7 +129,7 @@ class PaperNNforNFTmodel(nn.Module):
         self._2_tanh = nn.Tanh()
         self._3_conv = nn.Conv1d(in_channels=10, out_channels=4, kernel_size=k, stride=1, dilation=2)
         self._3_relu = nn.ReLU()
-        self._4_fc = nn.Linear(in_features=4*(input_size-3*(2*(k-1))), out_features=input_size)
+        self._4_fc = nn.Linear(in_features=4*(input_size - 3*(2*(k - 1))), out_features=input_size)
         self._4_relu = nn.ReLU()
 
     def forward(self, x: Tensor):
@@ -144,6 +144,20 @@ class PaperNNforNFTmodel(nn.Module):
         x = self._4_fc(x)
         x = self._4_relu(x)
         return x
+
+
+class PaperNNforNFTwrapper(nn.Module):
+    def __init__(self, real_model: PaperNNforNFTmodel, imag_model: PaperNNforNFTmodel):
+        super().__init__()
+        self.real_model = real_model
+        self.imag_model = imag_model
+
+    def forward(self, x: Tensor):
+        x_real = x[:,0]
+        x_imag = x[:,1]
+        pred_real = self.real_model(x_real)
+        pred_imag = self.imag_model(x_imag)
+        return torch.stack([pred_real, pred_imag], dim=1)
 
 
 class SingleMuModel3Layers(nn.Module):
