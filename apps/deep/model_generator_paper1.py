@@ -84,6 +84,15 @@ def main(config: PaperModelConfig):
     trainer_imag.save3(config.output_model_path, '__imag')
 
     # TODO: merge trainers and save the merged instead
+    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name+f'_analysis',
+               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name + f'_analysis',
+                     f'ds={len(train_dataset)}'],
+               reinit=True)
+    wandb.config = {
+        "learning_rate": config.lr,
+        "epochs": config.epochs,
+        "batch_size": config.batch_size
+    }
     analyze_models(trainer_real, trainer_imag)
 
 
