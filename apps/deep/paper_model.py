@@ -6,10 +6,10 @@ from tqdm import tqdm
 import torch
 
 import wandb
-from apps.deep.multi_model_generator import analyze_model
 from src.deep import models, data_loaders
 from src.deep.data_loaders import SeparatedRealImagDataset
 from src.deep.ml_ops import Trainer
+from src.deep.standalone_methods import get_platform
 
 
 @dataclass
@@ -26,7 +26,12 @@ class PaperModelConfig:
 
 def main(config: PaperModelConfig):
     print(f"Running paper model")
-    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_real')
+    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
+                                                                     train_val_ratio=config.train_val_ratio)
+
+    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_real',
+               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', f'paper1_model', f'ds={len(train_dataset)}'],
+               reinit=False)
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,
@@ -41,8 +46,6 @@ def main(config: PaperModelConfig):
     else:
         device1, device2 = 'cpu', 'cpu'
 
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
-                                                                     train_val_ratio=config.train_val_ratio)
 
     optim_real = torch.optim.Adam(model_real.parameters(), lr=config.lr)
     optim_imag = torch.optim.Adam(model_imag.parameters(), lr=config.lr)
@@ -63,7 +66,7 @@ def main(config: PaperModelConfig):
     trainer_real.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_real.save3(config.output_model_path, '__real')
     print('finish training real part')
-    # analyze_model(trainer_real) #TODO fix it
+    # fully_analyze_model_to_wandb(trainer_real) #TODO fix it
     del trainer_real
 
     print('training imaginary part')

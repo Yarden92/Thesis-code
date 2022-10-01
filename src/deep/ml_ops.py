@@ -1,16 +1,10 @@
-import os
-from typing import Optional
-
-import numpy as np
 import torch.optim
 import wandb
-from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.deep import data_loaders
 from src.deep.metrics import Metrics
-from src.deep.models import SingleMuModel3Layers
+from src.deep.models import *
 from src.deep.data_loaders import OpticDataset
 from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
@@ -94,11 +88,11 @@ class Trainer:
         loss: Tensor = self.l_metric(y, pred)
         return loss, pred
 
-    def save3(self, dir_path: str = 'saved_models', endings: str=''):
+    def save3(self, dir_path: str = 'saved_models', endings: str = ''):
         # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
         if model_name == 'NLayersModel': model_name = f'{self.model.n_layers}_layers_model'
-        ds_size = len(self.train_dataset)
+        ds_size = len(self.train_dataset)+len(self.val_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
         sub_dir_path = f'{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs{endings}'
@@ -116,6 +110,8 @@ class Trainer:
 
     @classmethod
     def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':
+        abs_path = os.path.abspath(dir_path)
+        assert dir_path and os.path.exists(abs_path), f'cant find the following path:\n\t{abs_path}'
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         trainer = torch.load(dir_path + '/trainer.pt', map_location=device)
         model_state_dict = torch.load(dir_path + '/model_state_dict.pt', map_location=device)
