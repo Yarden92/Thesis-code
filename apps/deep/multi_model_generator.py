@@ -2,13 +2,13 @@ import json
 from dataclasses import dataclass
 from typing import List
 
-import numpy as np
 import pyrallis
 import torch
 
 import wandb
 from torch import nn
 
+from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import SingleMuDataSet
 from src.deep.ml_ops import Trainer
@@ -62,21 +62,6 @@ def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, ep
     return trainer
 
 
-def analyze_model(trainer: Trainer):
-    org_ber, model_ber, ber_improvement = trainer.compare_ber()
-    wandb.log({'org_ber': org_ber, 'model_ber': model_ber, 'ber_improvement': ber_improvement})
-
-    x, y, preds = trainer.test_single_item(i=0, plot=False)
-    indices = np.arange(len(x))
-    for y, title in [(x, 'x (dirty)'), (y, 'y (clean)'), (preds, 'preds')]:
-        wandb.log({title: wandb.plot.line_series(
-            xs=indices,
-            ys=[y.real, y.imag],
-            keys=['real', 'imag'],
-            title=title,
-            xname="sample index")})
-
-
 def parse_models_config(model_config: str):
     models_strings = model_config.split(';')
     for model_string in models_strings:
@@ -109,7 +94,9 @@ def main(main_config: ModelsConfig):
                               epochs=main_config.epochs, batch_size=main_config.batch_size, device=main_config.device,
                               output_model_path=main_config.output_model_path)
 
-        analyze_model(trainer)
+        ma = ModelAnalyzer(trainer)
+        ma.upload_bers_to_wandb()
+        ma.upload_single_item_plots_to_wandb(i=0)
 
     print('finished all models')
 
