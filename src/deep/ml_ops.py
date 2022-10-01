@@ -94,7 +94,7 @@ class Trainer:
         # create dir if it doesn't exist
         model_name = self.model.__class__.__name__
         if model_name == 'NLayersModel': model_name = f'{self.model.n_layers}_layers_model'
-        ds_size = len(self.train_dataset)+len(self.val_dataset)
+        ds_size = len(self.train_dataset) + len(self.val_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.mu
         sub_dir_path = f'{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs{endings}'
@@ -113,7 +113,6 @@ class Trainer:
         # save params to a readable json file (for manual inspection)
         with open(sub_dir_path + '/params.json', 'w') as f:
             json.dump(self.params, f, indent=4)
-
 
     @classmethod
     def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':
@@ -150,21 +149,23 @@ class Trainer:
 
         return x_np, y_np, pred_np
 
-    def compare_ber(self, verbose=False, tqdm=None, num_x_per_folder=None):
+    def compare_ber(self, verbose_level: int = 1, _tqdm=None, num_x_per_folder=None):
         # compare the original raw BER with the equalized model's BER
 
-        ber_vec, num_errors = Metrics.calc_ber_from_dataset(self.val_dataset, verbose, tqdm, num_x_per_folder)
+        ber_vec, num_errors = Metrics.calc_ber_from_dataset(self.val_dataset, verbose_level >= 2, _tqdm,
+                                                            num_x_per_folder)
         org_ber = np.mean(ber_vec)
-        print(f'the original avg ber (of validation set) is {org_ber}')
+        if verbose_level >= 1: print(f'the original avg ber (of validation set) is {org_ber}')
 
         # calc ber after training
-        ber_vec, num_errors = Metrics.calc_ber_from_model(self.val_dataset, self.model, verbose, tqdm, num_x_per_folder,
+        ber_vec, num_errors = Metrics.calc_ber_from_model(self.val_dataset, self.model, verbose_level >= 2, _tqdm,
+                                                          num_x_per_folder,
                                                           self.device)
         model_ber = np.mean(ber_vec)
-        print(f'the trained avg ber (of validation set) is {model_ber}')
+        if verbose_level >= 1: print(f'the trained avg ber (of validation set) is {model_ber}')
 
         ber_improvement = (org_ber - model_ber)/org_ber
-        print(f'the ber improvement is {ber_improvement*100:.2f}%')
+        if verbose_level >= 1: print(f'the ber improvement is {ber_improvement*100:.2f}%')
 
         return org_ber, model_ber, ber_improvement
 

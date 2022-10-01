@@ -130,7 +130,7 @@ class PaperNNforNFTmodel(nn.Module):
         self._3_conv = nn.Conv1d(in_channels=10, out_channels=4, kernel_size=k, stride=1, dilation=2)
         self._3_relu = nn.ReLU()
         self._4_fc = nn.Linear(in_features=4*(input_size - 3*(2*(k - 1))), out_features=input_size)
-        self._4_relu = nn.ReLU()
+        # self._4_relu = nn.ReLU()
 
     def forward(self, x: Tensor):
         x = x.unsqueeze(1).unsqueeze(1).T
@@ -142,7 +142,7 @@ class PaperNNforNFTmodel(nn.Module):
         x = self._3_relu(x)
         x = x.flatten()
         x = self._4_fc(x)
-        x = self._4_relu(x)
+        # x = self._4_relu(x)
         return x
 
 

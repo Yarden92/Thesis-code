@@ -27,7 +27,6 @@ class ModelAnalyzer:
         self.model_name = self.trainer.model._get_name()
         self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
         self.mu = self.trainer.train_dataset.mu
-        self._init_wandb()
 
     def _init_wandb(self):
         if wandb.run is not None:  # if already logged in
@@ -42,13 +41,22 @@ class ModelAnalyzer:
             "batch_size": self.trainer.params['batch_size']
         }
 
+    def plot_bers(self, _tqdm=None, verbose_level=1):
+        _ = self.trainer.compare_ber(verbose_level=verbose_level, _tqdm=_tqdm)
+
     def upload_bers_to_wandb(self):
         org_ber, model_ber, ber_improvement = self.trainer.compare_ber()
+        self._init_wandb()
         wandb.log({'org_ber': org_ber, 'model_ber': model_ber, 'ber_improvement': ber_improvement})
+
+    def plot_single_item(self, i):
+        _ = self.trainer.test_single_item(i, plot=True)
 
     def upload_single_item_plots_to_wandb(self, i):
         x, y, preds = self.trainer.test_single_item(i, plot=False)
         indices = np.arange(len(x))
+
+        self._init_wandb()
         for v, title in [(x, 'x (dirty)'), (y, 'y (clean)'), (preds, 'preds')]:
             wandb.log({title: wandb.plot.line_series(
                 xs=indices,

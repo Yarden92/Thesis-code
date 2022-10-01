@@ -20,6 +20,10 @@ def main(config: Paper1Config):
     trainer_real = Trainer.load3(config.real_path)
     trainer_imag = Trainer.load3(config.imag_path)
 
+    analyze_models(trainer_real, trainer_imag)
+
+
+def analyze_models(trainer_real, trainer_imag):
     model = PaperNNforNFTwrapper(trainer_real.model, trainer_imag.model)
     train_ds = SingleMuDataSet(data_dir_path=trainer_real.train_dataset.data_dir_path,
                                data_indices=trainer_real.train_dataset.data_indices)

@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch
 
 import wandb
+from apps.deep.model_analyzer_paper1 import analyze_models
 from src.deep import models, data_loaders
 from src.deep.data_loaders import SeparatedRealImagDataset
 from src.deep.ml_ops import Trainer
@@ -22,6 +23,7 @@ class PaperModelConfig:
     output_model_path: str = './data/test_models'
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     wandb_project: str = 'thesis_model_scan_test'
+    model_name: str = 'paper_no_relu'
 
 
 def main(config: PaperModelConfig):
@@ -29,8 +31,8 @@ def main(config: PaperModelConfig):
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
                                                                      train_val_ratio=config.train_val_ratio)
 
-    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_real',
-               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', f'paper1_model', f'ds={len(train_dataset)}'],
+    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name,
+               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name, f'ds={len(train_dataset)}'],
                reinit=False)
     wandb.config = {
         "learning_rate": config.lr,
@@ -45,7 +47,6 @@ def main(config: PaperModelConfig):
         device1, device2 = 'cuda:0', 'cuda:1'
     else:
         device1, device2 = 'cpu', 'cpu'
-
 
     optim_real = torch.optim.Adam(model_real.parameters(), lr=config.lr)
     optim_imag = torch.optim.Adam(model_imag.parameters(), lr=config.lr)
@@ -66,8 +67,6 @@ def main(config: PaperModelConfig):
     trainer_real.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_real.save3(config.output_model_path, '__real')
     print('finish training real part')
-    # fully_analyze_model_to_wandb(trainer_real) #TODO fix it
-    del trainer_real
 
     print('training imaginary part')
     wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_imag', reinit=True)
@@ -80,6 +79,9 @@ def main(config: PaperModelConfig):
     train_dataset.set_is_real(False), val_dataset.set_is_real(False)
     trainer_imag.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer_imag.save3(config.output_model_path, '__imag')
+
+    # TODO: merge trainers and save the merged instead
+    analyze_models(trainer_real, trainer_imag)
 
 
 if __name__ == '__main__':

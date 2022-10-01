@@ -150,7 +150,7 @@ def test6_wandb():
 
     trainer.test_single_item(0, f'after {trainer.train_state_vec.num_epochs} epochs')
 
-    trainer.compare_ber(tqdm=tqdm)
+    trainer.compare_ber(_tqdm=tqdm)
 
     trainer.plot_loss_vec()
 
