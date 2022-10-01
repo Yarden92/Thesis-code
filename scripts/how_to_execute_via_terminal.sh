@@ -1,6 +1,6 @@
 echo """
 check existing stuffs..
-    echo $PYTHONPATH
+    echo \$PYTHONPATH
     conda env list
 
 run the following commands (dont copy):
