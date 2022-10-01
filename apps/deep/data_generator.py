@@ -1,12 +1,11 @@
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 
 import numpy as np
 import pyrallis
 from tqdm import tqdm
 
+from apps.deep.data_analyzer import analyze_data
 from src.deep import data_loaders
-from src.deep.data.data_analyzer import DataAnalyzer
 from src.deep.standalone_methods import DataType
 from src.optics.channel_simulation import ChannelSimulator
 from src.optics.split_step_fourier import SplitStepFourier
@@ -52,12 +51,6 @@ def main(config: DataConfig):
 
     if config.is_analyze_after:
         analyze_data(dir)
-
-
-def analyze_data(path: str):
-    data_analyzer = DataAnalyzer(path)
-    data_analyzer.plot_full_ber_graph(n=30, is_save=True)
-    data_analyzer.wandb_log_ber_vs_mu(n=30)
 
 
 if __name__ == '__main__':

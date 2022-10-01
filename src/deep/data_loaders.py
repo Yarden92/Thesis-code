@@ -118,15 +118,17 @@ class FilesReadWrite:
         # example: dir = f'data/10_samples_mu=0.001'
 
         conf_read = read_conf(dir)
+        num_files = len(os.listdir(dir))
+        N = int((num_files - 1)/2)
+        assert os.path.basename(dir).startswith(f'{N}'), f'wrong number ({N}) of files in folder: {dir}'
 
-        all_x = []
-        for x_path in glob(f'{dir}/*_{x_file_name}'):
+        all_x, all_y = [], []
+        for i in range(N):
+            x_path = os.path.join(dir, f'{i}_{x_file_name}')
+            y_path = os.path.join(dir, f'{i}_{y_file_name}')
             x = np.load(x_path)
-            all_x.append(x)
-
-        all_y = []
-        for y_path in glob(f'{dir}/*_{y_file_name}'):
             y = np.load(y_path)
+            all_x.append(x)
             all_y.append(y)
 
         if verbose:
@@ -256,6 +258,7 @@ def get_ts_filename():
 def complex_numpy_to_torch(np_vec: np.ndarray):
     x = np.array([np.real(np_vec), np.imag(np_vec)])
     return torch.from_numpy(x).float()
+
 
 def numpy_to_torch(np_vec: np.ndarray):
     return torch.from_numpy(np_vec).float()

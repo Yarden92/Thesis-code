@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import wandb
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from src.deep.data.data_methods import DataMethods
 from src.deep.data_loaders import SingleMuDataSet, read_conf
@@ -14,11 +14,12 @@ analyzation_dir = '_analyzation'
 
 
 class DataAnalyzer():
-    def __init__(self, data_folder_path: str, _tqdm=tqdm):
+    def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False):
         self.path = data_folder_path.rstrip('/')
         self.base_name = os.path.basename(self.path)
         self.params = self.fetch_params()
         self.is_wandb_init = False
+        self.is_box_plot = is_box_plot
         self.ber_vec = None
         self.mu_vec = None
         self._tqdm = _tqdm
@@ -52,13 +53,13 @@ class DataAnalyzer():
 
     def plot_single_sample(self, mu: float = None, data_id: int = 0, is_save=True):
         # read folder and plot one of the data samples
-        if mu is None: mu = self.params['mu_start']
-        sub_name = self._get_subfolder_name(mu)
+        mu = mu or self.params['mu_start']  # default to first mu
+        sub_name = self._get_sub_folder_name(mu)
         x, y = self._get_xy(data_id, sub_name)
         out_path = f'{self.path}/{analyzation_dir}/{sub_name}'
         os.makedirs(out_path, exist_ok=True)
 
-        is_spectrum = self.params['conf']['data_type'] == 0
+        is_spectrum = ('data_type' not in self.params['conf']) or (self.params['conf']['data_type'] == 0)
 
         zm = range(1700, 2300) if is_spectrum else range(0, 50)
         func = 'plot' if is_spectrum else 'stem'
@@ -75,7 +76,21 @@ class DataAnalyzer():
         x_power = np.mean(np.abs(x) ** 2)
         print(f'x_power={x_power}')
 
-        print(f'images saved to {out_path}')
+        ber, num_errors = Metrics.calc_ber_for_single_vec(x, y, conf=self.params['conf'])
+        print(f'ber={ber}')
+
+        if is_save: print(f'images saved to {out_path}')
+
+    def calc_ber_for_sub_folder(self, mu, n=5, _tqdm=None):
+        # n is the number of x's permutations to take from each folder
+        sub_name = self._get_sub_folder_name(mu)
+        dir = self.path + '/' + sub_name
+        dataset = SingleMuDataSet(dir)
+
+        ber_vec, num_errors = Metrics.calc_ber_from_dataset(dataset, False, _tqdm, n)
+        print(f'the avg ber of mu={mu} (with {n} permutations) is {np.mean(ber_vec)}')
+
+        return ber_vec
 
     def plot_full_ber_graph(self, n=5, is_save=True):
         # n is the number of x's permutations to take from each folder
@@ -84,11 +99,18 @@ class DataAnalyzer():
         os.makedirs(out_dir, exist_ok=True)
         out_path = f'{out_dir}/ber_vs_mu.png'
 
-        Visualizer.plot_bers(
-            us=self.mu_vec,
-            bers_vecs=[self.ber_vec],
-            output_path=out_path if is_save else None
-        )
+        if self.is_box_plot:
+            Visualizer.plot_bers_boxplot(
+                us=self.mu_vec,
+                bers_vecs=self.ber_vec.T,
+                output_path=out_path if is_save else None,
+            )
+        else:
+            Visualizer.plot_bers(
+                us=self.mu_vec,
+                bers_vecs=[self.ber_vec],
+                output_path=out_path if is_save else None,
+            )
 
         print(f'ber vs mu saved to {out_path}')
 
@@ -119,7 +141,7 @@ class DataAnalyzer():
 
     def wandb_log_single_sample(self, mu: float, data_id: int):
         self._init_wandb()
-        sub_name = self._get_subfolder_name(mu)
+        sub_name = self._get_sub_folder_name(mu)
         x, y = self._get_xy(data_id, sub_name)
         indices = np.arange(len(x))
         for v, title in [(x, 'x (dirty)'), (y, 'y (clean)')]:
@@ -134,25 +156,22 @@ class DataAnalyzer():
 
     # ------------ private ------------
 
-    def calc_ber_for_subfolder(self, mu, n=5):
-        # n is the number of x's permutations to take from each folder
-        sub_name = self._get_subfolder_name(mu)
-        dir = self.path + '/' + sub_name
-        dataset = SingleMuDataSet(dir)
 
-        ber_vec, num_errors = Metrics.calc_ber_from_dataset(dataset, False, self._tqdm, n)
-
-        print(f'the avg ber of mu={mu} (with {n} permutations) is {np.mean(ber_vec)}')
 
     def _calc_full_ber(self, n):
         sub_name_filter = '*'
         if self.ber_vec is None or self.mu_vec is None:
-            self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, 0, self._tqdm, n)
+            self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, 0, self._tqdm, n,
+                                                                        is_matrixed_ber=self.is_box_plot)
 
-    def _get_subfolder_name(self, mu):
+    def _get_sub_folder_name(self, mu):
         num_samples = self.params['num_samples']
         sub_name = f"{num_samples}_samples_mu={mu:.3f}"
         return sub_name
+
+    def clear_ber(self):
+        self.ber_vec = None
+        self.mu_vec = None
 
     # def _is_valid_subfolder(self, sub_name):
     #     if sub_name.startswith('_'): return False

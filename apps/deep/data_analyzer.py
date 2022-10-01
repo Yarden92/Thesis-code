@@ -11,6 +11,7 @@ class DataAnalyzerConfig:
     mu: float = -1  # mu to check, if -1: takes the first folder
     i: int = 0  # data index to check
     is_full_ber: bool = True  # if True, calculate full ber
+    is_box_plot: bool = False  # if True, the ber graph will be displayed in a box plot form
     is_single_item: bool = False  # whether to plot single item (by i and mu vals)
     num_x_per_folder: int = 5
     is_save_to_file: bool = True
@@ -19,7 +20,7 @@ class DataAnalyzerConfig:
 
 def main(config):
     path = config.path
-    da = DataAnalyzer(path)
+    da = DataAnalyzer(path, is_box_plot=config.is_box_plot)
     if config.mu == -1:
         config.mu = da.params['mu_start']
 
@@ -38,3 +39,9 @@ def main(config):
 if __name__ == '__main__':
     config = pyrallis.parse(config_class=DataAnalyzerConfig)
     main(config)
+
+
+def analyze_data(path: str):
+    data_analyzer = DataAnalyzer(path)
+    data_analyzer.plot_full_ber_graph(n=30, is_save=True)
+    data_analyzer.wandb_log_ber_vs_mu(n=30)
