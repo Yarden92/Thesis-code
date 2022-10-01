@@ -31,8 +31,8 @@ def main(config: PaperModelConfig):
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
                                                                      train_val_ratio=config.train_val_ratio)
 
-    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name,
-               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name, f'ds={len(train_dataset)}'],
+    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name+f'_real',
+               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name+f'_real', f'ds={len(train_dataset)}'],
                reinit=False)
     wandb.config = {
         "learning_rate": config.lr,
@@ -69,7 +69,10 @@ def main(config: PaperModelConfig):
     print('finish training real part')
 
     print('training imaginary part')
-    wandb.init(project=config.wandb_project, entity="yarden92", name='paper_model_imag', reinit=True)
+    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name+f'_imag',
+               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name + f'_imag',
+                     f'ds={len(train_dataset)}'],
+               reinit=True)
     wandb.config = {
         "learning_rate": config.lr,
         "epochs": config.epochs,
