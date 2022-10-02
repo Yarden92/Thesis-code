@@ -5,7 +5,7 @@ import wandb
 from tqdm.auto import tqdm
 
 from src.deep.data.data_methods import DataMethods
-from src.deep.data_loaders import SingleMuDataSet, read_conf
+from src.deep.data_loaders import DatasetNormal, read_conf
 from src.deep.metrics import Metrics
 from src.deep.standalone_methods import get_platform, DataType
 from src.general_methods.visualizer import Visualizer
@@ -85,7 +85,7 @@ class DataAnalyzer():
         # n is the number of x's permutations to take from each folder
         sub_name = self._get_sub_folder_name(mu)
         dir = self.path + '/' + sub_name
-        dataset = SingleMuDataSet(dir)
+        dataset = DatasetNormal(dir)
 
         ber_vec, num_errors = Metrics.calc_ber_from_dataset(dataset, False, _tqdm, n)
         print(f'the avg ber of mu={mu} (with {n} permutations) is {np.mean(ber_vec)}')
@@ -181,7 +181,7 @@ class DataAnalyzer():
 
     def _get_xy(self, data_id, sub_name):
         dir = self.path + '/' + sub_name
-        dataset = SingleMuDataSet(dir)
+        dataset = DatasetNormal(dir)
         print(f'the folder {dir} contains {len(dataset)} samples')
         x, y = dataset.get_numpy_xy(data_id)
         return x, y

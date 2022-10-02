@@ -51,7 +51,7 @@ def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_
     return train_ds, val_ds
 
 
-class SingleMuDataSet(OpticDataset):
+class DatasetNormal(OpticDataset):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None) -> None:
         super().__init__(data_dir_path, data_indices)
         self.data_dir_path = os.path.abspath(data_dir_path)
@@ -69,10 +69,10 @@ class SingleMuDataSet(OpticDataset):
 
         x, y = GeneralMethods.normalize_xy(x, y, self.mu, self.std)
 
-        x = complex_numpy_to_torch(x)
-        y = complex_numpy_to_torch(y)
+        x = complex_numpy_to_torch2(x)
+        y = complex_numpy_to_torch2(y)
 
-        x, y = x.T, y.T
+        # x, y = x.T, y.T
 
         return x, y
 
@@ -84,7 +84,7 @@ class SingleMuDataSet(OpticDataset):
         return x, y
 
 
-class SeparatedRealImagDataset(SingleMuDataSet):
+class SeparatedRealImagDataset(DatasetNormal):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None, is_real=True) -> None:
         super(SeparatedRealImagDataset, self).__init__(data_dir_path, data_indices)
         self.is_real = is_real
@@ -258,6 +258,12 @@ def get_ts_filename():
 def complex_numpy_to_torch(np_vec: np.ndarray):
     x = np.array([np.real(np_vec), np.imag(np_vec)])
     return torch.from_numpy(x).float()
+
+
+def complex_numpy_to_torch2(np_vec: np.ndarray) -> torch.Tensor:
+    # complex [N] (a+bi) -> torch [2, N] (a, b)
+    t = torch.Tensor([np_vec.real, np_vec.imag])
+    return t
 
 
 def numpy_to_torch(np_vec: np.ndarray):

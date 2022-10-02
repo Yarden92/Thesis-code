@@ -3,9 +3,9 @@ from dataclasses import dataclass
 import pyrallis
 
 from apps.deep.model_analyzer import ModelAnalyzer
-from src.deep.data_loaders import SingleMuDataSet
+from src.deep.data_loaders import DatasetNormal
 from src.deep.ml_ops import Trainer
-from src.deep.models import PaperNNforNFTwrapper
+from src.deep.models import Paper1ModelWrapper
 
 
 @dataclass
@@ -24,11 +24,11 @@ def main(config: Paper1Config):
 
 
 def analyze_models(trainer_real, trainer_imag):
-    model = PaperNNforNFTwrapper(trainer_real.model, trainer_imag.model)
-    train_ds = SingleMuDataSet(data_dir_path=trainer_real.train_dataset.data_dir_path,
-                               data_indices=trainer_real.train_dataset.data_indices)
-    val_ds = SingleMuDataSet(data_dir_path=trainer_real.val_dataset.data_dir_path,
-                             data_indices=trainer_real.val_dataset.data_indices)
+    model = Paper1ModelWrapper(trainer_real.model, trainer_imag.model)
+    train_ds = DatasetNormal(data_dir_path=trainer_real.train_dataset.data_dir_path,
+                             data_indices=trainer_real.train_dataset.data_indices)
+    val_ds = DatasetNormal(data_dir_path=trainer_real.val_dataset.data_dir_path,
+                           data_indices=trainer_real.val_dataset.data_indices)
     trainer = Trainer(
         train_dataset=train_ds,
         val_dataset=val_ds,

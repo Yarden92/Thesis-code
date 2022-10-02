@@ -5,7 +5,7 @@ import numpy as np
 import torch.optim
 from torch import nn, Tensor
 
-from src.deep.data_loaders import SingleMuDataSet
+from src.deep.data_loaders import DatasetNormal
 
 num_epochs = 3
 MAX_LAYER_SIZE = 64  # maximum number of channels in each layer
@@ -119,7 +119,7 @@ class NLayersModel(nn.Module):
         return arr
 
 
-class PaperNNforNFTmodel(nn.Module):
+class Paper1Model(nn.Module):
     def __init__(self, input_size=8192, k=10):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -146,8 +146,8 @@ class PaperNNforNFTmodel(nn.Module):
         return x
 
 
-class PaperNNforNFTwrapper(nn.Module):
-    def __init__(self, real_model: PaperNNforNFTmodel, imag_model: PaperNNforNFTmodel):
+class Paper1ModelWrapper(nn.Module):
+    def __init__(self, real_model: Paper1Model, imag_model: Paper1Model):
         super().__init__()
         self.real_model = real_model
         self.imag_model = imag_model
@@ -160,10 +160,9 @@ class PaperNNforNFTwrapper(nn.Module):
         return torch.stack([pred_real, pred_imag], dim=1)
 
 
-class PaperNNforNFT_v2(nn.Module):
+class Paper1Model_v2(nn.Module):
     def __init__(self, input_size=8192, k=10):
         super().__init__()
-        self.layers = nn.ModuleList()
         self._1_conv = nn.Conv1d(in_channels=1, out_channels=10, kernel_size=k, stride=1, dilation=2)
         self._1_tanh = nn.Tanh()
         self._2_conv = nn.Conv1d(in_channels=10, out_channels=10, kernel_size=k, stride=1, dilation=2)
@@ -191,6 +190,45 @@ class PaperNNforNFT_v2(nn.Module):
 
         y = torch.stack([x_real, x_imag], dim=1)
         return y
+
+
+class Paper2Model(nn.Module):
+    def __init__(self, input_size: int = 8192, k=10, s=1, d=2):
+        super().__init__()
+        self._1_conv = nn.Conv1d(in_channels=2, out_channels=8, kernel_size=k, stride=s, dilation=d)
+        self._1_relu = nn.ReLU()
+        self._2_conv = nn.Conv1d(in_channels=8, out_channels=16, kernel_size=k, stride=s, dilation=d)
+        self._2_relu = nn.ReLU()
+        self._3_conv = nn.Conv1d(in_channels=16, out_channels=32, kernel_size=k, stride=s, dilation=d)
+        self._3_relu = nn.ReLU()
+        self._4_conv = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=k, stride=s, dilation=d)
+        self._4_relu = nn.ReLU()
+        # self._5_conv = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=k, stride=s, dilation=d)
+        # self._5_relu = nn.ReLU()
+        # self._6_conv = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=k, stride=s, dilation=d)
+        # self._6_relu = nn.ReLU()
+        self._7_fc = nn.Linear(in_features=64*(input_size - 4*(2*(k - 1))), out_features=4*input_size)
+        self._7_relu = nn.ReLU()
+        self._8_fc = nn.Linear(in_features=4*input_size, out_features=2*input_size)
+
+    def forward(self, x: Tensor):
+        x = self._1_conv(x)
+        x = self._1_relu(x)
+        x = self._2_conv(x)
+        x = self._2_relu(x)
+        x = self._3_conv(x)
+        x = self._3_relu(x)
+        x = self._4_conv(x)
+        x = self._4_relu(x)
+        # x = self._5_conv(x)
+        # x = self._5_relu(x)
+        # x = self._6_conv(x)
+        # x = self._6_relu(x)
+        x = x.flatten()
+        x = self._7_fc(x)
+        x = self._7_relu(x)
+        x = self._8_fc(x)
+        return x
 
 
 class SingleMuModel3Layers(nn.Module):
@@ -235,7 +273,7 @@ class SingleMuModel3Layers(nn.Module):
 def test():
     model = SingleMuModel3Layers()
     data_dir_path = '../apps/deep/data/qam1024_50x16/50_samples_mu=0.0005'
-    dataset = SingleMuDataSet(data_dir_path)
+    dataset = DatasetNormal(data_dir_path)
     l_metric = nn.MSELoss()
     optim = torch.optim.Adam(model.parameters(), lr=1e-3)
 

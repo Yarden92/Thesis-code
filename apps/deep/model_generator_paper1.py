@@ -40,8 +40,8 @@ def main(config: PaperModelConfig):
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
-    model_real = models.PaperNNforNFTmodel()
-    model_imag = models.PaperNNforNFTmodel()
+    model_real = models.Paper1Model()
+    model_imag = models.Paper1Model()
 
     if config.device == 'cuda':
         device1, device2 = 'cuda:0', 'cuda:1'

@@ -10,7 +10,7 @@ from torch import nn
 
 from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
-from src.deep.data_loaders import SingleMuDataSet
+from src.deep.data_loaders import DatasetNormal
 from src.deep.ml_ops import Trainer
 from src.deep.models import NLayersModel
 from src.deep.standalone_methods import get_platform
@@ -71,7 +71,7 @@ def parse_models_config(model_config: str):
 
 def main(main_config: ModelsConfig):
     if main_config.device == 'auto': main_config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(main_config.input_data_path, SingleMuDataSet,
+    train_dataset, val_dataset = data_loaders.get_train_val_datasets(main_config.input_data_path, DatasetNormal,
                                                                      train_val_ratio=main_config.train_val_ratio)
     mu = train_dataset.mu
     for sub_config in parse_models_config(main_config.models):
