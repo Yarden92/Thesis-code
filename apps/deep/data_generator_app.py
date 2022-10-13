@@ -4,7 +4,7 @@ import numpy as np
 import pyrallis
 from tqdm import tqdm
 
-from apps.deep.data_analyzer import analyze_data
+from apps.deep.data_analyzer_app import analyze_data
 from src.deep import data_loaders
 from src.deep.standalone_methods import DataType
 from src.optics.channel_simulation import ChannelSimulator

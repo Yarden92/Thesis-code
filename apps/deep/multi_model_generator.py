@@ -11,8 +11,8 @@ from torch import nn
 from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
-from src.deep.ml_ops import Trainer
-from src.deep.models import NLayersModel
+from src.deep.trainers import Trainer
+from src.deep.models.n_layers_model import NLayersModel
 from src.deep.standalone_methods import get_platform
 
 

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from src.deep.data.data_methods import DataMethods
+from src.deep.data_methods import DataMethods
 from src.deep.standalone_methods import GeneralMethods, DataType
 from src.deep.data_loaders import OpticDataset, FilesReadWrite
 from src.optics.channel_simulation import ChannelSimulator

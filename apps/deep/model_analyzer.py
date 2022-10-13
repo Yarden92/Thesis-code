@@ -4,7 +4,7 @@ import numpy as np
 import pyrallis
 
 import wandb
-from src.deep.ml_ops import Trainer
+from src.deep.trainers import Trainer
 from src.deep.standalone_methods import get_platform
 
 

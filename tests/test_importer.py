@@ -1,6 +1,7 @@
 print('test1: import src.deep.ml_ops.Trainer\t', end="")
 try:
-    from src.deep.ml_ops import Trainer
+    from src.deep.trainers import Trainer
+
     print('[OK]')
 except Exception as e:
     print(f'[FAIL] <- {e}')
@@ -15,7 +16,6 @@ except Exception as e:
 
 print('test3: import ...src.deep.ml_ops.Trainer\t', end="")
 try:
-    from src.deep.ml_ops import Trainer
     print('[OK]')
 except Exception as e:
     print(f'[FAIL] <- {e}')

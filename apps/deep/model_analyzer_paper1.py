@@ -4,8 +4,8 @@ import pyrallis
 
 from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep.data_loaders import DatasetNormal
-from src.deep.ml_ops import Trainer
-from src.deep.models import Paper1ModelWrapper
+from src.deep.trainers import Trainer
+from src.deep.models.paper1_model import Paper1ModelWrapper
 
 
 @dataclass

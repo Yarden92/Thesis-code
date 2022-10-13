@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 
 import torch
+
 import wandb
 import pyrallis
 from torch import nn
@@ -10,8 +11,8 @@ from tqdm import tqdm
 from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
-from src.deep.ml_ops import Trainer
-from src.deep import models
+from src.deep.models.paper2_model import Paper2Model
+from src.deep.trainers import Trainer
 from src.deep.standalone_methods import get_platform
 
 
@@ -44,7 +45,7 @@ def main(config: TrainConfig):
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
-    model = models.Paper2Model()
+    model = Paper2Model()
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,

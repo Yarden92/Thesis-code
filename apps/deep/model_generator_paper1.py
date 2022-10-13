@@ -9,7 +9,8 @@ import wandb
 from apps.deep.model_analyzer_paper1 import analyze_models
 from src.deep import models, data_loaders
 from src.deep.data_loaders import SeparatedRealImagDataset
-from src.deep.ml_ops import Trainer
+from src.deep.models.paper1_model import Paper1Model
+from src.deep.trainers import Trainer
 from src.deep.standalone_methods import get_platform
 
 
@@ -40,8 +41,8 @@ def main(config: PaperModelConfig):
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
-    model_real = models.Paper1Model()
-    model_imag = models.Paper1Model()
+    model_real = Paper1Model()
+    model_imag = Paper1Model()
 
     if config.device == 'cuda':
         device1, device2 = 'cuda:0', 'cuda:1'

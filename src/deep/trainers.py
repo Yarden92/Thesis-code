@@ -1,15 +1,21 @@
 import json
+import os
 
+import numpy
+import numpy as np
+import torch.cuda
 import torch.optim
 import wandb
+from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.deep.metrics import Metrics
-from src.deep.models import *
 from src.deep.data_loaders import OpticDataset
+from src.deep.metrics import Metrics
+from src.deep.models.single_mu_model_3_layers import SingleMuModel3Layers
 from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
+
 
 
 class Trainer:
@@ -191,3 +197,7 @@ class TrainStateVector:
         self.num_epochs += 1
         self.train_loss_vec.append(train_loss)
         self.val_loss_vec.append(val_loss)
+
+
+class DoubleTrainer(Trainer):
+    pass

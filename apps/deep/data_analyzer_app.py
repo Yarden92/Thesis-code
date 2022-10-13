@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pyrallis
 
-from src.deep.data.data_analyzer import DataAnalyzer
+from src.deep.data_analyzer import DataAnalyzer
 
 
 @dataclass

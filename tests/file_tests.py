@@ -8,8 +8,8 @@ import wandb
 
 from src.deep import data_loaders
 from src.deep.data_loaders import FilesReadWrite, DatasetNormal
-from src.deep.ml_ops import Trainer
-from src.deep.models import SingleMuModel3Layers
+from src.deep.trainers import Trainer
+from src.deep.models.single_mu_model_3_layers import SingleMuModel3Layers
 from src.optics.split_step_fourier import SplitStepFourier
 
 from src.deep.metrics import Metrics

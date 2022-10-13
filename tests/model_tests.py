@@ -7,8 +7,9 @@ from tqdm import tqdm
 from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
-from src.deep.ml_ops import Trainer
-from src.deep.models import SingleMuModel3Layers, Paper1ModelWrapper
+from src.deep.trainers import Trainer
+from src.deep.models.paper1_model import Paper1ModelWrapper
+from src.deep.models.single_mu_model_3_layers import SingleMuModel3Layers
 
 
 def test1_model_test():

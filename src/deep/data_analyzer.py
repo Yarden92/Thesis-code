@@ -4,7 +4,7 @@ import numpy as np
 import wandb
 from tqdm.auto import tqdm
 
-from src.deep.data.data_methods import DataMethods
+from src.deep.data_methods import DataMethods
 from src.deep.data_loaders import DatasetNormal, read_conf
 from src.deep.metrics import Metrics
 from src.deep.standalone_methods import get_platform, DataType
