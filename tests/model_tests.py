@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from tqdm import tqdm
 
-from apps.deep.model_analyzer import ModelAnalyzer
+from src.deep.model_analyzer_src import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
 from src.deep.trainers import Trainer
@@ -72,7 +72,7 @@ def test4_paper1():
         batch_size=trainer_real.train_dataloader.batch_size,
         l_metric=trainer_real.l_metric,
         optim=trainer_real.optim,
-        params=trainer_real.params)
+        config=trainer_real.config)
 
     ma = ModelAnalyzer(trainer)
     ma.plot_single_item(i=0)

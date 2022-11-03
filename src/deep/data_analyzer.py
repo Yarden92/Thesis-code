@@ -162,7 +162,7 @@ class DataAnalyzer():
         sub_name_filter = '*'
         if self.ber_vec is None or self.mu_vec is None:
             self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, 0, self._tqdm, n,
-                                                                        is_matrixed_ber=self.is_box_plot)
+                                                                        is_matrix_ber=self.is_box_plot)
 
     def _get_sub_folder_name(self, mu):
         num_samples = self.params['num_samples']

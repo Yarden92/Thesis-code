@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pyrallis
 
-from apps.deep.model_analyzer import ModelAnalyzer
+from src.deep.model_analyzer_src import ModelAnalyzer
 from src.deep.data_loaders import DatasetNormal
 from src.deep.trainers import Trainer
 from src.deep.models.paper1_model import Paper1ModelWrapper
@@ -37,7 +37,7 @@ def analyze_models(trainer_real, trainer_imag):
         batch_size=trainer_real.train_dataloader.batch_size,
         l_metric=trainer_real.l_metric,
         optim=trainer_real.optim,
-        params=trainer_real.params)
+        config=trainer_real.config)
 
     ma = ModelAnalyzer(trainer)
     ma.upload_bers_to_wandb()

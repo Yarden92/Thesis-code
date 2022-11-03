@@ -1,28 +1,14 @@
-from dataclasses import dataclass
-
 import numpy as np
-import pyrallis
 
 import wandb
-from src.deep.trainers import Trainer
 from src.deep.standalone_methods import get_platform
-
-
-@dataclass
-class ModelAnalyzerConfig:
-    path: str = None  # path to the model folder
-
-
-def main(config: ModelAnalyzerConfig):
-    trainer = Trainer.load3(config.path)
-    ma = ModelAnalyzer(trainer)
-    ma.upload_single_item_plots_to_wandb(i=0)
+from src.deep.trainers import Trainer
 
 
 class ModelAnalyzer:
     def __init__(self, trainer: Trainer, run_name: str = None):
         self.trainer = trainer
-        self.wandb_project = self.trainer.params['wandb_project']
+        self.wandb_project = self.trainer.config['wandb_project']
         self.run_name = run_name
         self.model_name = self.trainer.model._get_name()
         self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
@@ -36,9 +22,9 @@ class ModelAnalyzer:
                    tags=[f'mu={self.mu}', f'{get_platform()}', self.model_name, f'ds={self.ds_len}'],
                    reinit=True)
         wandb.config = {
-            "learning_rate": self.trainer.params['lr'],
-            "epochs": self.trainer.params['epochs'],
-            "batch_size": self.trainer.params['batch_size']
+            "learning_rate": self.trainer.config['lr'],
+            "epochs": self.trainer.config['epochs'],
+            "batch_size": self.trainer.config['batch_size']
         }
 
     def plot_bers(self, _tqdm=None, verbose_level=1):
@@ -64,8 +50,3 @@ class ModelAnalyzer:
                 keys=['real', 'imag'],
                 title=title,
                 xname="sample index")})
-
-
-if __name__ == '__main__':
-    conf = pyrallis.parse(config_class=ModelAnalyzerConfig)
-    main(conf)

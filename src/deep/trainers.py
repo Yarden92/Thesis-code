@@ -1,7 +1,6 @@
 import json
 import os
 
-import numpy
 import numpy as np
 import torch.cuda
 import torch.optim
@@ -10,12 +9,11 @@ from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.deep.data_loaders import OpticDataset
+from src.deep.data_loaders import OpticDataset, SeparatedRealImagDataset
 from src.deep.metrics import Metrics
 from src.deep.models.single_mu_model_3_layers import SingleMuModel3Layers
 from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
-
 
 
 class Trainer:
@@ -27,7 +25,7 @@ class Trainer:
                  batch_size: int = 1,
                  l_metric=None,
                  optim=None,
-                 params: dict = None):
+                 config: dict = None):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -39,7 +37,7 @@ class Trainer:
         self.device = device
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.Adam(model.parameters(), lr=1e-3)
-        self.params = params or {}
+        self.config = config or {}
 
         self.attach_to_device(self.device)
         # move all to device
@@ -66,17 +64,13 @@ class Trainer:
             val_loss_i = self.epoch_step(self.val_dataloader, self._step_val)
 
             wandb.log({"train_loss": train_loss_i, "val_loss": val_loss_i, "epoch": epoch})
-            wandb.log({"val_loss": val_loss_i})
             self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
 
     def epoch_step(self, dataloader, step):
         final_loss = 0
         for batch in dataloader:
             x, y = batch
-            # x, y = x[0], y[0]
-            # x, y = x[0].to(self.device), y[0].to(self.device)
             loss, pred = step(x, y)
-            # print(f'loss={loss.item()}')
             final_loss += loss.item()/len(dataloader)
 
         return final_loss
@@ -118,7 +112,7 @@ class Trainer:
 
         # save params to a readable json file (for manual inspection)
         with open(sub_dir_path + '/params.json', 'w') as f:
-            json.dump(self.params, f, indent=4)
+            json.dump(self.config, f, indent=4)
 
     @classmethod
     def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':
@@ -199,5 +193,45 @@ class TrainStateVector:
         self.val_loss_vec.append(val_loss)
 
 
-class DoubleTrainer(Trainer):
-    pass
+class DoubleTrainer:
+    def __init__(self, train_dataset: SeparatedRealImagDataset, val_dataset: SeparatedRealImagDataset,
+                 model_real: nn.Module = None, model_imag: nn.Module = None,
+                 device: str = 'cpu', batch_size: int = 1, params: dict = None):
+
+        l_metric_real = nn.MSELoss()  # or L1Loss
+        l_metric_imag = nn.MSELoss()  # or L1Loss
+
+
+        optim_real = torch.optim.Adam(model_real.parameters(), lr=params['lr'])
+        optim_imag = torch.optim.Adam(model_imag.parameters(), lr=params['lr'])
+
+        if device == 'cuda':
+            device1, device2 = 'cuda:0', 'cuda:1'
+        else:
+            device1, device2 = 'cpu', 'cpu'
+
+        self.trainer_real = Trainer(train_dataset, val_dataset, model_real, device1, batch_size, l_metric_real, optim_real, params)
+        self.trainer_imag = Trainer(train_dataset, val_dataset, model_imag, device2, batch_size, l_metric_imag, optim_imag, params)
+
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+
+    def train(self, num_epochs: int, mini_batch_size: int = 500, _tqdm=tqdm):
+        print('training real part...')
+        self.train_dataset.set_is_real(True), self.val_dataset.set_is_real(True)
+        self.trainer_real.train(num_epochs, mini_batch_size, _tqdm)
+
+        print('training imaginary part...')
+        self.train_dataset.set_is_real(False), self.val_dataset.set_is_real(False)
+        self.trainer_imag.train(num_epochs, mini_batch_size, _tqdm)
+
+    def save3(self, dir_path: str = 'saved_models', endings: str = ''):
+        self.trainer_real.save3(dir_path, '_real' + endings)
+        self.trainer_imag.save3(dir_path, '_imag' + endings)
+
+    @classmethod
+    def load3(cls, dir_path: str = 'saved_models') -> 'Trainer':
+        return super().load3(dir_path)
+
+    def test_single_item(self, i: int, title=None, verbose=False, plot=True):
+        return super().test_single_item(i, title, verbose, plot)

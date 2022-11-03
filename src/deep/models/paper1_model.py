@@ -1,3 +1,4 @@
+import torch
 from torch import nn, Tensor
 
 
@@ -15,7 +16,7 @@ class Paper1Model(nn.Module):
         # self._4_relu = nn.ReLU()
 
     def forward(self, x: Tensor):
-        x = x.unsqueeze(1).unsqueeze(1).T
+        x = x.unsqueeze(1)
         x = self._1_conv(x)
         x = self._1_tanh(x)
         x = self._2_conv(x)
@@ -24,6 +25,7 @@ class Paper1Model(nn.Module):
         x = self._3_relu(x)
         x = x.flatten()
         x = self._4_fc(x)
+        x = x.unsqueeze(0)
         # x = self._4_relu(x)
         return x
 
@@ -35,11 +37,12 @@ class Paper1ModelWrapper(nn.Module):
         self.imag_model = imag_model
 
     def forward(self, x: Tensor):
-        x_real = x[:, 0]
-        x_imag = x[:, 1]
+        assert x.shape[0] == 2, f"input should have been 2x8192 but got {x.shape} instead"
+        x_real = x[0].unsqueeze(0)
+        x_imag = x[1].unsqueeze(0)
         pred_real = self.real_model(x_real)
         pred_imag = self.imag_model(x_imag)
-        return torch.stack([pred_real, pred_imag], dim=1)
+        return torch.stack([pred_real, pred_imag], dim=1).squeeze(0)
 
 
 class Paper1Model_v2(nn.Module):

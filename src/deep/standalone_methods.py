@@ -10,7 +10,9 @@ class GeneralMethods:
     @staticmethod
     def torch_to_complex_numpy(tensor: Tensor):
         np_vec = tensor.cpu().detach().numpy()
-        return np_vec[:, 0] + 1j*np_vec[:, 1]
+        assert np_vec.shape[0] == 2, f"input should have been 2x8192 but got {np_vec.shape} instead"
+        # return np_vec[:, 0] + 1j*np_vec[:, 1]
+        return np_vec[0] + 1j*np_vec[1]
 
     @staticmethod
     def normalize_xy(x, y, mu, std):

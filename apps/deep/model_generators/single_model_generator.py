@@ -1,23 +1,22 @@
 import json
 from dataclasses import dataclass
 
-import torch
-
-import wandb
 import pyrallis
+import torch
+import wandb
 from torch import nn
 from tqdm import tqdm
 
-from apps.deep.model_analyzer import ModelAnalyzer
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
+from src.deep.model_analyzer_src import ModelAnalyzer
 from src.deep.models.paper2_model import Paper2Model
-from src.deep.trainers import Trainer
 from src.deep.standalone_methods import get_platform
+from src.deep.trainers import Trainer
 
 
 @dataclass
-class TrainConfig:
+class SingleModelTrainConfig:
     lr: float = 1e-3  # learning rate
     epochs: int = 3  # num of epochs
     batch_size: int = 1  # batch size
@@ -29,11 +28,10 @@ class TrainConfig:
     run_name: str = "test_model_10epochs"  # name of the run in wandb
 
 
-
-def main(config: TrainConfig):
+def single_model_main(model, config: SingleModelTrainConfig, verbose: bool = False):
     # config
     print(f"Running {config.run_name}")
-    print(json.dumps(config.__dict__, indent=4))
+    if verbose: print(json.dumps(config.__dict__, indent=4))
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, DatasetNormal,
                                                                      train_val_ratio=config.train_val_ratio)
 
@@ -45,18 +43,17 @@ def main(config: TrainConfig):
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
-    model = Paper2Model()
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,
                       model=model, device=config.device,
                       l_metric=l_metric, optim=optim,
-                      params=config.__dict__)
+                      config=config.__dict__)
     # trainer.model.print_architecture(train_dataset[0])
     trainer.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer.save3(config.output_model_path)
 
-    print('finished training')
+    print(f'finished training {config.run_name}')
 
     ma = ModelAnalyzer(trainer)
     ma.upload_single_item_plots_to_wandb(i=0)
@@ -64,5 +61,6 @@ def main(config: TrainConfig):
 
 
 if __name__ == '__main__':
-    config = pyrallis.parse(config_class=TrainConfig)
-    main(config)
+    config = pyrallis.parse(config_class=SingleModelTrainConfig)
+    model = Paper2Model()
+    single_model_main(model, config)

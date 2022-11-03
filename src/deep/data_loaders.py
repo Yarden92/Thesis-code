@@ -38,8 +38,10 @@ class OpticDataset(Dataset, ABC):
         return 0
 
 
-def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_val_ratio=0.8):
+def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_val_ratio=0.8, ds_limit: int = None):
     n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
+    if ds_limit:
+        n_total = min(n_total, ds_limit)
     divider_index = int(n_total*train_val_ratio)
     train_indices = range(0, divider_index)
     val_indices = range(divider_index, n_total)
@@ -263,6 +265,7 @@ def complex_numpy_to_torch(np_vec: np.ndarray):
 def complex_numpy_to_torch2(np_vec: np.ndarray) -> torch.Tensor:
     # complex [N] (a+bi) -> torch [2, N] (a, b)
     t = torch.Tensor([np_vec.real, np_vec.imag])
+    # TODO: they say Tensor(list(numpy)) is slow and I should consider convert to numpy array first
     return t
 
 
