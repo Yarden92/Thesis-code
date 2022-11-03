@@ -6,6 +6,6 @@ ds_limit: 0
 input_data_path: './data/datasets/spectrum/qam1024_160x20/160_samples_mu=0.008'
 output_model_path: './data/saved_models'
 device: 'cuda'
-wandb_project: 'Thesis_model_scanning_test'
+wandb_project: 'Thesis_model_scanning'
 model_name: "test_paper2_in_new_sw_ds160_mu008"  # name of the run in wandb
 model_class: "Paper2Model"
