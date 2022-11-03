@@ -26,7 +26,8 @@ class DualModelTrainConfig:
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     wandb_project: str = 'thesis_model_scan_test'
     model_name: str = 'paper_no_relu'
-    ds_limit: int = 5  # limit the dataset size, use None for unlimited (as much as exists)
+    ds_limit: int = None
+    # limit the dataset size, use None for unlimited (as much as exists)
 
 
 def dual_model_main(ModelClass, config: DualModelTrainConfig):
