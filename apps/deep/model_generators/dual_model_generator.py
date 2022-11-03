@@ -9,8 +9,7 @@ from tqdm import tqdm
 from apps.deep.model_analyzers.model_analyzer_paper1 import analyze_models
 from src.deep import data_loaders
 from src.deep.data_loaders import SeparatedRealImagDataset
-from src.deep.models.paper1_model import Paper1Model
-from src.deep.models.paper2_model import Paper2Model
+from src.deep.models import *
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 
@@ -27,10 +26,14 @@ class DualModelTrainConfig:
     wandb_project: str = 'thesis_model_scan_test'
     model_name: str = 'paper_no_relu_ds160_mu001'
     ds_limit: int = None  # limit the dataset size, use 0 for unlimited (as much as exists)
+    model_class: str = "Paper1Model" # the exact class name
 
-
-def dual_model_main(ModelClass, config: DualModelTrainConfig):
-    print(f"Running {ModelClass.__name__} model")
+def dual_model_main(config: DualModelTrainConfig):
+    try:
+        ModelClass = globals()[config.model_class]
+        print(f"Running {ModelClass.__name__} model")
+    except Exception:
+        print(f'failed to find class named {config.model_class}, make sure you wrote it correctly and imported it')
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
                                                                      train_val_ratio=config.train_val_ratio,
                                                                      ds_limit=config.ds_limit)
@@ -103,5 +106,5 @@ def dual_model_main(ModelClass, config: DualModelTrainConfig):
 
 if __name__ == '__main__':
     config = pyrallis.parse(config_class=DualModelTrainConfig)
-    dual_model_main(Paper1Model, config)
+    dual_model_main(config)
     # dual_model_main(Paper2Model, config)

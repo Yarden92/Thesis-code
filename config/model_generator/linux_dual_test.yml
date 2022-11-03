@@ -8,3 +8,4 @@ output_model_path: './data/saved_models'
 device: 'cuda'
 wandb_project: 'Thesis_model_scanning'
 model_name: "test_paper1_in_new_sw_ds160_mu008"  # name of the run in wandb
+model_class: "Paper1Model"
