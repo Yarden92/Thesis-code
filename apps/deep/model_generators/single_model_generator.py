@@ -25,17 +25,28 @@ class SingleModelTrainConfig:
     output_model_path: str = './data/test_models'  # path to save model
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'  # device to use
     wandb_project: str = 'thesis_model_scan_test'  # wandb project name
-    run_name: str = "test_model_10epochs"  # name of the run in wandb
+    model_name: str = "test_model_10epochs"  # name of the run in wandb
+    ds_limit: int = None  # limit the dataset size, use 0 for unlimited (as much as exists)
+    model_class: str = "Paper2Model" # the exact class name
 
 
-def single_model_main(model, config: SingleModelTrainConfig, verbose: bool = False):
+
+def single_model_main(config: SingleModelTrainConfig, verbose: bool = False):
     # config
-    print(f"Running {config.run_name}")
+    print(f"Running {config.model_name}")
     if verbose: print(json.dumps(config.__dict__, indent=4))
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, DatasetNormal,
-                                                                     train_val_ratio=config.train_val_ratio)
+    try:
+        ModelClass = globals()[config.model_class]
+        print(f"Running {ModelClass.__name__} model")
+    except Exception:
+        raise f'failed to find class named {config.model_class}, make sure you wrote it correctly and imported it'
 
-    wandb.init(project=config.wandb_project, entity="yarden92", name=config.run_name,
+    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, DatasetNormal,
+                                                                     train_val_ratio=config.train_val_ratio,
+                                                                     ds_limit=config.ds_limit)
+
+
+    wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name,
                tags=[f'mu={train_dataset.mu}', f'{get_platform()}', f'ds={len(train_dataset)}'])
     wandb.config = {
         "learning_rate": config.lr,
@@ -43,6 +54,7 @@ def single_model_main(model, config: SingleModelTrainConfig, verbose: bool = Fal
         "batch_size": config.batch_size
     }
     l_metric = nn.MSELoss()  # or L1Loss
+    model = ModelClass()
 
     optim = torch.optim.Adam(model.parameters(), lr=config.lr)
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, batch_size=config.batch_size,
@@ -53,7 +65,7 @@ def single_model_main(model, config: SingleModelTrainConfig, verbose: bool = Fal
     trainer.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer.save3(config.output_model_path)
 
-    print(f'finished training {config.run_name}')
+    print(f'finished training {config.model_name}')
 
     ma = ModelAnalyzer(trainer)
     ma.upload_single_item_plots_to_wandb(i=0)
@@ -62,5 +74,4 @@ def single_model_main(model, config: SingleModelTrainConfig, verbose: bool = Fal
 
 if __name__ == '__main__':
     config = pyrallis.parse(config_class=SingleModelTrainConfig)
-    model = Paper2Model()
-    single_model_main(model, config)
+    single_model_main(config)

@@ -53,7 +53,7 @@ class MultiModelConfig:
             output_model_path=train_config.output_model_path,
             device=train_config.device,
             wandb_project=train_config.wandb_project,
-            run_name=run_name
+            model_name=run_name
         )
 
 

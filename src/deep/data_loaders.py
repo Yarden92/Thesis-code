@@ -65,11 +65,14 @@ class DatasetNormal(OpticDataset):
         self.n = len(self.data_indices)
 
     def __getitem__(self, index):
+        # dataset returns 2x8192 vector
+        # the dataloader returns 1x2x8192 where 1 is the batch size
+
         file_id = self.data_indices[index]
 
         x, y = read_xy(self.data_dir_path, file_id)
 
-        x, y = GeneralMethods.normalize_xy(x, y, self.mu, self.std)
+        x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
 
         x = complex_numpy_to_torch2(x)
         y = complex_numpy_to_torch2(y)
@@ -95,6 +98,8 @@ class SeparatedRealImagDataset(DatasetNormal):
         self.is_real = is_real
 
     def __getitem__(self, index):
+        # dataset returns 2x8192 vector
+        # the dataloader returns 1x2x8192 where 1 is the batch size
         file_id = self.data_indices[index]
 
         x, y = read_xy(self.data_dir_path, file_id)
@@ -108,7 +113,7 @@ class SeparatedRealImagDataset(DatasetNormal):
             x = numpy_to_torch(x.imag)
             y = numpy_to_torch(y.imag)
 
-        x, y = x.T, y.T
+        x, y = x.unsqueeze(0), y.unsqueeze(0)
 
         return x, y
 

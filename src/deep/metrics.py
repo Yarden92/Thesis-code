@@ -79,7 +79,9 @@ class Metrics:
         for i in rng:
             (x, y) = dataset[i]
             x = x.to(device)
+            x = x.unsqueeze(0)  # when fetching directly from dataset we need to wrap like dataloader does as 1x1xN
             pred = model(x)
+            pred = pred.squeeze(0)
             ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(pred, y, cs)
             ber_vec.append(ber_i)
             num_errors += num_errors_i

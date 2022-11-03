@@ -13,20 +13,17 @@ class Paper1Model(nn.Module):
         self._3_conv = nn.Conv1d(in_channels=10, out_channels=4, kernel_size=k, stride=1, dilation=2)
         self._3_relu = nn.ReLU()
         self._4_fc = nn.Linear(in_features=4*(input_size - 3*(2*(k - 1))), out_features=input_size)
-        # self._4_relu = nn.ReLU()
 
     def forward(self, x: Tensor):
-        x = x.unsqueeze(1)
+        # input should be 1x1x8192, outputs the same
         x = self._1_conv(x)
         x = self._1_tanh(x)
         x = self._2_conv(x)
         x = self._2_tanh(x)
         x = self._3_conv(x)
-        x = self._3_relu(x)
-        x = x.flatten()
-        x = self._4_fc(x)
-        x = x.unsqueeze(0)
-        # x = self._4_relu(x)
+        x = self._3_relu(x) # -> 1x4x8138
+        x = x.reshape([1,1,-1]) # -> 1x1x32552
+        x = self._4_fc(x) # -> 1x1x8192
         return x
 
 
@@ -37,12 +34,12 @@ class Paper1ModelWrapper(nn.Module):
         self.imag_model = imag_model
 
     def forward(self, x: Tensor):
-        assert x.shape[0] == 2, f"input should have been 2x8192 but got {x.shape} instead"
-        x_real = x[0].unsqueeze(0)
-        x_imag = x[1].unsqueeze(0)
-        pred_real = self.real_model(x_real)
-        pred_imag = self.imag_model(x_imag)
-        return torch.stack([pred_real, pred_imag], dim=1).squeeze(0)
+        assert x.shape[0:2] == torch.Size([1,2]), f"input should have been 1x2xN but got {x.shape} instead"
+        x_real = x[:,0].unsqueeze(0) # -> 1x1xN
+        x_imag = x[:,1].unsqueeze(0) # -> 1x1xN
+        pred_real = self.real_model(x_real) # -> 1x1xN
+        pred_imag = self.imag_model(x_imag) # -> 1x1xN
+        return torch.stack([pred_real, pred_imag], dim=2).squeeze(0) # -> 1x2xN
 
 
 class Paper1Model_v2(nn.Module):

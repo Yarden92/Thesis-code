@@ -21,7 +21,6 @@ class Paper2Model(nn.Module):
         self._8_fc = nn.Linear(in_features=4*input_size, out_features=2*input_size)
 
     def forward(self, x: Tensor):
-        x = x.unsqueeze(1)
         x = self._1_conv(x)
         x = self._1_relu(x)
         x = self._2_conv(x)
@@ -38,5 +37,4 @@ class Paper2Model(nn.Module):
         x = self._7_fc(x)
         x = self._7_relu(x)
         x = self._8_fc(x)
-        x = x.unsqueeze(0)
         return x
