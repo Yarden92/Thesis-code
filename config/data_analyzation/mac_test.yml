@@ -1,0 +1,9 @@
+path: './data/datasets/spectrum/qam16_8x11'
+mu: -1  # mu to check, if -1: takes the first folder
+i: 0  # data index to check
+is_full_ber: true  # if True, calculate full ber
+is_box_plot: true  # if True, the ber graph will be displayed in a box plot form
+is_single_item: true  # whether to plot single item (by i and mu vals)
+num_x_per_folder: 8
+is_save_to_file: true
+is_upload_to_wandb: true

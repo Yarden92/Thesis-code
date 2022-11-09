@@ -199,7 +199,7 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     assert mu_vec[1] - mu_vec[0] > 0.0005, "mu_vec resolution is too low, folders will overlap"
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
-        print(f'saving logs to {os.path.abspath(logger_path)}')
+        print(f'saving logs (disabled) to {os.path.abspath(logger_path)}')
         print(f'saving data to {os.path.abspath(root_dir)}')
     file_path = f'{logger_path}/{get_ts_filename()}'
 

@@ -120,6 +120,6 @@ def trim_data(x, y, n=None):
     if n is None:
         return x, y
     if n > len(x):
-        print(f'requested {n} samples for BER but only {len(x)} were found')
+        print(f'warning: requested {n} samples for BER but only {len(x)} were found')
         return x, y
     return x[:n], y[:n]

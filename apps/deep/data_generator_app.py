@@ -22,6 +22,7 @@ class DataConfig:
     max_workers: int = 10
     data_type: int = 0  # 0 for spectrum, 1 for iq_samples
     mu_start: float = 0.0005
+    over_sampling: int = 8 # over sampling factor for pulse shaping
     mu_end: float = 0.07
     is_analyze_after: bool = False
 
@@ -47,7 +48,7 @@ def main(config: DataConfig):
 
     # generate the date
     data_loaders.gen_data2(config.data_len, config.num_symbols, mu_vec, cs, dir, tqdm=tqdm,
-                           logger_path=config.logger_path, max_workers=config.max_workers, type=DataType.iq_samples)
+                           logger_path=config.logger_path, max_workers=config.max_workers, type=config.data_type)
 
     if config.is_analyze_after:
         analyze_data(dir)

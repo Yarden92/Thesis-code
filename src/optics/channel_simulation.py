@@ -11,7 +11,6 @@ from src.optics.split_step_fourier import SplitStepFourier
 
 class ChannelSimulator:
     Ts = 3  # symbol period
-    over_sampling = 8  # sampling rate
     roll_off = 0.25  # filter roll-off factor
 
     def __init__(self,
@@ -21,11 +20,14 @@ class ChannelSimulator:
                  dt: float = 1e-12,
                  ssf: SplitStepFourier = None,
                  verbose=True,
-                 test_verbose=False
+                 test_verbose=False,
+                 over_sampling=8  # sampling rate
                  ):
         # ~~~~~~~~~~~~~~~~~~~~~~~ Network Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        assert np.log2(m_qam)%2 == 0, f'm_qam must be even power of 2, got {m_qam} which is 2^{np.log2(m_qam)}'
         self.m_qam = m_qam
         self.num_symbols = num_symbols
+        self.over_sampling = over_sampling
         # ~~~~~~~~~~~~~~~~~~~~~~~~~ Other Params ~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.normalization_factor = normalization_factor
         # self.t0 = t0
@@ -66,6 +68,7 @@ class ChannelSimulator:
     @property
     def modem(self):
         if self._modem is None:
+            # validate m_qam is even power of 2 (4, 16, 64, 256, ...)
             self._modem = self.cb.generate_modem(self.m_qam)
         return self._modem
 
@@ -136,7 +139,6 @@ class ChannelSimulator:
         self.x[9] = x
         self.step10_demodulate()
         return self.x[10]
-
 
     def gen_io_data(self, type=DataType.spectrum) -> (np.ndarray, np.ndarray):
         _ = self.iterate_through_channel()

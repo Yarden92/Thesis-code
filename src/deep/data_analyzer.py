@@ -61,7 +61,9 @@ class DataAnalyzer():
 
         is_spectrum = ('data_type' not in self.params['conf']) or (self.params['conf']['data_type'] == 0)
 
-        zm = range(1700, 2300) if is_spectrum else range(0, 50)
+        N = len(x)
+        x_start, x_stop = int(0.2* N), int(0.3 * N)
+        zm = range(x_start, x_stop) if is_spectrum else range(0, 50)
         func = 'plot' if is_spectrum else 'stem'
 
         for v, name in [[x, 'x'], [y, 'y']]:
