@@ -8,3 +8,4 @@ max_workers: 64
 data_type: 0
 mu_start: 0.00005
 mu_end: 0.01
+is_analyze_after: true
