@@ -31,7 +31,7 @@ def main(config):
             da.wandb_log_single_sample(mu=config.mu, data_id=config.i)
 
     if config.is_full_ber:
-        da.plot_full_ber_graph(n=config.num_x_per_folder, is_save=config.is_save_to_file)
+        da.plot_full_ber_graph(num_permut=config.num_x_per_folder, is_save=config.is_save_to_file)
         if config.is_upload_to_wandb:
             da.wandb_log_ber_vs_mu(n=config.num_x_per_folder)
 
@@ -39,9 +39,3 @@ def main(config):
 if __name__ == '__main__':
     config = pyrallis.parse(config_class=DataAnalyzerConfig)
     main(config)
-
-
-def analyze_data(path: str):
-    data_analyzer = DataAnalyzer(path)
-    data_analyzer.plot_full_ber_graph(n=30, is_save=True)
-    data_analyzer.wandb_log_ber_vs_mu(n=30)

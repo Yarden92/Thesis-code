@@ -98,6 +98,7 @@ class Metrics:
         mu_vec, ber_vec = [], []
         for dirpath in _tqdm(glob(f'{root_dir}/{sub_name_filter}')):
             if not DataMethods.is_valid_subfolder(os.path.basename(dirpath)):
+                print(f'warning: folder "{dirpath}" is not valid, skipping')
                 continue
             mu = GeneralMethods.name_to_mu_val(dirpath)
             all_x_read, all_y_read, conf_read = FilesReadWrite.read_folder(dirpath, verbose_level >= 1)

@@ -10,7 +10,7 @@ from src.deep.metrics import Metrics
 from src.deep.standalone_methods import get_platform, DataType
 from src.general_methods.visualizer import Visualizer
 
-analyzation_dir = '_analyzation'
+analysis_dir = '_analysis'
 
 
 class DataAnalyzer():
@@ -56,7 +56,7 @@ class DataAnalyzer():
         mu = mu or self.params['mu_start']  # default to first mu
         sub_name = self._get_sub_folder_name(mu)
         x, y = self._get_xy(data_id, sub_name)
-        out_path = f'{self.path}/{analyzation_dir}/{sub_name}'
+        out_path = f'{self.path}/{analysis_dir}/{sub_name}'
         os.makedirs(out_path, exist_ok=True)
 
         is_spectrum = ('data_type' not in self.params['conf']) or (self.params['conf']['data_type'] == 0)
@@ -94,10 +94,10 @@ class DataAnalyzer():
 
         return ber_vec
 
-    def plot_full_ber_graph(self, n=5, is_save=True):
+    def plot_full_ber_graph(self, num_permut=5, is_save=True):
         # n is the number of x's permutations to take from each folder
-        self._calc_full_ber(n)
-        out_dir = f'{self.path}/{analyzation_dir}'
+        self._calc_full_ber(num_permut)
+        out_dir = f'{self.path}/{analysis_dir}'
         os.makedirs(out_dir, exist_ok=True)
         out_path = f'{out_dir}/ber_vs_mu.png'
 
@@ -122,9 +122,16 @@ class DataAnalyzer():
         if self.is_wandb_init: return
         data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
         data_type = DataType(data_type).name
+        mu_range = f'{self.params["mu_start"]}-{self.params["mu_end"]}'
+        qam = self.params['conf']['m_qam']
         run_name = f'{self.base_name}__{data_type}'
         wandb.init(project="data_analyze", entity="yarden92", name=run_name,
-                   tags=[f'{get_platform()}', f'ds={self.params["num_samples"]}'])
+                   tags=[
+                       f'{get_platform()}',
+                       f'ds={self.params["num_samples"]}',
+                       f'mu_range={mu_range}',
+                       f'qam={qam}',
+                   ])
         wandb.config = self.params
         self.is_wandb_init = True
 
@@ -158,11 +165,9 @@ class DataAnalyzer():
 
     # ------------ private ------------
 
-
-
     def _calc_full_ber(self, n):
         sub_name_filter = '*'
-        if self.ber_vec is None or self.mu_vec is None:
+        if self.ber_vec is None or self.mu_vec is None or len(self.ber_vec) < n :
             self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, 0, self._tqdm, n,
                                                                         is_matrix_ber=self.is_box_plot)
 
