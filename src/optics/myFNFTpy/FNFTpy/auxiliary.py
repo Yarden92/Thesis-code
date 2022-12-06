@@ -52,8 +52,8 @@ def get_lib_path():
 #     libstr = "/usr/local/lib/libfnft.so.0.4.1"
     fnftpy_root_dir = Path(__file__).parent.parent
     thesis_root_dir = fnftpy_root_dir.parent.parent.parent
-    libstr = f"{thesis_root_dir}/lib/FNFT-mac/lib/libfnft.dylib"
-    # libstr = f"{thesis_root_dir}/lib/FNFT-linux/lib/libfnft.so"
+    # libstr = f"{thesis_root_dir}/lib/FNFT-mac/lib/libfnft.dylib"
+    libstr = f"{thesis_root_dir}/lib/FNFT-linux/lib/libfnft.so"
 
 
     return libstr
