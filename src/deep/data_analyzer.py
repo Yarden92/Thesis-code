@@ -143,12 +143,13 @@ class DataAnalyzer():
         # n is the number of x's permutations to take from each folder
         self._calc_full_ber(n)
         self._init_wandb()
+        n = n or self.params['num_samples']
         wandb.log({
             'BER vs mu': wandb.plot.line_series(
                 xs=self.mu_vec,
                 ys=[self.ber_vec],
                 keys=['ber'],
-                title='BER vs mu',
+                title=f'BER vs mu (with {n} permutations)',
                 xname="mu")
         })
 
