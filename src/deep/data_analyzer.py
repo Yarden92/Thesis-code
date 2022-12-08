@@ -166,7 +166,7 @@ class DataAnalyzer():
         indices = np.arange(len(x))
         wandb.log({'abs signal': wandb.plot.line_series(
             xs=indices,
-            ys=[x, y],
+            ys=[abs_x, abs_y],
             keys=['dirty', 'clean'],
             title=f'abs signal, mu={mu}, i={data_id}',
             xname="index")})
