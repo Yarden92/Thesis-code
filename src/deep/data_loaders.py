@@ -88,6 +88,7 @@ class DatasetNormal(OpticDataset):
         x, y = read_xy(self.data_dir_path, i)
         return x, y
 
+# TODO: move all standalone methods to a class
 
 class SeparatedRealImagDataset(DatasetNormal):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None, is_real=True) -> None:
