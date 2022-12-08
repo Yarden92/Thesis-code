@@ -135,7 +135,7 @@ class DataAnalyzer():
         wandb.config = self.params
         self.is_wandb_init = True
 
-    def wandb_log_ber_vs_mu(self, n=5):
+    def wandb_log_ber_vs_mu(self, n=None):
         # n is the number of x's permutations to take from each folder
         self._calc_full_ber(n)
         self._init_wandb()

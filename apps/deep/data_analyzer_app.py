@@ -13,7 +13,7 @@ class DataAnalyzerConfig:
     is_full_ber: bool = True  # if True, calculate full ber
     is_box_plot: bool = False  # if True, the ber graph will be displayed in a box plot form
     is_single_item: bool = False  # whether to plot single item (by i and mu vals)
-    num_x_per_folder: int = 5
+    num_x_per_folder: int = None  # if None, will be calculated from the data
     is_save_to_file: bool = True
     is_upload_to_wandb: bool = True
 
