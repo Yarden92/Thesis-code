@@ -109,7 +109,7 @@ class Metrics:
             sub_ber_vec, num_errors = Metrics.calc_ber_for_folder(all_x_read, all_y_read, conf_read, verbose_level >= 2)
 
             if verbose_level >= 1:
-                print(f'folder {dirpath} has {len(sub_ber_vec)} signals with total {num_errors} errors')
+                print(f'folder {dirpath} has {len(sub_ber_vec)} signals with total {num_errors} errors -> ber = {np.mean(sub_ber_vec)}')
 
             ber = sub_ber_vec if is_matrix_ber else np.mean(sub_ber_vec)
 
