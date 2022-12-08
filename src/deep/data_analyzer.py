@@ -94,9 +94,9 @@ class DataAnalyzer():
 
         return ber_vec
 
-    def plot_full_ber_graph(self, num_permut=5, is_save=True):
+    def plot_full_ber_graph(self, permute_limit=None, is_save=True):
         # n is the number of x's permutations to take from each folder
-        self._calc_full_ber(num_permut)
+        self._calc_full_ber(permute_limit)
         out_dir = f'{self.path}/{analysis_dir}'
         os.makedirs(out_dir, exist_ok=True)
         out_path = f'{out_dir}/ber_vs_mu.png'
@@ -167,7 +167,7 @@ class DataAnalyzer():
 
     def _calc_full_ber(self, n):
         sub_name_filter = '*'
-        if self.ber_vec is None or self.mu_vec is None or len(self.ber_vec) < n :
+        if self.ber_vec is None or self.mu_vec is None or (n is not None and len(self.ber_vec) < n):
             self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, 0, self._tqdm, n,
                                                                         is_matrix_ber=self.is_box_plot)
 

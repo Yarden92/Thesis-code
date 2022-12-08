@@ -14,8 +14,8 @@ class DataAnalyzerConfig:
     is_box_plot: bool = False  # if True, the ber graph will be displayed in a box plot form
     is_single_item: bool = False  # whether to plot single item (by i and mu vals)
     num_x_per_folder: int = None  # if None, will be calculated from the data
-    is_save_to_file: bool = True
-    is_upload_to_wandb: bool = True
+    is_save_to_file: bool = True  # if True, will save the plots to file
+    is_upload_to_wandb: bool = True  # if True, will upload the plots to wandb
 
 
 def main(config):
@@ -31,7 +31,7 @@ def main(config):
             da.wandb_log_single_sample(mu=config.mu, data_id=config.i)
 
     if config.is_full_ber:
-        da.plot_full_ber_graph(num_permut=config.num_x_per_folder, is_save=config.is_save_to_file)
+        da.plot_full_ber_graph(permute_limit=config.num_x_per_folder, is_save=config.is_save_to_file)
         if config.is_upload_to_wandb:
             da.wandb_log_ber_vs_mu(n=config.num_x_per_folder)
 
