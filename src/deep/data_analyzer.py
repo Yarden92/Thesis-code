@@ -16,7 +16,7 @@ analysis_dir = '_analysis'
 
 
 class DataAnalyzer():
-    def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False):
+    def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False, verbose_level=0):
         self.path = data_folder_path.rstrip('/')
         self.base_name = os.path.basename(self.path)
         self.params = self.fetch_params()
@@ -26,6 +26,7 @@ class DataAnalyzer():
         self.mu_vec = None
         self._tqdm = _tqdm
         self.num_digits = None
+        self.verbose_level = verbose_level
 
     def fetch_params(self):
         num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]

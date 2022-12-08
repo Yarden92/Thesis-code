@@ -16,11 +16,12 @@ class DataAnalyzerConfig:
     num_x_per_folder: int = None  # if None, will be calculated from the data
     is_save_to_file: bool = True  # if True, will save the plots to file
     is_upload_to_wandb: bool = True  # if True, will upload the plots to wandb
+    verbose_level: int = 0  # 0: no prints, 1: summary prints, 2: detailed prints
 
 
 def main(config):
     path = config.path
-    da = DataAnalyzer(path, is_box_plot=config.is_box_plot)
+    da = DataAnalyzer(path, is_box_plot=config.is_box_plot, verbose_level=config.verbose_level)
     if config.mu == -1:
         config.mu = da.params['mu_start']
 
