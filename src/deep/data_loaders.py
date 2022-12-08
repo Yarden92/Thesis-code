@@ -196,7 +196,9 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
               type=DataType.spectrum):
     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    assert mu_vec[1] - mu_vec[0] > 0.0005, "mu_vec resolution is too low, folders will overlap"
+    # assert mu_vec[1] - mu_vec[0] >= 0.0001, "mu_vec resolution is too low, folders will overlap"
+    delta = mu_vec[1] - mu_vec[0]
+    num_digits = int(np.ceil(-np.log10(delta)))
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
         print(f'saving logs (disabled) to {os.path.abspath(logger_path)}')
@@ -209,7 +211,7 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {}
         for mu_i, mu in enumerate(mu_vec):
-            dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
+            dir = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits}f}'
             os.makedirs(dir, exist_ok=True)
             cs.normalization_factor = mu
             conf = cs.params_to_dict()
