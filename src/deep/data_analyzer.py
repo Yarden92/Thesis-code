@@ -162,14 +162,22 @@ class DataAnalyzer():
         self._init_wandb()
         sub_name = self._get_sub_folder_name(mu)
         x, y = self._get_xy(data_id, sub_name)
+        abs_x, abs_y = np.abs(x), np.abs(y)
         indices = np.arange(len(x))
-        for v, title in [(x, 'x (dirty)'), (y, 'y (clean)')]:
-            wandb.log({title: wandb.plot.line_series(
-                xs=indices,
-                ys=[v.real, v.imag],
-                keys=['real', 'imag'],
-                title=f'{title}, mu={mu}, i={data_id}',
-                xname="index")})
+        wandb.log({'abs signal': wandb.plot.line_series(
+            xs=indices,
+            ys=[x, y],
+            keys=['dirty', 'clean'],
+            title=f'abs signal, mu={mu}, i={data_id}',
+            xname="index")})
+
+        # for v, title in [(x, 'x (dirty)'), (y, 'y (clean)')]:
+        #     wandb.log({title: wandb.plot.line_series(
+        #         xs=indices,
+        #         ys=[v.real, v.imag],
+        #         keys=['real', 'imag'],
+        #         title=f'{title}, mu={mu}, i={data_id}',
+        #         xname="index")})
 
         print(f'uploaded to wandb mu={mu}, i={data_id}')
 
