@@ -4,7 +4,7 @@ import numpy as np
 import wandb
 from tqdm.auto import tqdm
 
-from src.deep.data_methods import DataMethods
+from src.deep.data_methods import DataMethods, FolderTypes
 from src.deep.data_loaders import DatasetNormal, read_conf
 from src.deep.metrics import Metrics
 from src.deep.standalone_methods import get_platform, DataType
@@ -29,7 +29,11 @@ class DataAnalyzer():
         mu_vec = []
         conf_list = []
         for sub_name in os.listdir(self.path):
-            if not DataMethods.is_valid_subfolder(sub_name): continue
+            folder_type = DataMethods.check_folder_type(os.path.basename(sub_name))
+            if folder_type != FolderTypes.Data:
+                if folder_type == FolderTypes.Unknown:
+                    print(f'warning: unknown folder "{sub_name}", skipping it...')
+                continue
             sub_path = f"{self.path}/{sub_name}"
             conf = read_conf(sub_path)
             mu_vec.append(conf['normalization_factor'])
