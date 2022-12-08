@@ -4,10 +4,12 @@ import numpy as np
 import wandb
 from tqdm.auto import tqdm
 
+from src.deep import data_loaders
+from src.deep import standalone_methods
+from src.deep.data_loaders import DatasetNormal
 from src.deep.data_methods import DataMethods, FolderTypes
-from src.deep.data_loaders import DatasetNormal, read_conf
 from src.deep.metrics import Metrics
-from src.deep.standalone_methods import get_platform, DataType
+from src.deep.standalone_methods import DataType
 from src.general_methods.visualizer import Visualizer
 
 analysis_dir = '_analysis'
@@ -23,11 +25,13 @@ class DataAnalyzer():
         self.ber_vec = None
         self.mu_vec = None
         self._tqdm = _tqdm
+        self.num_digits = None
 
     def fetch_params(self):
         num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
         mu_vec = []
         conf_list = []
+        self.num_digits = self._count_digits(os.listdir(self.path)[0])
         for sub_name in os.listdir(self.path):
             folder_type = DataMethods.check_folder_type(os.path.basename(sub_name))
             if folder_type != FolderTypes.Data:
@@ -35,7 +39,7 @@ class DataAnalyzer():
                     print(f'warning: unknown folder "{sub_name}", skipping it...')
                 continue
             sub_path = f"{self.path}/{sub_name}"
-            conf = read_conf(sub_path)
+            conf = data_loaders.read_conf(sub_path)
             mu_vec.append(conf['normalization_factor'])
             conf_list.append(conf)
             num_files = len(os.listdir(sub_path))
@@ -49,7 +53,8 @@ class DataAnalyzer():
             'num_mus': num_mus,
             'mu_start': min(mu_vec),
             'mu_end': max(mu_vec),
-            'conf': conf_list[0]
+            'conf': conf_list[0],
+            'num_digits': self.num_digits
         }
         return params
 
@@ -66,7 +71,7 @@ class DataAnalyzer():
         is_spectrum = ('data_type' not in self.params['conf']) or (self.params['conf']['data_type'] == 0)
 
         N = len(x)
-        x_start, x_stop = int(0.2* N), int(0.3 * N)
+        x_start, x_stop = int(0.2*N), int(0.3*N)
         zm = range(x_start, x_stop) if is_spectrum else range(0, 50)
         func = 'plot' if is_spectrum else 'stem'
 
@@ -131,7 +136,7 @@ class DataAnalyzer():
         run_name = f'{self.base_name}__{data_type}'
         wandb.init(project="data_analyze", entity="yarden92", name=run_name,
                    tags=[
-                       f'{get_platform()}',
+                       f'{standalone_methods.get_platform()}',
                        f'ds={self.params["num_samples"]}',
                        f'mu_range={mu_range}',
                        f'qam={qam}',
@@ -178,7 +183,7 @@ class DataAnalyzer():
 
     def _get_sub_folder_name(self, mu):
         num_samples = self.params['num_samples']
-        sub_name = f"{num_samples}_samples_mu={mu:.3f}"
+        sub_name = f"{num_samples}_samples_mu={mu:.{self.params['num_digits']}f}"
         return sub_name
 
     def clear_ber(self):
@@ -197,6 +202,10 @@ class DataAnalyzer():
         print(f'the folder {dir} contains {len(dataset)} samples')
         x, y = dataset.get_numpy_xy(data_id)
         return x, y
+
+    def _count_digits(self, subfolder_name):
+        mu = subfolder_name.split('=')[1]
+        return len(mu.split('.')[1])
 
 
 if __name__ == '__main__':
