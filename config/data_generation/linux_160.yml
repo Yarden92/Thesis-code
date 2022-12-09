@@ -1,5 +1,5 @@
 data_len: 160  # for each mu
-mu_len: 20
+mu_len: 50
 num_symbols: 64
 qam: 16
 logger_path: './logs'
@@ -7,5 +7,5 @@ output_path: './data/datasets/spectrum'
 max_workers: 64
 data_type: 0
 mu_start: 0.00005
-mu_end: 0.01
+mu_end: 0.3
 is_analyze_after: true
