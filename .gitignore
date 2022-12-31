@@ -1,2 +1,9 @@
 /venv/
 /.idea/
+/.vscode/
+/**/._.DS_Store
+/**/.DS_Store
+**/__pycache__
+logs/
+data/
+wandb/
