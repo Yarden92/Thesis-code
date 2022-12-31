@@ -118,11 +118,11 @@ class ChannelSimulator:
         self.step1_modulate()
         self.step2_over_sample()
         self.step3_pulse_shaping()
-        self.step4_pre_equalize()
+        self.step4_pre_equalize() # -> x[4] (clean spectrum)
         self.step5_inft()
         self.step6_channel()
         self.step7_nft()
-        self.step8_equalize()
+        self.step8_equalize() # -> x[8] (dirty spectrum)
         self.step9_match_filter()
         self.step10_demodulate()
 
@@ -143,7 +143,7 @@ class ChannelSimulator:
     def gen_io_data(self, type=DataType.spectrum) -> (np.ndarray, np.ndarray):
         _ = self.iterate_through_channel()
         if type == DataType.spectrum:
-            x = self.x[7]  # dirty
+            x = self.x[8]  # dirty
             y = self.x[4]  # clean
         elif type == DataType.iq_samples:
             x = self.x[9]
