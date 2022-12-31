@@ -3,9 +3,9 @@ mu_len: 50
 num_symbols: 64
 qam: 16
 logger_path: './logs'
-output_path: './data/datasets/spectrum'
+output_path: './data/datasets'
 max_workers: 64
 data_type: 0
-mu_start: 0.00005
-mu_end: 0.3
-is_analyze_after: true
+mu_start: 0.1
+mu_end: 0.2
+is_analyze_after: false
