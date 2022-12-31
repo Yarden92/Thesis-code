@@ -100,6 +100,9 @@ class DataAnalyzer():
 
         x_power = np.mean(np.abs(x) ** 2)
         print(f'x_power={x_power}')
+        
+        y_power = np.mean(np.abs(y) ** 2)
+        print(f'y_power={y_power}')
 
         ber, num_errors = Metrics.calc_ber_for_single_vec(x, y, conf=self.params['conf'])
         print(f'ber={ber}')
