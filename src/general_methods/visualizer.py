@@ -192,7 +192,7 @@ class Visualizer:
                     boxprops=dict(facecolor='pink', color='black'),
                     medianprops=dict(color='black'),
                     )
-
+        plt.yscale('log')
         plt.xlabel('normalizing factor'), plt.ylabel('BER')
         plt.xticks(rotation=45)
         plt.title(f'BER vs normalizing factor with {len(bers_vecs)} permutations each')

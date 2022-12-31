@@ -13,6 +13,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from src.deep.standalone_methods import GeneralMethods, DataType
+from src.optics.channel_simulation import ChannelSimulator
 
 x_file_name = 'data_x.npy'
 y_file_name = 'data_y.npy'
@@ -58,7 +59,7 @@ class DatasetNormal(OpticDataset):
         super().__init__(data_dir_path, data_indices)
         self.data_dir_path = os.path.abspath(data_dir_path)
         self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{x_file_name}')))
-        self.mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
+        self.cropped_mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
 
         self.config = read_conf(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
@@ -105,7 +106,7 @@ class SeparatedRealImagDataset(DatasetNormal):
 
         x, y = read_xy(self.data_dir_path, file_id)
 
-        x, y = GeneralMethods.normalize_xy(x, y, self.mu, self.std)
+        x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
 
         if self.is_real:
             x = numpy_to_torch(x.real)
@@ -235,7 +236,7 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     print('\nall done')
 
 
-def _gen_data_i(cs, dir, i, mu, type=DataType.spectrum):
+def _gen_data_i(cs: ChannelSimulator, dir, i, mu, type=DataType.spectrum):
     # print(f'generating data {i}, mu {mu_i}...')
     try:
         x, y = cs.gen_io_data(type)

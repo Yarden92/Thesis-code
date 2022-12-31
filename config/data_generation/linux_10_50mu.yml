@@ -1,4 +1,4 @@
-data_len: 5000  # for each mu
+data_len: 10  # for each mu
 mu_len: 50
 num_symbols: 64
 qam: 16

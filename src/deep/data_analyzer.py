@@ -27,6 +27,7 @@ class DataAnalyzer():
         self._tqdm = _tqdm
         self.num_digits = None
         self.verbose_level = verbose_level
+        self.ber_res = 0
 
     def fetch_params(self):
         num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
@@ -63,8 +64,9 @@ class DataAnalyzer():
 
     def plot_single_sample(self, mu: float = None, data_id: int = 0, is_save=True):
         # read folder and plot one of the data samples
-        mu = mu or self.params['mu_start']  # default to first mu
-        sub_name = self._get_sub_folder_name(mu)
+        mu_cropped = mu or self.params['mu_start']  # default to first mu
+        sub_name = self._get_sub_folder_name(mu_cropped)
+        mu_actual = self._get_full_mu(sub_name)
         x, y = self._get_xy(data_id, sub_name)
         out_path = f'{self.path}/{analysis_dir}/{sub_name}'
         os.makedirs(out_path, exist_ok=True)
@@ -75,15 +77,26 @@ class DataAnalyzer():
         x_start, x_stop = int(0.2*N), int(0.3*N)
         zm = range(x_start, x_stop) if is_spectrum else range(0, 50)
         func = 'plot' if is_spectrum else 'stem'
+        
+        indices = range(N)
+        abs_x = np.abs(x)
+        abs_y = np.abs(y)
+        name = f'abs spectrum, mu={mu_actual:.2e}'
+        
+        Visualizer.my_plot(indices,abs_x,abs_y, name=name,
+                           legend=['clean (before channel)', 'dirty (after channel)'],
+                           output_name=f'{out_path}/abs_spectrum.png' if is_save else None,
+                           )
+                           
 
-        for v, name in [[x, 'x'], [y, 'y']]:
-            Visualizer.twin_zoom_plot(
-                title=name,
-                full_y=np.real(v),
-                zoom_indices=zm,
-                function=func,
-                output_name=f'{out_path}/{name}_real.png' if is_save else None
-            )
+        # for v, name in [[x, 'x'], [y, 'y']]:
+        #     Visualizer.twin_zoom_plot(
+        #         title=name,
+        #         full_y=np.real(v),
+        #         zoom_indices=zm,
+        #         function=func,
+        #         output_name=f'{out_path}/{name}_real.png' if is_save else None
+        #     )
 
         x_power = np.mean(np.abs(x) ** 2)
         print(f'x_power={x_power}')
@@ -162,6 +175,7 @@ class DataAnalyzer():
     def wandb_log_single_sample(self, mu: float, data_id: int):
         self._init_wandb()
         sub_name = self._get_sub_folder_name(mu)
+        full_mu = self._get_full_mu(sub_name)
         x, y = self._get_xy(data_id, sub_name)
         abs_x, abs_y = np.abs(x), np.abs(y)
         indices = np.arange(len(x))
@@ -182,18 +196,35 @@ class DataAnalyzer():
 
         print(f'uploaded to wandb mu={mu}, i={data_id}')
 
+    def _get_full_mu(self, sub_name):
+        # read the actual mu from the config in that dir
+        return DatasetNormal(self.path + '/' + sub_name).config['normalization_factor']
+
     # ------------ private ------------
 
     def _calc_full_ber(self, n):
         sub_name_filter = '*'
-        if self.ber_vec is None or self.mu_vec is None or (n is not None and len(self.ber_vec) < n):
+        n = n or self.params['num_samples'] # if n is None, take all permutations
+        if self.ber_res < n:
             self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, self.verbose_level, self._tqdm, n,
                                                                         is_matrix_ber=self.is_box_plot)
+            self.ber_res = n
 
     def _get_sub_folder_name(self, mu):
         num_samples = self.params['num_samples']
+        mu = self._get_closest_mu(mu)
         sub_name = f"{num_samples}_samples_mu={mu:.{self.params['num_digits']}f}"
         return sub_name
+    
+    def _get_closest_mu(self, mu):
+        all_mus = []
+        for dir in os.listdir(self.path):
+            if '=' in dir: 
+                all_mus.append(float(dir.split('=')[1]))
+                
+        closest_mu = min(all_mus, key=lambda x:abs(x-mu))
+        return closest_mu
+            
 
     def clear_ber(self):
         self.ber_vec = None

@@ -15,8 +15,9 @@ class GeneralMethods:
         return np_vec[0] + 1j*np_vec[1]
 
     @staticmethod
-    def normalize_xy(x, y, mu, std):
-        return (x - mu)/std, (y - mu)/std
+    def normalize_xy(x, y, mean, std):
+        return x, y # TODO: somethings wrong here
+        return (x - mean)/std, (y - mean)/std
 
     @staticmethod
     def calc_statistics_for_dataset(dataset):

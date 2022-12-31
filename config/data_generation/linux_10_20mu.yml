@@ -1,5 +1,5 @@
-data_len: 5000  # for each mu
-mu_len: 50
+data_len: 10  # for each mu
+mu_len: 20
 num_symbols: 64
 qam: 16
 logger_path: './logs'

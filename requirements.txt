@@ -11,3 +11,4 @@ torch
 pyrallis
 wandb
 gpustat
+pandas
