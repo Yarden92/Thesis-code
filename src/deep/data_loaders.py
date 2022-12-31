@@ -239,7 +239,10 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
 def _gen_data_i(cs: ChannelSimulator, dir, i, mu, type=DataType.spectrum):
     # print(f'generating data {i}, mu {mu_i}...')
     try:
+        cs.normalization_factor = mu
+        # assert cs.normalization_factor == mu, "entered multi process with mu not corresponding to cs"
         x, y = cs.gen_io_data(type)
+        assert GeneralMethods.power_ratio(x, y) < 10, f"x and y not in the same scale!"
         save_xy(dir, x, y, i)
     except Exception as e:
         print(f'error at mu={mu}, i={i}: {e}')

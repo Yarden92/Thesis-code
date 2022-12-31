@@ -31,6 +31,14 @@ class GeneralMethods:
         mu = float(folder_name.split('=')[-1])
         return mu
 
+    @staticmethod
+    def power_ratio(x, y):
+        x_power = np.mean(np.abs(x)**2)
+        y_power = np.mean(np.abs(y)**2)
+        if x_power > y_power:
+            return x_power/y_power
+        else:
+            return y_power/x_power
 
 
 
