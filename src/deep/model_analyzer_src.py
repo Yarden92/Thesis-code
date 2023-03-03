@@ -3,6 +3,7 @@ import numpy as np
 import wandb
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
+from src.general_methods.visualizer import Visualizer
 
 
 class ModelAnalyzer:
@@ -12,7 +13,7 @@ class ModelAnalyzer:
         self.run_name = run_name
         self.model_name = self.trainer.model._get_name()
         self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
-        self.mu = self.trainer.train_dataset.mu
+        self.mu = self.trainer.train_dataset.cropped_mu
 
     def _init_wandb(self):
         if wandb.run is not None:  # if already logged in
@@ -37,6 +38,39 @@ class ModelAnalyzer:
 
     def plot_single_item(self, i):
         _ = self.trainer.test_single_item(i, plot=True)
+        
+    def plot_single_item_together(self, i, normalize=True):
+        x,y,preds = self.trainer.test_single_item(i, plot=False)
+        delta = np.abs(x) - np.abs(y)
+        indices = np.arange(len(x))
+        Visualizer.my_plot(
+            indices, np.abs(x),
+            indices, np.abs(y),
+            indices, np.abs(preds),
+            indices, np.abs(delta),
+            legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
+            name=f'after {self.trainer.train_state_vec.num_epochs} epochs'
+        )
+        
+    def calc_norms(self, _tqdm=None, verbose_level=1, max_items=None):
+        x_norms, y_norms, preds_norms = 0, 0, 0
+        N = len(self.trainer.val_dataset)
+        if max_items is not None:
+            N = min(N, max_items)
+        rng = range(N)
+        if _tqdm is not None:
+            rng = _tqdm(rng)
+        for i in rng:
+            x, y, preds = self.trainer.test_single_item(i, plot=False)
+            x_power = np.sum(np.abs(x) ** 2)
+            y_power = np.sum(np.abs(y) ** 2)
+            pred_power = np.sum(np.abs(preds) ** 2)
+            x_norms += x_power/N
+            y_norms += y_power/N
+            preds_norms += pred_power/N
+            
+        return x_norms, y_norms, preds_norms
+            
 
     def upload_single_item_plots_to_wandb(self, i):
         x, y, preds = self.trainer.test_single_item(i, plot=False)

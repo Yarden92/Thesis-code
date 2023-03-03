@@ -34,6 +34,8 @@ class MultiModelConfig:
         device: str = 'auto'  # device to use
         train_val_ratio: float = 0.8  # train vs val ratio
         wandb_project: str = 'Thesis_model_scanning_test'  # wandb project name
+        is_analyze_after: bool = False # if true, will analyze the model after training
+
 
     @classmethod
     def parse_models_config(cls, models_json: str):
@@ -53,7 +55,8 @@ class MultiModelConfig:
             output_model_path=train_config.output_model_path,
             device=train_config.device,
             wandb_project=train_config.wandb_project,
-            model_name=run_name
+            model_name=run_name,
+            is_analyze_after=train_config.is_analyze_after
         )
 
 
@@ -61,7 +64,7 @@ def multiple_models_main(main_config: MultiModelConfig.TrainConfig):
     if main_config.device == 'auto': main_config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     train_dataset, val_dataset = data_loaders.get_train_val_datasets(main_config.input_data_path, DatasetNormal,
                                                                      train_val_ratio=main_config.train_val_ratio)
-    mu = train_dataset.mu
+    mu = train_dataset.cropped_mu
     for sub_config in MultiModelConfig.parse_models_config(main_config.models):
         run_name = f'{sub_config.n_layers}_layers__{mu}_mu'
         print(f'running model {run_name}')

@@ -26,7 +26,9 @@ class OpticDataset(Dataset, ABC):
         self.config = None
         self.mean = 0
         self.std = 1
+        self.cropped_mu = 0
         self.root_dir = ''
+        self.data_dir_path = data_dir_path
 
     def set_scale(self, mean, std):
         self.mean = mean

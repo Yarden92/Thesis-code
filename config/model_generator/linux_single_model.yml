@@ -1,0 +1,13 @@
+lr: 1e-3  
+epochs: 200 
+batch_size: 1 
+train_val_ratio: 0.8 
+input_data_path: './data/datasets/qam16_100000x20/100000_samples_mu=0.125' 
+output_model_path: './data/prod_models' 
+device: 'cuda'
+wandb_project: 'models_v2' 
+model_name: "7layers_unet"  # name of the run in wandb
+ds_limit: 0
+model_class: "Fc7Layers" 
+is_analyze_after: false
+verbose: true

@@ -40,7 +40,7 @@ def dual_model_main(config: DualModelTrainConfig):
                                                                      ds_limit=config.ds_limit)
 
     wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name + f'_real',
-               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name + f'_real',
+               tags=[f'mu={train_dataset.cropped_mu}', f'{get_platform()}', config.model_name + f'_real',
                      f'ds={len(train_dataset)}'],
                reinit=False)
     wandb.config = {
@@ -79,7 +79,7 @@ def dual_model_main(config: DualModelTrainConfig):
 
     print('training imaginary part')
     wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name + f'_imag',
-               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name + f'_imag',
+               tags=[f'mu={train_dataset.cropped_mu}', f'{get_platform()}', config.model_name + f'_imag',
                      f'ds={len(train_dataset)}'],
                reinit=True)
     wandb.config = {
@@ -94,7 +94,7 @@ def dual_model_main(config: DualModelTrainConfig):
 
     # TODO: merge trainers and save the merged instead
     wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name + f'_analysis',
-               tags=[f'mu={train_dataset.mu}', f'{get_platform()}', config.model_name + f'_analysis',
+               tags=[f'mu={train_dataset.cropped_mu}', f'{get_platform()}', config.model_name + f'_analysis',
                      f'ds={len(train_dataset)}'],
                reinit=True)
     wandb.config = {
