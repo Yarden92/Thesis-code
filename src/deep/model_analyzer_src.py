@@ -41,14 +41,15 @@ class ModelAnalyzer:
         
     def plot_single_item_together(self, i, normalize=True):
         x,y,preds = self.trainer.test_single_item(i, plot=False)
-        delta = np.abs(x) - np.abs(y)
+        # delta = np.abs(x) - np.abs(y)
         indices = np.arange(len(x))
         Visualizer.my_plot(
             indices, np.abs(x),
             indices, np.abs(y),
             indices, np.abs(preds),
-            indices, np.abs(delta),
-            legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
+            # indices, np.abs(delta),
+            legend=['x (dirty)', 'y (clean)', 'preds'],
+            # legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
             name=f'after {self.trainer.train_state_vec.num_epochs} epochs'
         )
         

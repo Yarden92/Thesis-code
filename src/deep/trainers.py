@@ -15,6 +15,8 @@ from src.deep.models import *
 from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
 
+LOG_INTERVAL = 100
+
 
 class Trainer:
     def __init__(self,
@@ -42,8 +44,8 @@ class Trainer:
         self.l_metric = l_metric or nn.MSELoss()
         self.optim = optim or torch.optim.AdamW(
             model.parameters(), lr=1e-3, weight_decay=1e-4)
-        
-        self.scheduler = scheduler 
+
+        self.scheduler = scheduler
         self.config = config or {}
 
         self.attach_to_device(self.device)
@@ -68,32 +70,31 @@ class Trainer:
         # train
         epoch_range = _tqdm(range(num_epochs)) if _tqdm else range(num_epochs)
         for epoch in epoch_range:
-            train_loss_i = self.epoch_step(self.train_dataloader, self._step_train)
+            self.epoch_step(self.train_dataloader,
+                            self._step_train, name='train')
             if self.scheduler:
                 self.scheduler.step()
-            val_loss_i = self.epoch_step(self.val_dataloader, self._step_val)
+            self.epoch_step(self.val_dataloader, self._step_validate, name='val', epoch=epoch)
+            
+            self.train_state_vec.add(self.model, 0, 0)
 
-            wandb.log({"train_loss": train_loss_i,
-                      "val_loss": val_loss_i, "epoch": epoch})
-            self.train_state_vec.add(self.model, train_loss_i, val_loss_i)
-
-    def epoch_step(self, dataloader, step):
-        final_loss = 0
-        for batch in dataloader:
+    def epoch_step(self, dataloader, step, name: str, epoch: int) -> None:
+        for i, batch in enumerate(dataloader):
             x, y = batch
             loss, pred = step(x, y)
-            final_loss += loss.item()
-        
-        return final_loss/len(dataloader)
+            if i % LOG_INTERVAL == 0:
+                iteration_num = epoch * len(dataloader) + i
+                wandb.log({f'{name}_loss': loss.item(),
+                          "iteration": iteration_num})
 
     def _step_train(self, x, y):
-        loss, pred = self._step_val(x, y)
+        loss, pred = self._step_validate(x, y)
         self.optim.zero_grad()
         loss.backward()
         self.optim.step()
         return loss, pred
 
-    def _step_val(self, x, y):
+    def _step_validate(self, x, y):
         x, y = x.to(self.device), y.to(self.device)
         pred = self.model(x)
         loss: Tensor = self.l_metric(y, pred)

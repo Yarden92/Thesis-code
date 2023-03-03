@@ -108,9 +108,9 @@ class Visualizer:
         y2 = output[zoom_indices]
         y3 = pred[zoom_indices]
 
-        Visualizer.my_plot(x, y1, name=f'input', xlabel=xlabel, ax=ax1, function=function, legend=['real', 'imag'],
+        Visualizer.my_plot(x, y1, name=f'input (dirty)', xlabel=xlabel, ax=ax1, function=function, legend=['real', 'imag'],
                            hold=True)
-        Visualizer.my_plot(x, y2, name=f'output', xlabel=xlabel, ax=ax2, function=function, legend=['real', 'imag'],
+        Visualizer.my_plot(x, y2, name=f'output (clean)', xlabel=xlabel, ax=ax2, function=function, legend=['real', 'imag'],
                            hold=True)
         Visualizer.my_plot(x, y3, name=f'pred', xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
 
