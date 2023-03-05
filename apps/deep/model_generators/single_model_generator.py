@@ -10,7 +10,7 @@ from tqdm import tqdm
 from src.deep import data_loaders
 from src.deep.data_loaders import DatasetNormal
 from src.deep.model_analyzer_src import ModelAnalyzer
-from src.deep.models import * # essential for model name searching
+from src.deep.models import *  # essential for model name searching
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 
@@ -21,35 +21,40 @@ class SingleModelTrainConfig:
     min_lr: float = 1e-5  # min learning rate
     epochs: int = 3  # num of epochs
     batch_size: int = 1  # batch size
-    train_val_ratio: float = 0.8  # train vs val ratio
+    # train_val_ratio: float = 0.8  # train vs val ratio
+    train_ds_ratio: float = 0.05  # train vs dataset ratio
+    val_ds_ratio: float = 0.03  # val vs dataset ratio
     input_data_path: str = './data/datasets/qam1024_160x20/160_samples_mu=0.008'  # path to data
     output_model_path: str = './data/test_models'  # path to save model
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'  # device to use
     wandb_project: str = 'thesis_model_scan_test'  # wandb project name
     model_name: str = "test_model_10epochs"  # name of the run in wandb
     ds_limit: int = None  # limit the dataset size, use 0 for unlimited (as much as exists)
-    model_class: str = "Paper2Model" # the exact class name
-    is_analyze_after: bool = False # if true, will analyze the model after training
-    verbose: bool = False # if true, will print the config
+    model_class: str = "Paper2Model"  # the exact class name
+    is_analyze_after: bool = False  # if true, will analyze the model after training
+    verbose: bool = False  # if true, will print the config
 
 
 DATASETTYPE = DatasetNormal
 
+
 def single_model_main(config: SingleModelTrainConfig):
     # config
     print(f"Running {config.model_name}")
-    if config.verbose: print(json.dumps(config.__dict__, indent=4))
+    if config.verbose:
+        print(json.dumps(config.__dict__, indent=4))
     try:
         ModelClass = globals()[config.model_class]
         print(f"Running {ModelClass.__name__} model")
     except Exception:
         raise f'failed to find class named {config.model_class}, make sure you wrote it correctly and imported it'
-    
-    train_dataset: DATASETTYPE;  val_dataset : DATASETTYPE
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, DATASETTYPE,
-                                                                     train_val_ratio=config.train_val_ratio,
-                                                                     ds_limit=config.ds_limit)
 
+    train_dataset: DATASETTYPE
+    val_dataset: DATASETTYPE
+    train_dataset, val_dataset, _ = data_loaders.get_train_val_datasets(config.input_data_path, DATASETTYPE,
+                                                                     train_ds_ratio=config.train_ds_ratio,
+                                                                     val_ds_ratio=config.val_ds_ratio,
+                                                                     ds_limit=config.ds_limit)
 
     wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name,
                tags=[f'mu={train_dataset.cropped_mu}', f'{get_platform()}', f'ds={len(train_dataset)}'])

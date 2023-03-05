@@ -41,19 +41,30 @@ class OpticDataset(Dataset, ABC):
         return 0
 
 
-def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, train_val_ratio=0.8, ds_limit: int = None):
+def get_train_val_datasets(data_dir_path: str, dataset_type=OpticDataset, 
+                        #    train_val_ratio=0.8, 
+                           train_ds_ratio=0.8,
+                           val_ds_ratio=0.2, 
+                           ds_limit: int = None):
+    assert train_ds_ratio + val_ds_ratio <= 1, "train_val_ratio must be <= 1"
     n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
     if ds_limit:
         n_total = min(n_total, ds_limit)
-    divider_index = int(n_total*train_val_ratio)
-    train_indices = range(0, divider_index)
-    val_indices = range(divider_index, n_total)
+    divider_index1 = int(n_total*train_ds_ratio)
+    divider_index2 = divider_index1 + int(n_total*val_ds_ratio)
+    
+    train_indices = range(0, divider_index1)
+    val_indices = range(divider_index1, divider_index2)
+    test_indices = range(divider_index2, n_total)
+    
     train_ds = dataset_type(data_dir_path, train_indices)
     val_ds = dataset_type(data_dir_path, val_indices)
+    test_ds = dataset_type(data_dir_path, test_indices)
+    
     mean, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
-    train_ds.set_scale(mean, std)
+    train_ds.set_scale(mean, std) # TODO: consider if mean and std should be calculated for each dataset separately
     val_ds.set_scale(mean, std)
-    return train_ds, val_ds
+    return train_ds, val_ds, test_ds
 
 
 class DatasetNormal(OpticDataset):
