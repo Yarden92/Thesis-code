@@ -4,6 +4,7 @@ import wandb
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 from src.general_methods.visualizer import Visualizer
+from src.optics.channel_simulation import ChannelSimulator
 
 
 class ModelAnalyzer:
@@ -52,6 +53,23 @@ class ModelAnalyzer:
             # legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
             name=f'after {self.trainer.train_state_vec.num_epochs} epochs'
         )
+        
+    def plot_constelation(self, i):
+        x,y,preds = self.trainer.test_single_item(i, plot=False)
+        m_qam = self.trainer.train_dataset.config.get('m_qam')
+        cs = ChannelSimulator.from_dict(self.trainer.train_dataset.config)
+        
+
+        x9 = cs.steps8_to_9(x)
+        y9 = cs.steps8_to_9(y)
+        pred9 = cs.steps8_to_9(preds)
+        Visualizer.plot_constellation_map_with_3_data_vecs(x9, y9, pred9, m_qam, 
+                                                           'constellation map',
+                                                           ['dirty', 'clean', 'preds'])
+        # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
+        # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
+        # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')
+
         
     def calc_norms(self, _tqdm=None, verbose_level=1, max_items=None):
         x_norms, y_norms, preds_norms = 0, 0, 0

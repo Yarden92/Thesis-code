@@ -52,6 +52,24 @@ class Visualizer:
         plt.ylabel('imag part')
         plt.title(f'{m_qam}-QAM constellation map {title_ending}')
         plt.show()
+        
+    @staticmethod
+    def plot_constellation_map_with_3_data_vecs(data_vec, data_vec2, data_vec3, m_qam,
+                                                title_ending, legend):
+        modem = ModulationPy.QAMModem(m_qam)
+        fig = Visualizer.plot_constellation_map_grid(modem)
+
+        i, q = np.real(data_vec), np.imag(data_vec)
+        plt.plot(i, q, '.', label=legend[0])
+        i, q = np.real(data_vec2), np.imag(data_vec2)
+        plt.plot(i, q, '.', label=legend[1])
+        i, q = np.real(data_vec3), np.imag(data_vec3)
+        plt.plot(i, q, '.', label=legend[2])
+        plt.xlabel('real part')
+        plt.ylabel('imag part')
+        plt.title(f'{m_qam}-QAM constellation map {title_ending}')
+        plt.legend()
+        plt.show()
 
     @staticmethod
     def my_plot(*args, name='graph', title=None, output_name=None,

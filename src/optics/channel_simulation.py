@@ -127,6 +127,12 @@ class ChannelSimulator:
         self.step10_demodulate()
 
         return self.evaluate()
+    
+    def steps8_to_9(self, x):
+        self.x[7] = x
+        self.step8_equalize()
+        self.step9_match_filter()
+        return self.x[9]
 
     def steps8_to_10(self, x):
         self.x[7] = x
