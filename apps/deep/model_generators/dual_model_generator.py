@@ -35,7 +35,7 @@ def dual_model_main(config: DualModelTrainConfig):
     except Exception:
         raise f'failed to find class named {config.model_class}, make sure you wrote it correctly and imported it'
 
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(config.input_data_path, SeparatedRealImagDataset,
+    train_dataset, val_dataset = data_loaders.get_datasets_set(config.input_data_path, SeparatedRealImagDataset,
                                                                      train_val_ratio=config.train_val_ratio,
                                                                      ds_limit=config.ds_limit)
 

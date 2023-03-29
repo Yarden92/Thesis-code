@@ -51,7 +51,7 @@ def single_model_main(config: SingleModelTrainConfig):
 
     train_dataset: DATASETTYPE
     val_dataset: DATASETTYPE
-    train_dataset, val_dataset, _ = data_loaders.get_train_val_datasets(config.input_data_path, DATASETTYPE,
+    train_dataset, val_dataset, _ = data_loaders.get_datasets_set(config.input_data_path, DATASETTYPE,
                                                                      train_ds_ratio=config.train_ds_ratio,
                                                                      val_ds_ratio=config.val_ds_ratio,
                                                                      ds_limit=config.ds_limit)

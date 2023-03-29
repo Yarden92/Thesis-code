@@ -16,7 +16,7 @@ class GeneralMethods:
 
     @staticmethod
     def normalize_xy(x, y, mean, std):
-        return x, y # TODO: somethings wrong here
+        return x, y  # TODO: somethings wrong here
         return (x - mean)/std, (y - mean)/std
 
     @staticmethod
@@ -40,6 +40,10 @@ class GeneralMethods:
         else:
             return y_power/x_power
 
+    @staticmethod
+    def sort_dirs_by_mu(dirs: list) -> list:
+        dirs = [d for d in dirs if d[0] not in ['.', '_']]  # filter private dirs
+        return sorted(dirs, key=lambda x: GeneralMethods.name_to_mu_val(x))
 
 
 class DataType(IntEnum):

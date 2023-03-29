@@ -62,7 +62,7 @@ class MultiModelConfig:
 
 def multiple_models_main(main_config: MultiModelConfig.TrainConfig):
     if main_config.device == 'auto': main_config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(main_config.input_data_path, DatasetNormal,
+    train_dataset, val_dataset = data_loaders.get_datasets_set(main_config.input_data_path, DatasetNormal,
                                                                      train_val_ratio=main_config.train_val_ratio)
     mu = train_dataset.cropped_mu
     for sub_config in MultiModelConfig.parse_models_config(main_config.models):

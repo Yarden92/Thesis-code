@@ -140,7 +140,7 @@ def test6_wandb():
     l_metric = nn.MSELoss()  # or L1Loss
     model = SingleMuModel3Layers()
     dir = '../data/datasets/qam1024_100x10/100_samples_mu=0.008'
-    train_dataset, val_dataset = data_loaders.get_train_val_datasets(dir, DatasetNormal, train_val_ratio=0.8)
+    train_dataset, val_dataset = data_loaders.get_datasets_set(dir, DatasetNormal, train_val_ratio=0.8)
     optim = torch.optim.Adam(model.parameters(), lr=lr)
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim)
 

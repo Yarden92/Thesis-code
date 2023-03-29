@@ -1,0 +1,7 @@
+model_path: 'data/prod_models/mu-0.125__8000ds__UnetWithSkips__51epochs'
+ds_init_path: './data/datasets/qam16_100000x20/'
+train_ds_ratio: 0.05
+val_ds_ratio: 0.03
+test_ds_ratio: 0.5
+wandb_project: 'models_v3' 
+run_name: 'skip_connection'
