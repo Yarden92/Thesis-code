@@ -87,7 +87,7 @@ class DatasetNormal(OpticDataset):
 
         x, y = read_xy(self.data_dir_path, file_id)
 
-        x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
+        # x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
 
         x = complex_numpy_to_torch2(x)
         y = complex_numpy_to_torch2(y)

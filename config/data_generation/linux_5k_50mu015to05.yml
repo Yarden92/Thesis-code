@@ -1,11 +1,11 @@
-data_len: 50  # for each mu
-mu_len: 300
+data_len: 5000  # for each mu
+mu_len: 50
 num_symbols: 64
 qam: 16
 logger_path: './logs'
 output_path: './data/datasets'
 max_workers: 64
 data_type: 0
-mu_start: 0.00005
-mu_end: 0.3
+mu_start: 0.15
+mu_end: 0.5
 is_analyze_after: false

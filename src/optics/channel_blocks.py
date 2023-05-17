@@ -47,8 +47,37 @@ class ChannelBlocks:
     def pre_equalize(self, x, normalization_factor):  # step 4
         # normalize vector:
         y = normalization_factor * x
+        y2 = self.scaling(y)
 
+        return y2
+    
+    def scaling(self, x):
+        # scaling the amplitude of the vector to be in the range of [-1,1] with sigmoid function
+        amp, phase = self.get_amp_phase(x)
+        scaled_amp = self.sigmoid(amp)
+        y = self.get_complex_from_amp_phase(scaled_amp, phase)
         return y
+    
+    def descaling(self, x):
+        # scaling the amplitude of the vector to be in the range of [-1,1] with sigmoid function
+        amp, phase = self.get_amp_phase(x)
+        scaled_amp = self.desigmoid(amp)
+        y = self.get_complex_from_amp_phase(scaled_amp, phase)
+        return y
+    
+    def get_amp_phase(self, x):
+        amp = np.abs(x)
+        phase = np.angle(x)
+        return amp, phase
+    
+    def sigmoid(self, x):
+        return 2 / (1 + np.exp(-x)) - 1
+    
+    def desigmoid(self, x):
+        return -np.log((2 / (x + 1)) - 1)
+    
+    def get_complex_from_amp_phase(self, amp, phase):
+        return amp * np.exp(1j * phase)
 
     def gen_nft_params(self, N_xi, dt):  # step 5.1
         # some basic params for NFT
@@ -91,13 +120,15 @@ class ChannelBlocks:
         return y
 
     def equalizer(self, x, normalization_factor):  # step 8
+        #descale
+        y1 = self.descaling(x)
         # unnormalize
-        y1 = x / normalization_factor
+        y2 = y1 / normalization_factor
 
         # channel equalizer (nothing)
         equalizer_func = 1
-        y2 = y1 * equalizer_func
-        return y2
+        y3 = y2 * equalizer_func
+        return y3
 
     def match_filter(self, x, h_rrc, N_rrc, over_sampling):  # step 9
         y1 = np.convolve(x, h_rrc)

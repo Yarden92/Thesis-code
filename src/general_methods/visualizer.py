@@ -52,7 +52,7 @@ class Visualizer:
         plt.ylabel('imag part')
         plt.title(f'{m_qam}-QAM constellation map {title_ending}')
         plt.show()
-        
+
     @staticmethod
     def plot_constellation_map_with_3_data_vecs(data_vec, data_vec2, data_vec3, m_qam,
                                                 title_ending, legend):
@@ -80,18 +80,40 @@ class Visualizer:
         getattr(ax, function)(*args)
         ax.grid(True)
         ax.set_title(title or name)
-        if xlabel:  ax.set_xlabel(xlabel)
-        if ylabel:  ax.set_ylabel(ylabel)
-        if legend:  ax.legend(legend)
-        if custom_keyval: getattr(ax, custom_keyval[0])(custom_keyval[1])
-        if output_name: plt.savefig(output_name)
-        if not hold and not output_name: plt.show()
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if legend:
+            ax.legend(legend)
+        if custom_keyval:
+            getattr(ax, custom_keyval[0])(custom_keyval[1])
+        if output_name:
+            plt.savefig(output_name)
+        if not hold and not output_name:
+            plt.show()
+
+    @staticmethod
+    def double_plot(title: str, y1, y2, x1_vec=None, x2_vec=None,
+                    name1: str = 'plot1', name2: str = 'plot2', function='plot', output_name=None):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+        if x1_vec is None:
+            x1_vec = np.arange(len(y1))
+        if x2_vec is None:
+            x2_vec = np.arange(len(y2))
+        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1, function=function, hold=True)
+        Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2,
+                           function=function, output_name=output_name)
 
     @staticmethod
     def twin_zoom_plot(title: str, full_y, zoom_indices, x_vec=None, xlabel='index', function='plot', output_name=None):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-        if title: fig.suptitle(title)
-        if x_vec is None: x_vec = np.arange(len(full_y))
+        if title:
+            fig.suptitle(title)
+        if x_vec is None:
+            x_vec = np.arange(len(full_y))
         Visualizer.my_plot(x_vec, full_y, name=f'full scale', xlabel=xlabel, ax=ax1, function=function, hold=True)
         Visualizer.my_plot(x_vec[zoom_indices], full_y[zoom_indices], name=f'crop in', xlabel=xlabel, ax=ax2,
                            function=function, output_name=output_name)
@@ -99,8 +121,10 @@ class Visualizer:
     @staticmethod
     def twin_zoom_plot_vec(title: str, y_vecs, legends, zm_indx, x_vec=None, xlabel='index', function='plot'):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-        if title: fig.suptitle(title)
-        if x_vec is None: x_vec = np.arange(len(y_vecs))
+        if title:
+            fig.suptitle(title)
+        if x_vec is None:
+            x_vec = np.arange(len(y_vecs))
         Visualizer.my_plot(x_vec, y_vecs, name='full scale', xlabel=xlabel, ax=ax1, function=function, hold=True,
                            legend=legends)
         Visualizer.my_plot(x_vec[zm_indx], y_vecs[:, zm_indx], name='crop in', xlabel=xlabel, ax=ax1, function=function,
@@ -117,9 +141,12 @@ class Visualizer:
     def data_trio_plot(input, output, pred, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
                        function='plot'):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
-        if title: fig.suptitle(title)
-        if x_vec is None: x_vec = np.arange(len(input))
-        if zoom_indices is None: zoom_indices = x_vec
+        if title:
+            fig.suptitle(title)
+        if x_vec is None:
+            x_vec = np.arange(len(input))
+        if zoom_indices is None:
+            zoom_indices = x_vec
 
         x = x_vec[zoom_indices]
         y1 = input[zoom_indices]
@@ -197,7 +224,8 @@ class Visualizer:
         plt.grid(which='both', axis='y')
         plt.grid(which='major', axis='x')
         # plt.ylim(top=1,bottom=3e-4)
-        if legends: plt.legend(legends)
+        if legends:
+            plt.legend(legends)
         if output_path:
             plt.savefig(output_path)
         else:
@@ -216,7 +244,8 @@ class Visualizer:
         plt.title(f'BER vs normalizing factor with {len(bers_vecs)} permutations each')
         plt.grid(which='both', axis='y')
         plt.grid(which='major', axis='x')
-        if legends: plt.legend(legends)
+        if legends:
+            plt.legend(legends)
         if output_path:
             plt.savefig(output_path)
         else:
@@ -230,7 +259,8 @@ class Visualizer:
         plt.title(f'BER histogram with {len(bers_vecs)} permutations each')
         plt.grid(which='both', axis='y')
         plt.grid(which='major', axis='x')
-        if legends: plt.legend(legends)
+        if legends:
+            plt.legend(legends)
         if output_path:
             plt.savefig(output_path)
         else:
