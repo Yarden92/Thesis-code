@@ -138,26 +138,27 @@ class Visualizer:
                                function=function, hold=hold)
 
     @staticmethod
-    def data_trio_plot(input, output, pred, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
-                       function='plot'):
+    def data_trio_plot(y1, y2, y3, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
+                       function='plot', 
+                       names=['input (dirty)', 'output (clean)', 'pred']):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
         if title:
             fig.suptitle(title)
         if x_vec is None:
-            x_vec = np.arange(len(input))
+            x_vec = np.arange(len(y1))
         if zoom_indices is None:
-            zoom_indices = x_vec
+            zoom_indices = range(len(x_vec))
 
         x = x_vec[zoom_indices]
-        y1 = input[zoom_indices]
-        y2 = output[zoom_indices]
-        y3 = pred[zoom_indices]
+        y1 = y1[zoom_indices]
+        y2 = y2[zoom_indices]
+        y3 = y3[zoom_indices]
 
-        Visualizer.my_plot(x, y1, name=f'input (dirty)', xlabel=xlabel, ax=ax1, function=function, legend=['real', 'imag'],
+        Visualizer.my_plot(x, y1, name=names[0], xlabel=xlabel, ax=ax1, function=function, legend=['real', 'imag'],
                            hold=True)
-        Visualizer.my_plot(x, y2, name=f'output (clean)', xlabel=xlabel, ax=ax2, function=function, legend=['real', 'imag'],
+        Visualizer.my_plot(x, y2, name=names[1], xlabel=xlabel, ax=ax2, function=function, legend=['real', 'imag'],
                            hold=True)
-        Visualizer.my_plot(x, y3, name=f'pred', xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
+        Visualizer.my_plot(x, y3, name=names[2], xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
 
     @staticmethod
     def print_bits(bits, M, title='the bits are:'):

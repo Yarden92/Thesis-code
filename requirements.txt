@@ -12,3 +12,4 @@ pyrallis
 wandb
 gpustat
 pandas
+tabulate
