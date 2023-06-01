@@ -52,6 +52,7 @@ def main(config: DataConfig):
 
     if config.is_analyze_after:
         data_analyzer = DataAnalyzer(dir)
+        data_analyzer.wandb_log_single_sample(mu=0.01,data_id=0)
         data_analyzer.plot_full_ber_graph(is_save=True)
         data_analyzer.wandb_log_ber_vs_mu()
 
