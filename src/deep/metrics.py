@@ -75,7 +75,7 @@ class Metrics:
         num_errors = 0
         ber_vec = []
         cs = ChannelSimulator.from_dict(dataset.config)
-        n = max_x or len(dataset)
+        n = min(max_x or len(dataset), len(dataset))
         # TODO: can we do it all in one batch? at least the model(x) part.
         rng = _tqdm(range(n)) if _tqdm else range(n)
         for i in rng:
