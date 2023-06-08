@@ -55,15 +55,15 @@ def get_datasets_set(data_dir_path: str, dataset_type=OpticDataset,
     val_indices = range(stop_index_train, stop_index_val)
     test_indices = range(stop_index_val, stop_index_test)
 
-    train_ds = dataset_type(data_dir_path, train_indices)
-    val_ds = dataset_type(data_dir_path, val_indices)
-    test_ds = dataset_type(data_dir_path, test_indices)
+    train_ds = dataset_type(data_dir_path, train_indices) if train_ds_ratio > 0 else None
+    val_ds = dataset_type(data_dir_path, val_indices) if val_ds_ratio > 0 else None
+    test_ds = dataset_type(data_dir_path, test_indices) if test_ds_ratio > 0 else None
 
-    mean, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
+    # mean, std = GeneralMethods.calc_statistics_for_dataset(train_ds)
 
-    train_ds.set_scale(mean, std)  # TODO: consider if mean and std should be calculated for each dataset separately
-    val_ds.set_scale(mean, std)
-    test_ds.set_scale(mean, std)
+    # train_ds.set_scale(mean, std)  # TODO: consider if mean and std should be calculated for each dataset separately
+    # val_ds.set_scale(mean, std)
+    # test_ds.set_scale(mean, std)
 
     return train_ds, val_ds, test_ds
 
