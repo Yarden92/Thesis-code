@@ -1,0 +1,7 @@
+model_path: '/data/yarcoh/thesis_data/data/prod_models/mu-0.125__8000ds__UnetWithSkips__51epochs'
+ds_init_path: '/data/yarcoh/thesis_data/data/datasets/qam16_5001x50'
+train_ds_ratio: 0.0
+val_ds_ratio: 0.0
+test_ds_ratio: 1
+wandb_project: 'models_v3' 
+run_name: 'skip_connection_upto05_ds_w_scaling'
