@@ -124,7 +124,7 @@ class Trainer:
         abs_path = os.path.abspath(dir_path)
         assert dir_path and os.path.exists(abs_path), f"cant find the following path:\n\t{abs_path}"
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        trainer = torch.load(dir_path + "/trainer.pt", map_location=device)
+        trainer: Trainer = torch.load(dir_path + "/trainer.pt", map_location=device)
         model_state_dict = torch.load(dir_path + "/model_state_dict.pt", map_location=device)
         # load model class name
         with open(dir_path + "/model_class_name.txt", "r") as f:
@@ -133,6 +133,11 @@ class Trainer:
         trainer.model = model_class()
         trainer.model.load_state_dict(model_state_dict)
         trainer.model.to(device)
+
+        # # fix h -> dz
+        # if 'ssf' in trainer.train_dataset.config and 'h' in trainer.train_dataset.config['ssf']:
+        #     trainer.train_dataset.config['ssf']['dz'] = trainer.train_dataset.config['ssf'].pop('h')
+        
 
         return trainer
 
@@ -177,7 +182,7 @@ class Trainer:
         if verbose_level >= 1:
             print(f"the trained avg ber (of validation set) is {model_ber}")
 
-        ber_improvement = (org_ber - model_ber) / org_ber
+        ber_improvement = (org_ber - model_ber) / org_ber if org_ber != 0 else 0
         if verbose_level >= 1:
             print(f"the ber improvement is {ber_improvement*100:.2f}%")
 
