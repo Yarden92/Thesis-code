@@ -14,32 +14,29 @@ class SplitStepFourier:
                  t0=125e-12,
                  dt=1,
                  z_n=1000e3,
-                 h=200,
-                 noise_psd=1e-3,
+                 dz=200,
+                #  D=1e-30,
                  with_noise=True,
                  verbose=False
                  ):
-        self.gamma = gamma
-        self.b2 = b2
-        self.h = h
-        self.t0 = t0
-        self.z_n = z_n
-
-        
 
         Z_0 = t0 ** 2/abs(b2)
         self.P_0 = 1/(gamma*Z_0)
 
+        self.gamma = gamma
+        self.b2 = b2
+        self.dz = dz
+        self.t0 = t0
+        self.z_n = z_n
+
         self.dt = dt
 
-
-        self.noise_psd = noise_psd
+        self.D = self._calculate_D()
+        self.noise_amplitude = np.sqrt(self.D * self.dz / self.dt)
         self.with_noise = with_noise
-        self.noise_mean = 0
-        self.std = np.sqrt(self.noise_psd * self.h / self.dt)
 
         # self.N = np.int64((1 + z_n*(t0 ** 2)/np.absolute(b2))//self.h)
-        self.N = int(z_n / self.h)
+        self.N = int(z_n / self.dz)
         if verbose:
             print(f'SSF params: N = {self.N}, P_0 = {self.P_0}')
 
@@ -49,27 +46,32 @@ class SplitStepFourier:
                           f"\t2) enlarge t0\n"
                           f"\t3) enlarge z_n\n")
 
-        
+    def __call__(self, a) -> np.ndarray:
+        a = a*np.sqrt(self.P_0)
 
-    def __call__(self, x) -> np.ndarray:
-        L = len(x)
-        x = x*np.sqrt(self.P_0)
+        Nt = np.max(a.shape)  # length
 
-        Nt = np.max(x.shape)
+        w = 2.0 * np.pi / (float(Nt) * self.dt) * np.fft.fftshift(np.arange(-Nt / 2.0, Nt / 2.0))
 
-        dw = 2.0*np.pi/float(Nt)/self.dt
+        # Half-step linear propagation
+        half_step = np.exp((1j * self.b2 / 2.0 * w ** 2) * self.dz / 2.0)
 
-        w = dw*np.fft.fftshift(np.arange(-Nt/2.0, Nt/2.0))
-
-        vec1 = np.exp((1j*self.b2/2.0*w ** 2)*self.h)
-
-        a = x
+        a = np.fft.fft(a)
         for _ in range(self.N):
-            a = np.fft.fft(a)*vec1
-            a = np.fft.ifft(a)
-            a *= np.exp(1j*self.h*self.gamma*np.abs(a) ** 2)
-            a += self._get_noise(L)
-        a = a/np.sqrt(self.P_0)
+            # First half-step linear propagation
+            a = np.fft.ifft(a * half_step)
+
+            # Noise addition
+            a += self._get_noise(Nt)
+
+            # Nonlinear propagation
+            a *= np.exp(1j * self.gamma * self.dz * np.abs(a) ** 2)
+
+            # Second half-step linear propagation
+            a = half_step * np.fft.fft(a)
+
+        a = np.fft.ifft(a)
+        a /= np.sqrt(self.P_0)
 
         return a
 
@@ -80,7 +82,7 @@ class SplitStepFourier:
             't0': self.t0,
             'dt': self.dt,
             'z_n': self.z_n,
-            'h': self.h,
+            'dz': self.dz,
         }
 
     @classmethod
@@ -91,10 +93,10 @@ class SplitStepFourier:
             t0=_dict['t0'],
             dt=_dict['dt'],
             z_n=_dict['z_n'],
-            h=_dict['h'],
+            dz=_dict['dz'],
             verbose=verbose
         )
-        
+
     @classmethod
     def with_params_for_example(cls):
         return cls(
@@ -104,7 +106,7 @@ class SplitStepFourier:
             z_n=1.51,
             # steps=np.arange(0.1, 1.51, 0.1),
             # dt=1e-12,
-            h=1000
+            dz=1000
         )
 
     # def set_dt(self, dt):
@@ -124,11 +126,26 @@ class SplitStepFourier:
 
     def _get_dummy_noise(self, L) -> np.ndarray:
         return np.zeros(L) + 1j*np.zeros(L)
-    
+
     def _gen_noise(self, L) -> np.ndarray:
-        real = np.random.normal(self.noise_mean, self.std, L)
-        imag = np.random.normal(self.noise_mean, self.std, L)
-        return real + 1j*imag
+        noise = (np.random.randn(L) + 1j * np.random.randn(L))
+        noise = self.noise_amplitude * noise
+
+        return noise
+
+    def _calculate_D(self):
+
+        h = 6.62607015e-34 # planck constant
+        lambda_0 = 1.55 * 1e-6 # wavelength
+        C = 299792458 # speed of light
+        K_T = 1.1 
+        X_dB = 0.2 #dB/km -> TODO: do we need to do something with the km?
+        X = 10 ** (X_dB / 10) # fiber loss coefficient
+        v_0 = C / lambda_0 # frequency
+
+        D = 0.5 * h * v_0 * K_T * X   #   D= 7.38e-20
+        return D
+
 
 
 def tester():
@@ -138,8 +155,12 @@ def tester():
         t0=125e-12,
         dt=1,
         z_n=1000e3,
-        h=200
+        dz=200,
+        D=1e30,
+        with_noise=True,
+        verbose=True
     )
+
     Po = .00064
     C = -2
     Ao = np.sqrt(Po)

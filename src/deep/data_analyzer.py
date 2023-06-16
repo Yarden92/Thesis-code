@@ -1,4 +1,5 @@
 import os
+import re
 
 import numpy as np
 import wandb
@@ -30,7 +31,8 @@ class DataAnalyzer():
         self.ber_res = 0
 
     def fetch_params(self):
-        num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
+        # num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
+        num_samples, num_mus = self._extract_values_from_folder_name()
         mu_vec = []
         conf_list = []
         self.num_digits = self._count_digits(os.listdir(self.path)[0])
@@ -77,17 +79,16 @@ class DataAnalyzer():
         x_start, x_stop = int(0.2*N), int(0.3*N)
         zm = range(x_start, x_stop) if is_spectrum else range(0, 50)
         func = 'plot' if is_spectrum else 'stem'
-        
+
         indices = range(N)
         abs_x = np.abs(x)
         abs_y = np.abs(y)
         name = f'abs spectrum, mu={mu_actual:.2e}'
-        
-        Visualizer.my_plot(indices,abs_x,abs_y, name=name,
+
+        Visualizer.my_plot(indices, abs_x, abs_y, name=name,
                            legend=['clean (before channel)', 'dirty (after channel)'],
                            output_name=f'{out_path}/abs_spectrum.png' if is_save else None,
                            )
-                           
 
         # for v, name in [[x, 'x'], [y, 'y']]:
         #     Visualizer.twin_zoom_plot(
@@ -100,14 +101,15 @@ class DataAnalyzer():
 
         x_power = np.mean(np.abs(x) ** 2)
         print(f'x_power={x_power}')
-        
+
         y_power = np.mean(np.abs(y) ** 2)
         print(f'y_power={y_power}')
 
         ber, num_errors = Metrics.calc_ber_for_single_vec(x, y, conf=self.params['conf'])
         print(f'ber={ber}')
 
-        if is_save: print(f'images saved to {out_path}')
+        if is_save:
+            print(f'images saved to {out_path}')
 
     def calc_ber_for_sub_folder(self, mu, n=5, _tqdm=None):
         # n is the number of x's permutations to take from each folder
@@ -145,7 +147,8 @@ class DataAnalyzer():
     # ------------ wandb ------------
 
     def _init_wandb(self):
-        if self.is_wandb_init: return
+        if self.is_wandb_init:
+            return
         data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
         data_type = DataType(data_type).name
         mu_range = f'{self.params["mu_start"]}-{self.params["mu_end"]}'
@@ -203,11 +206,21 @@ class DataAnalyzer():
         # read the actual mu from the config in that dir
         return DatasetNormal(self.path + '/' + sub_name).config['normalization_factor']
 
+    def _extract_values_from_folder_name(self):
+        matches = re.findall(r'\d+', self.base_name)
+
+        if len(matches) >= 2:
+            num_samples = int(matches[0])
+            num_mus = int(matches[1])
+            return num_samples, num_mus
+        else:
+            raise "folder name is not in the right format of $$samples_$$mus"
+
     # ------------ private ------------
 
     def _calc_full_ber(self, n):
         sub_name_filter = '*'
-        n = n or self.params['num_samples'] # if n is None, take all permutations
+        n = n or self.params['num_samples']  # if n is None, take all permutations
         if self.ber_res < n:
             self.ber_vec, self.mu_vec = Metrics.gen_ber_mu_from_folders(self.path, sub_name_filter, self.verbose_level, self._tqdm, n,
                                                                         is_matrix_ber=self.is_box_plot)
@@ -215,19 +228,21 @@ class DataAnalyzer():
 
     def _get_sub_folder_name(self, mu):
         num_samples = self.params['num_samples']
-        mu = self._get_closest_mu(mu)
-        sub_name = f"{num_samples}_samples_mu={mu:.{self.params['num_digits']}f}"
+        cropped_mu = self._get_mu_as_str(mu)
+        sub_name = f"{num_samples}_samples_mu={cropped_mu}"
         return sub_name
-    
-    def _get_closest_mu(self, mu):
+
+    def _get_mu_as_str(self, mu):
         all_mus = []
+
         for dir in os.listdir(self.path):
-            if '=' in dir: 
-                all_mus.append(float(dir.split('=')[1]))
-                
-        closest_mu = min(all_mus, key=lambda x:abs(x-mu))
-        return closest_mu
-            
+            if 'mu=' in dir:
+                mu_val = re.findall(r'mu=(\d+\.\d+)', dir)[0]
+                all_mus.append((float(mu_val), mu_val))
+
+        closest_mu = min(all_mus, key=lambda x: abs(x[0] - mu))
+
+        return closest_mu[1] # return the string (the cropped mu)
 
     def clear_ber(self):
         self.ber_vec = None

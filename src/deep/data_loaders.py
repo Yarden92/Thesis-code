@@ -187,40 +187,18 @@ def save_xy(dir, x, y, i):
     with open(y_path, 'wb') as f:
         np.save(f, y)
 
-
-# def gen_data_old(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None):
-#     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
-#     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-#     pbar = tqdm(total=len(mu_vec)*data_len)
-#     if logger_path:
-#         os.makedirs(logger_path, exist_ok=True)
-#         print(f'saving logs to {os.path.abspath(logger_path)}')
-#         print(f'saving data to {os.path.abspath(root_dir)}')
-#     file_path = f'{logger_path}/{get_ts_filename()}'
-#     for mu_i, mu in enumerate(mu_vec):
-#         dir = f'{root_dir}/{data_len}_samples_mu={mu:.3f}'
-#         os.makedirs(dir, exist_ok=True)
-#         cs.normalization_factor = mu
-#         save_conf(f'{dir}/{conf_file_name}', cs.params_to_dict())
-#         for i in range(data_len):
-#             x, y = cs.gen_io_data()
-#             save_xy(dir, x, y, i)
-#             pbar.update()
-#             if logger_path: log_status(file_path, mu, mu_i, len(mu_vec), i, data_len, pbar)
-
-
-def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1,
-              type=DataType.spectrum):
+def gen_data(data_len, num_symbols, mu_vec, cs: ChannelSimulator, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1,
+              data_type=DataType.spectrum):
     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    # assert mu_vec[1] - mu_vec[0] >= 0.0001, "mu_vec resolution is too low, folders will overlap"
-    delta = mu_vec[1] - mu_vec[0]
-    num_digits = int(np.ceil(-np.log10(delta)))
+    mu_delta = mu_vec[1] - mu_vec[0]
+    num_digits_mu = int(np.ceil(-np.log10(mu_delta)))
+
     if logger_path:
         os.makedirs(logger_path, exist_ok=True)
         print(f'saving logs (disabled) to {os.path.abspath(logger_path)}')
         print(f'saving data to {os.path.abspath(root_dir)}')
-    file_path = f'{logger_path}/{get_ts_filename()}'
+    # file_path = f'{logger_path}/{get_ts_filename()}'
 
     print('setting up tasks...')
     # executor = ProcessPoolExecutor(max_workers=max_workers)
@@ -228,14 +206,14 @@ def gen_data2(data_len, num_symbols, mu_vec, cs, root_dir='data', tqdm=tqdm, log
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {}
         for mu_i, mu in enumerate(mu_vec):
-            dir = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits}f}'
+            dir = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits_mu}f}'
             os.makedirs(dir, exist_ok=True)
             cs.normalization_factor = mu
             conf = cs.params_to_dict()
-            conf['data_type'] = type
+            conf['data_type'] = data_type
             save_conf(f'{dir}/{conf_file_name}', conf)
             for i in range(data_len):
-                f_i = executor.submit(_gen_data_i, cs, dir, i, mu, type)
+                f_i = executor.submit(_gen_data_i, cs, dir, i, mu, data_type)
                 futures[f_i] = (mu, i)
 
         print('initiating data generation...')
@@ -255,10 +233,7 @@ def _gen_data_i(cs: ChannelSimulator, dir, i, mu, type=DataType.spectrum):
     # print(f'generating data {i}, mu {mu_i}...')
     try:
         cs.normalization_factor = mu
-        # assert cs.normalization_factor == mu, "entered multi process with mu not corresponding to cs"
         x, y = cs.gen_io_data(type)
-        # assert GeneralMethods.power_ratio(x, y) < 10, \
-        #     f"x and y not in the same scale!"
         save_xy(dir, x, y, i)
     except Exception as e:
         print(f'error at mu={mu}, i={i}: {e}')

@@ -1,0 +1,10 @@
+mu_start: 0.2
+mu_end: 0.35
+D_start: 1e-17
+D_end: 1e-12
+num_of_mu: 20
+num_of_D: 20
+n_realisation: 20
+is_print: false
+is_plot: false
+is_save: true

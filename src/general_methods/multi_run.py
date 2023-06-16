@@ -1,17 +1,23 @@
 import numpy as np
 from tqdm import tqdm
 
+from src.optics.channel_simulation import ChannelSimulator
+
 
 def create_us_vec(n_steps=10, min_u=-2.5, max_u=-1):
     normalizing_factors = 10 ** np.linspace(min_u, max_u, n_steps)
     return normalizing_factors
 
 
-def run_n_times(cs, n=10, pbar=None) -> (float, int):
+def run_n_times(cs: ChannelSimulator, n=10, pbar=None) -> (float, int):
     # outputs BER from N realisations
     num_errors = 0
     for r in range(n):
-        num_errors += cs.iterate_through_channel()[1]
+        try:
+            num_errors += cs.iterate_through_channel()[1]
+        except Exception as e:
+            print(f'Error in run {r}: {e}')
+            num_errors += cs.length_of_msg
         if pbar: pbar.update(1)
     ber = num_errors / (n * cs.length_of_msg)
     return ber, num_errors

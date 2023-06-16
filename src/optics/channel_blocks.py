@@ -6,6 +6,8 @@ from src.optics.myFNFTpy.FNFTpy import nsev_inverse_xi_wrapper, nsev_inverse, ns
 # TODO: take out prints into channel simulator, rather than channel blocks
 from src.optics.split_step_fourier import SplitStepFourier
 
+eps = 1e-8
+
 
 class ChannelBlocks:
 
@@ -50,32 +52,36 @@ class ChannelBlocks:
         y2 = self.scaling(y)
 
         return y2
-    
+
     def scaling(self, x):
         # scaling the amplitude of the vector to be in the range of [-1,1] with sigmoid function
         amp, phase = self.get_amp_phase(x)
         scaled_amp = self.sigmoid(amp)
         y = self.get_complex_from_amp_phase(scaled_amp, phase)
         return y
-    
+
     def descaling(self, x):
         # scaling the amplitude of the vector to be in the range of [-1,1] with sigmoid function
         amp, phase = self.get_amp_phase(x)
         scaled_amp = self.desigmoid(amp)
         y = self.get_complex_from_amp_phase(scaled_amp, phase)
         return y
-    
+
     def get_amp_phase(self, x):
         amp = np.abs(x)
         phase = np.angle(x)
         return amp, phase
-    
+
     def sigmoid(self, x):
         return 2 / (1 + np.exp(-x)) - 1
-    
+
     def desigmoid(self, x):
+        # check if x exceeds the range of [-1,1]
+        if any(np.abs(x) > 1):
+            x = np.clip(x, -1+eps, 1-eps) # clip x to be in the range of [-1,1]
+            # TODO: log this somewhere
         return -np.log((2 / (x + 1)) - 1)
-    
+
     def get_complex_from_amp_phase(self, amp, phase):
         return amp * np.exp(1j * phase)
 
@@ -120,10 +126,21 @@ class ChannelBlocks:
         return y
 
     def equalizer(self, x, normalization_factor):  # step 8
-        #descale
+        # values may be either complex or zero (0j) - check if all are complex
+        if not np.iscomplexobj(x) or np.any(np.isnan(x)):
+            print("some of x is not complex...")
+        # descale
         y1 = self.descaling(x)
         # unnormalize
-        y2 = y1 / normalization_factor
+        if normalization_factor == 0:
+            print("why normalization_factor is 0?!")
+
+        # check if x contains NaNs
+
+        try:
+            y2 = y1 / normalization_factor
+        except Exception as e:
+            y2 = y1
 
         # channel equalizer (nothing)
         equalizer_func = 1

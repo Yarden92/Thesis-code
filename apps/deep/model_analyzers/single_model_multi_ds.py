@@ -22,9 +22,8 @@ def main(config: ModelAnalyzerConfig):
     ma: ModelAnalyzer = ModelAnalyzer(trainer, config.run_name)
 
     ma.wandb_project = config.wandb_project
-    # ma.run_name = 'model_skip_'
 
-    ma.test_all_bers(config.ds_init_path,
+    ma.upload_all_bers_to_wandb(config.ds_init_path,
                      config.train_ds_ratio, config.val_ds_ratio, config.test_ds_ratio,
                      tqdm, 1)
 

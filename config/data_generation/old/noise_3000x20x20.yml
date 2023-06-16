@@ -1,0 +1,14 @@
+data_len: 3000  # for each mu
+mu_len: 20
+D_len: 20
+mu_start: 0.2
+mu_end: 0.35
+D_start: 1e-17
+D_end: 1e-12
+num_symbols: 64
+qam: 16
+logger_path: './logs'
+output_path: '/data/yarcoh/thesis_data/data/datasets'
+max_workers: 64
+data_type: 0  # 0 for spectrum, 1 for iq_samples
+is_analyze_after: False

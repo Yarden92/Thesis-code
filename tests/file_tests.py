@@ -49,7 +49,7 @@ def test2_data_generation():
                               t0=125e-12,
                               dt=1,
                               z_n=1000e3,
-                              h=200
+                              dz=200
                           ),
                           verbose=False)
     # generate the date

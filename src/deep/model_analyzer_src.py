@@ -19,6 +19,7 @@ class ModelAnalyzer:
         self.model_name = self.trainer.model._get_name()
         self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
         self.mu = self.trainer.train_dataset.cropped_mu
+        self.outputs = {}
 
     def _init_wandb(self):
         if wandb.run is not None:  # if already logged in
@@ -36,8 +37,46 @@ class ModelAnalyzer:
     def _reset_wandb(self):
         wandb.run = None
 
-    def test_all_bers(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
+    def plot_all_bers(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
                       _tqdm=None, verbose_level=1):
+
+        sorted_dirs = GM.sort_dirs_by_mu(os.listdir(base_path))
+        # powers, org_bers, model_bers, ber_improvements = [], [], [], []
+        self.outputs['powers'], self.outputs['org_bers'], self.outputs['model_bers'], self.outputs['ber_improvements'] = [], [], [], []
+        for folder_name in sorted_dirs:
+            ds_path = os.path.join(base_path, folder_name)
+            self.load_test_dataset(ds_path, train_ds_ratio, val_ds_ratio, test_ds_ratio, False)
+            mu = self.trainer.val_dataset.cropped_mu
+            y_power = self.trainer.val_dataset.config['avg_y_power']
+            org_ber, model_ber, ber_improve = self.trainer.compare_ber(verbose_level=verbose_level, _tqdm=_tqdm)
+
+            if verbose_level > 0:
+                print(
+                    f'mu={mu:.3f} | org_ber={org_ber:.2e} | model_ber={model_ber:.2e} |  ber_improve={ber_improve*100:03.0f}% | y_power={y_power:.2e}')
+                # print((
+                #     f'\n----------------- BERs for mu={mu} ----------------\n'
+                #     f'org_ber={org_ber}, model_ber={model_ber}, ber_improvement={ber_improve}, y_power={y_power:.2e}'
+                #     '\n'
+                # ))
+            # powers.append(y_power)
+            # org_bers.append(org_ber)
+            # model_bers.append(model_ber)
+            # ber_improvements.append(ber_improve)
+            self.outputs['powers'].append(y_power)
+            self.outputs['org_bers'].append(org_ber)
+            self.outputs['model_bers'].append(model_ber)
+            self.outputs['ber_improvements'].append(ber_improve)
+
+        Visualizer.my_plot(
+            self.outputs['powers'], self.outputs['org_bers'], self.outputs['powers'], self.outputs['model_bers'],
+            name='BERs vs. y power',
+            legend=['org_ber', 'model_ber'],
+            xlabel='y power', ylabel='BER',
+            function='semilogy'
+        )
+
+    def upload_all_bers_to_wandb(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
+                                 _tqdm=None, verbose_level=1):
 
         self._init_wandb()
 
@@ -63,8 +102,8 @@ class ModelAnalyzer:
                 'mu': mu
             })
 
-    def plot_bers(self, _tqdm=None, verbose_level=1):
-        _ = self.trainer.compare_ber(verbose_level=verbose_level, _tqdm=_tqdm)
+    def plot_bers(self, _tqdm=None, verbose_level=1, num_x_per_folder=None):
+        _ = self.trainer.compare_ber(verbose_level=verbose_level, _tqdm=_tqdm, num_x_per_folder=num_x_per_folder)
 
     def upload_bers_to_wandb(self, verbose=False):
         org_ber, model_ber, ber_improvement = self.trainer.compare_ber()
@@ -90,17 +129,24 @@ class ModelAnalyzer:
             name=f'after {self.trainer.train_state_vec.num_epochs} epochs'
         )
 
-    def plot_constelation(self, i):
-        x, y, preds = self.trainer.test_single_item(i, plot=False)
+    def plot_constelation(self, indices: list):
         m_qam = self.trainer.train_dataset.config.get('m_qam')
         cs = ChannelSimulator.from_dict(self.trainer.train_dataset.config)
 
-        x9 = cs.steps8_to_9(x)
-        y9 = cs.steps8_to_9(y)
-        pred9 = cs.steps8_to_9(preds)
-        Visualizer.plot_constellation_map_with_3_data_vecs(x9, y9, pred9, m_qam,
+        x, y, preds = np.array([]), np.array([]), np.array([])
+        for i in indices:
+            x_i, y_i, preds_i = self.trainer.test_single_item(i, plot=False)
+            x9 = cs.steps8_to_9(x_i)
+            y9 = cs.steps8_to_9(y_i)
+            pred9 = cs.steps8_to_9(preds_i)
+
+            x = np.concatenate((x, x9))  # dirty
+            y = np.concatenate((y, y9))  # clean
+            preds = np.concatenate((preds, pred9))
+
+        Visualizer.plot_constellation_map_with_3_data_vecs(x, preds, y, m_qam,
                                                            'constellation map',
-                                                           ['dirty', 'clean', 'preds'])
+                                                           ['dirty', 'preds', 'clean'])
         # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
         # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
         # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')
@@ -144,5 +190,6 @@ class ModelAnalyzer:
 
         self.trainer.val_dataset = test_dataset
         self.trainer.val_dataloader = test_dataloader
+        self.trainer.train_dataset.config = test_dataset.config
         if is_reset_wandb:
             self._reset_wandb()

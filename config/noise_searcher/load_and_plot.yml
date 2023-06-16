@@ -1,0 +1,4 @@
+is_print: true
+is_plot: true
+is_save: false
+load_path: ./data/ber_maps/2023.06.09-18.25.22
