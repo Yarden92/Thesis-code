@@ -12,7 +12,7 @@ class PowerAdder:
         self.is_overright = is_overright
         self.verbose_level = verbose_level  # 0 - no prints, 1 - print only dataset name, 2 - print everything
 
-    def add_to_all(self, datasets_dir):
+    def add_to_all(self, datasets_dir='/data/yarcoh/thesis_data/data/datasets'):
         """Add average powers to all the datasets in the datasets directory."""
         dirs = os.listdir(datasets_dir)
         if self.verbose_level == 0:
@@ -28,12 +28,12 @@ class PowerAdder:
             if self.verbose_level > 0:
                 print(f'added average powers to dataset: {dataset}')
 
-    def calculate_and_add_powers(self, dataset_path):
+    def calculate_and_add_powers(self, dataset_path='/data/yarcoh/thesis_data/data/datasets/qam16_50x300'):
         """Calculate and add average powers to the config files in each subdirectory."""
 
         subdirs = os.listdir(dataset_path)
         if self.verbose_level == 0:
-            subdirs = tqdm(subdirs, desc='adding average powers to dataset')
+            subdirs = tqdm(subdirs, desc='main loop - on subdirs')
 
         # Iterate over the subdirectories in the dataset
         for subdir in subdirs:
@@ -47,16 +47,27 @@ class PowerAdder:
                 if self.verbose_level > 1:
                     print(f'average powers already exist for subdir: {subdir}')
                 continue
-
-
+            
             # Get the list of data files in the subdirectory
-            x_data_files = [file for file in os.listdir(subdir_path) if file.endswith('x.npy')]
-            y_data_files = [file for file in os.listdir(subdir_path) if file.endswith('y.npy')]
+            dir_list = os.listdir(subdir_path)
+            if self.verbose_level == 0:
+                dir_list = tqdm(dir_list, desc=f'subloop0 - collecting files @{subdir}')
+            x_data_files, y_data_files = [], [] 
+            for filename in dir_list:
+                if filename.endswith('x.npy'):
+                    x_data_files.append(filename)
+                elif filename.endswith('y.npy'):
+                    y_data_files.append(filename)
+
+
+            # x_data_files = [file for file in os.listdir(subdir_path) if file.endswith('x.npy')]
+            # y_data_files = [file for file in os.listdir(subdir_path) if file.endswith('y.npy')]
 
             # Calculate the average power for x and y samples
             avg_x_power = 0.0
             avg_y_power = 0.0
-
+            if self.verbose_level == 0:
+                x_data_files = tqdm(x_data_files, desc=f'subloop1 - calculating power for each file @{subdir}')
             for x_data_file, y_data_file in zip(x_data_files, y_data_files):
                 x_data = np.load(os.path.join(subdir_path, x_data_file))
                 y_data = np.load(os.path.join(subdir_path, y_data_file))
