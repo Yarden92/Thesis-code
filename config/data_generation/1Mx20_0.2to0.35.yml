@@ -1,0 +1,12 @@
+data_len: 1000000  # for each mu
+mu_len: 20
+mu_start: 0.20
+mu_end: 0.35
+num_symbols: 64
+qam: 16
+logger_path: './logs'
+output_path: '/data/yarcoh/thesis_data/data/datasets'
+max_workers: 64
+data_type: 0  # 0 for spectrum, 1 for iq_samples
+with_noise: True
+is_analyze_after: True
