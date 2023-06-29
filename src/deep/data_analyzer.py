@@ -17,18 +17,43 @@ analysis_dir = '_analysis'
 
 
 class DataAnalyzer():
-    def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False, verbose_level=0):
+    def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False, verbose_level=0,
+                 load_ber_path=None):
         self.path = data_folder_path.rstrip('/')
         self.base_name = os.path.basename(self.path)
         self.params = self.fetch_params()
         self.is_wandb_init = False
         self.is_box_plot = is_box_plot
-        self.ber_vec = None
-        self.mu_vec = None
+
         self._tqdm = _tqdm
         self.num_digits = None
         self.verbose_level = verbose_level
+        self.ber_vec = None
+        self.mu_vec = None
         self.ber_res = 0
+        if load_ber_path is not None:
+            self.load_ber(load_ber_path)
+
+
+
+    def save_ber(self, n: None) -> None:
+        self._calc_full_ber(n)
+        ber_path = os.path.join(self.path, analysis_dir, 'ber.npy')
+        mu_path = os.path.join(self.path, analysis_dir, 'mu.npy')
+        ber_res_path = os.path.join(self.path, analysis_dir, 'ber_res.npy')
+        # create the dir
+        os.makedirs(os.path.join(self.path, analysis_dir), exist_ok=True)
+        np.save(ber_path, self.ber_vec)
+        np.save(mu_path, self.mu_vec)
+        np.save(ber_res_path, self.ber_res)
+
+    def load_ber(self) -> None:
+        ber_path = os.path.join(self.path, analysis_dir, 'ber.npy')
+        mu_path = os.path.join(self.path, analysis_dir, 'mu.npy')
+        ber_res_path = os.path.join(self.path, analysis_dir, 'ber_res.npy')
+        self.ber_vec = np.load(ber_path)
+        self.mu_vec = np.load(mu_path)
+        self.ber_res = np.load(ber_res_path)
 
     def fetch_params(self):
         # num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
@@ -242,17 +267,12 @@ class DataAnalyzer():
 
         closest_mu = min(all_mus, key=lambda x: abs(x[0] - mu))
 
-        return closest_mu[1] # return the string (the cropped mu)
+        return closest_mu[1]  # return the string (the cropped mu)
 
     def clear_ber(self):
         self.ber_vec = None
         self.mu_vec = None
-
-    # def _is_valid_subfolder(self, sub_name):
-    #     if sub_name.startswith('_'): return False
-    #     if sub_name.startswith('.'): return False
-    #     if '=' not in sub_name: return False
-    #     return True
+        self.ber_res = 0
 
     def _get_xy(self, data_id, sub_name):
         dir = self.path + '/' + sub_name

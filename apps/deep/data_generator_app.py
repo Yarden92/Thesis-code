@@ -25,7 +25,8 @@ class DataConfig:
     data_type: int = 0  # 0 for spectrum, 1 for iq_samples
     over_sampling: int = 8 # over sampling factor for pulse shaping
     with_noise: bool = True
-    is_analyze_after: bool = False
+    # is_analyze_after: bool = False
+    save_ber_after: bool = True
 
 
 def main(config: DataConfig):
@@ -52,11 +53,18 @@ def main(config: DataConfig):
     data_loaders.gen_data(config.data_len, config.num_symbols, mu_vec, cs, dir_path, tqdm=tqdm,
                            logger_path=config.logger_path, max_workers=config.max_workers, data_type=config.data_type)
 
-    if config.is_analyze_after:
+    # if config.is_analyze_after:
+    #     data_analyzer = DataAnalyzer(dir_path)
+    #     # data_analyzer.wandb_log_single_sample(mu=0.01,data_id=0)
+    #     data_analyzer.plot_full_ber_graph(is_save=True)
+    #     data_analyzer.wandb_log_ber_vs_mu()
+    print('done generating data')
+    if config.save_ber_after:
+        print('calculating BERs and saving...')
         data_analyzer = DataAnalyzer(dir_path)
-        # data_analyzer.wandb_log_single_sample(mu=0.01,data_id=0)
-        data_analyzer.plot_full_ber_graph(is_save=True)
-        data_analyzer.wandb_log_ber_vs_mu()
+        num_permutations = config.data_len # the entire data
+        data_analyzer.save_ber(n=num_permutations)
+        print('done saving BERs')
 
 
 if __name__ == '__main__':
