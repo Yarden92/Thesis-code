@@ -9,19 +9,18 @@ from src.general_methods.signal_processing import SP
 
 class SplitStepFourier:
     def __init__(self,
-                 b2=-20e-27,
+                 b2=-20e-27, # TODO: change to nano
                  gamma=0.003,
                  t0=125e-12,
                  dt=1,
                  z_n=1000e3,
                  dz=200,
-                #  D=1e-30,
                  with_noise=True,
                  verbose=False
                  ):
 
-        Z_0 = t0 ** 2/abs(b2)
-        self.P_0 = 1/(gamma*Z_0)
+        # Z_0 = t0 ** 2/abs(b2)
+        # self.P_0 = 1/(gamma*Z_0)
 
         self.gamma = gamma
         self.b2 = b2
@@ -134,13 +133,13 @@ class SplitStepFourier:
         return noise
 
     def _calculate_D(self):
-
         h = 6.62607015e-34 # planck constant
         lambda_0 = 1.55 * 1e-6 # wavelength
         C = 299792458 # speed of light
         K_T = 1.1 
         X_dB = 0.2 #dB/km -> TODO: do we need to do something with the km?
-        X = 10 ** (X_dB / 10) # fiber loss coefficient
+        # X = 10 ** (X_dB / 10) # fiber loss coefficient
+        X = (X_dB / 10) * np.log(10) * 1e-3 # fiber loss coefficient
         v_0 = C / lambda_0 # frequency
 
         D = 0.5 * h * v_0 * K_T * X   #   D= 7.38e-20
