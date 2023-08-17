@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
+from IPython.display import Math, display, Markdown
 
 from src.general_methods.signal_processing import SP
 
@@ -95,7 +96,9 @@ class Visualizer:
 
     @staticmethod
     def double_plot(title: str, y1, y2, x1_vec=None, x2_vec=None,
-                    name1: str = 'plot1', name2: str = 'plot2', function='plot', output_name=None):
+                    name1: str = 'plot1', name2: str = 'plot2', 
+                    function='plot', output_name=None,
+                    xlabel1=None, xlabel2=None):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
         if title:
             fig.suptitle(title)
@@ -103,8 +106,8 @@ class Visualizer:
             x1_vec = np.arange(len(y1))
         if x2_vec is None:
             x2_vec = np.arange(len(y2))
-        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1, function=function, hold=True)
-        Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2,
+        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1,xlabel=xlabel1, function=function, hold=True)
+        Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2, xlabel=xlabel2,
                            function=function, output_name=output_name)
 
     @staticmethod
@@ -161,11 +164,12 @@ class Visualizer:
         Visualizer.my_plot(x, y3, name=names[2], xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
 
     @staticmethod
-    def print_bits(bits, M, title='the bits are:'):
+    def print_bits(bits, sps: int, title='the bits are:'):
+        # sps = log2(M_QAM)
         print('\n_______________________________________________')
         print(title, f'- len={len(bits)}')
         # mat = np.int8(np.reshape(bits, (-1, M)))
-        mat = np.reshape(bits, (-1, M))
+        mat = np.reshape(bits, (-1, sps))
         print(mat)
         # print('\n')
 
@@ -197,6 +201,11 @@ class Visualizer:
         tmax = t_vec[np.max(np.where(np.abs(x) > th))]
 
         print(f'signal bw = [{tmin:.2e}:{tmax:.2e}]')
+
+    @staticmethod
+    def print_equation(equation: str) -> None:
+        display(Markdown(rf"$$\begin{{align*}} {equation} \end{{align*}}$$"))
+
 
     @staticmethod
     def print_nft_options(res_ob: dict) -> None:
