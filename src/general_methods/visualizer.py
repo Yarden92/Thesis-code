@@ -96,7 +96,7 @@ class Visualizer:
 
     @staticmethod
     def double_plot(title: str, y1, y2, x1_vec=None, x2_vec=None,
-                    name1: str = 'plot1', name2: str = 'plot2', 
+                    name1: str = 'plot1', name2: str = 'plot2',
                     function='plot', output_name=None,
                     xlabel1=None, xlabel2=None):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -106,7 +106,7 @@ class Visualizer:
             x1_vec = np.arange(len(y1))
         if x2_vec is None:
             x2_vec = np.arange(len(y2))
-        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1,xlabel=xlabel1, function=function, hold=True)
+        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1, xlabel=xlabel1, function=function, hold=True)
         Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2, xlabel=xlabel2,
                            function=function, output_name=output_name)
 
@@ -142,7 +142,7 @@ class Visualizer:
 
     @staticmethod
     def data_trio_plot(y1, y2, y3, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
-                       function='plot', 
+                       function='plot',
                        names=['input (dirty)', 'output (clean)', 'pred']):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
         if title:
@@ -205,7 +205,6 @@ class Visualizer:
     @staticmethod
     def print_equation(equation: str) -> None:
         display(Markdown(rf"$$\begin{{align*}} {equation} \end{{align*}}$$"))
-
 
     @staticmethod
     def print_nft_options(res_ob: dict) -> None:
@@ -277,6 +276,21 @@ class Visualizer:
             plt.show()
 
     @staticmethod
+    def plot_amp_and_phase(x, y, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '') # remove $ from y_name
+        Visualizer.double_plot(
+            title=title,
+            y1=np.abs(y),
+            y2=np.angle(y),
+            x1_vec=x,
+            x2_vec=x,
+            xlabel1=xlabel, 
+            xlabel2=xlabel,
+            name1=rf'$|{y_name}|$', 
+            name2=rf'$\angle {y_name}$'
+            )
+
+    @staticmethod
     def plot_loss_vec(train_loss_vec, valid_loss_vec):
         assert len(train_loss_vec) == len(valid_loss_vec), "train and valid loss vectors must have the same length"
         x = range(len(train_loss_vec))
@@ -288,3 +302,18 @@ class Visualizer:
         plt.legend()
         plt.grid(True)
         plt.show()
+
+    @staticmethod
+    def print_math(long_text):
+        math_text = f""
+        for r in long_text.split('\n'):
+            math_text.append(f"{r.strip()}")
+
+    @staticmethod
+    def vec2str(vec, n_start: int = 3, n_end: int = 1) -> str:
+        txt = '['
+        txt += ', '.join(map(str, vec[:n_start]))
+        txt += ', ... ,'
+        txt += ', '.join(map(str, vec[-n_end:]))
+        txt += ']'
+        return txt

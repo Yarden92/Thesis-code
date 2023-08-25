@@ -37,7 +37,7 @@ class SplitStepFourier:
         # self.N = np.int64((1 + z_n*(t0 ** 2)/np.absolute(b2))//self.h)
         self.N = int(z_n / self.dz)
         if verbose:
-            print(f'SSF params: N = {self.N}, P_0 = {self.P_0}')
+            print(f'SSF params: N = {self.N}')
 
         if self.N < 1:
             warnings.warn(f"there are not enough ({self.N}) steps in split algo do at least one of the following: \n"
@@ -46,7 +46,7 @@ class SplitStepFourier:
                           f"\t3) enlarge z_n\n")
 
     def __call__(self, a) -> np.ndarray:
-        a = a*np.sqrt(self.P_0)
+        # a = a*np.sqrt(self.P_0)
 
         Nt = np.max(a.shape)  # length
 
@@ -70,7 +70,7 @@ class SplitStepFourier:
             a = half_step * np.fft.fft(a)
 
         a = np.fft.ifft(a)
-        a /= np.sqrt(self.P_0)
+        # a /= np.sqrt(self.P_0)
 
         return a
 
