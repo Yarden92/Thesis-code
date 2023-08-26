@@ -9,7 +9,7 @@
 close all
 clear
 clc
-addpath(genpath('/home/yarcoh/projects/thesis-code4/lib/FNFT-linux/matlab'));
+addpath(genpath('../../../../lib/FNFT-linux/matlab'));
 %% General system parameters
 Nbursts=1;                          % The number of bursts
 Nspans=12;                          % The number of spans
@@ -78,7 +78,7 @@ disp('Generating bursts')
 dataMod=zeros(Nbursts,Nsc); %Modulated message for each burst
 uin=zeros(Nbursts,Ns); % Initial NFT spectrum for each burst
 psi_xi=rrc_impulse(xi,1,bet); % The xi-domain samples Cin=of the carriers
-% my_plot(xi,psi_xi,'\xi','\psi(\xi)',find((xi>=0)&(xi<=3)));
+my_plot(xi,psi_xi,'\xi','\psi(\xi)','psi.jpg');
 %%
 for ii=1:Nbursts
      %Generate message
@@ -106,121 +106,117 @@ bin=bin.*exp(-1i*xi.^2*(L/Zn));
 % Pad with zeros symmetrically
 bin_padded=zeros(1,Nnft);
 bin_padded(Nnft/2-Ns/2+1:Nnft/2+Ns/2)=bin;
+xi_padded = linspace(XI(1),XI(2),Nnft);
+my_plot(xi_padded,abs(bin_padded),'\xi','|b_{in}(\xi)|','b_in.jpg');
 %%
 qin=mex_fnft_nsev_inverse(bin_padded, XI, [], [], Nnft, tau, 1,'cstype_b_of_xi');
-plot_to_file([1:length(qin)],abs(qin),'Time, ps','|q(t)|','qin.png');
-
-%
-% % Keeping only the central part of length N_b
-% qb=qin((Nnft-Nb)/2+1:(Nnft+Nb)/2);
-% left=1+Nb*(ii-1);
-% right=left+Nb-1;
-% % Updating different parts of the main array
-% q(left:right)=qb;
-% q=q*sqrt(Pn); % Converting to the r.w.u.
-% toc
-% disp('(for INFT @Tx)');
-% %% Split-step
-% %% TBD. Currently does essentially nothing
-% %Average input optical power per burst [W]
-% Pave=dt*sum(abs(q((Nbursts*Nb-Nb)/2+1:(Nb*Nbursts+Nb)/2)).^2)/Tb;
-% fprintf('The average power in dbm = %5.2f\n',10*log10(Pave/1e-3));
-% %Calling the split-step routine
-% tic
-% qz=q;
-% %% The next part TBD:
-% %if ~no_ss
-% %    if lumped
-% %        qz=ssftm_niko_loss(q,dt,dz/Ln,Nspans,Nsps,-1,gamma_eff,alpha*Ln,nase*noise);
-% %    else
-% %        ssftm_niko(qz,dt,dz/Ln,Nsps*Nspans,-1,1,D*noise,true,true);
-% %        qz=ssftm_niko(qz,dt,dz/Ln,Nsps*Nspans,-1,1,D*noise,false,false);
-% %    end
-% %end
-% toc
-% disp('(for split-step)');
-% I0=abs(q.^2)/1e-3;
-% %I0=10*log10(I0);
-% I1=abs(qz.^2)/1e-3;
-% %I1=10*log10(I1);
-% figure
-% plot(t,I0);
-% hold on
-% plot(t,I1);
-% for ii=0:Nbursts
-%     line([(ii-1/2-(Nbursts-1)/2)*Tb  (ii-1/2-(Nbursts-1)/2)*Tb], ...
-%         [min(I1) max(I0)],'Color','red','LineStyle','--');
-% end
-% xlabel('Time, ps');
-% ylabel('Power, mW');
-% legend('Initial optical field','Final optical field','Location','SouthWest')
-% xlim([-1,1]*Tb*Nbursts)
-% %% Forward NFT @RX
-% tic
-% fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-% uout=zeros(Nbursts,Ns); % Final NFT spectrum for each burst
-% qz=qz/sqrt(Pn); % Rescale the pulse to the soliton units
-% for ii=1:Nbursts
-%     % Selecting current burst only
-%     left=1+Nb*(ii-1);
-%     right=left+Nb-1;
-%     qb=qz(left:right);
-%     %Pad with zeros up to size N_NFT
-%     q_padded=zeros(1,Nnft);
-%     if Nnft>Nb
-%         q_padded(Nnft/2-Nb/2+1:Nnft/2+Nb/2)=qb;
-%     else % Just take the central part ot the burst
-%         q_padded=qb(Nb/2-Nnft/2+1:Nb/2+Nnft/2);    
-%     end
-%     %Forward NFT
-%     contspec= mex_fnft_nsev(q_padded, tau, XI, +1, 'M', Nnft,'skip_bs','cstype_ab');
-%     bout_padded=contspec(Nnft+1:2*Nnft); %b-coefficient is the second part
-%     % Select the central N_s = N_{sc} N_{os} samples
-%     bout=bout_padded(Nnft/2-Ns/2+1:Nnft/2+Ns/2);
-%     % Postcompensation
-%     if no_ss
-%         bout=bout.*exp(1i*xi.^2*(L/Zn));
-%     else
-%         bout=bout.*exp(-1i*xi.^2*(L/Zn)); 
-%     end
-%     %Reversing the scaling
-%     uout(ii,:)=sqrt(-log(1-abs(bout).^2)).*exp(1i*angle(bout));
-%     subplot(1,Nbursts,ii);
-%     plot(xi,abs(uin(ii,:)),xi,abs(uout(ii,:)))
-%     xlabel('Nonlinear frequency, \xi');
-%     ylabel('|u(\xi)|');
-%     legend('Initial spectrum','Final spectrum','Location','SouthWest')
-%     title(strcat('Burst #',num2str(ii)))
-% end
-% toc
-% disp('(for forward NFT)');
-% %% Demodulation and data processing (OFDM)
-% dataModOut=zeros(Nbursts,Nsc); %Received constellation points
-% %uout = uin; % Short circuit for debugging (de)modulator
-% for ii=1:Nbursts
-%     c=ifft(fft(psi_xi).*fft(uout(ii,:)))/(mu*Nos); %Matched filtering
-%     c=downsample(c,Nos); %Downsampling
-%     dataModOut(ii,:)=[c(1:Nsc/2), c(Nsc/2+2*Nghost+1:Nsc+2*Nghost)]; % Skiping ghost symbols in dataMod;
-% end
-% %% Constellation diagramm
-% sPlotFig =scatterplot(reshape(dataMod,[1,numel(dataMod)]),1,0,'w*');
-% %sPlotFig =scatterplot(positions,1,0,'k*');
-% hold on
-% %Updating the constellations
-% scatterplot(dataModOut,1,0,'go',sPlotFig);
-% set(sPlotFig, 'NumberTitle', 'off','Name', sprintf('%s','Constellation diagram'));
-% title('Constellation diagram');
-% xlabel('I')
-% ylabel('Q')
-
-function plot_to_file(x,y,xlbl,ylbl,filename)
-    pp = plot(x,y);
-    xlabel(xlbl);
-    ylabel(ylbl);
-    grid on;
-    saveas(pp,filename,'png');
-
+%%
+qin=bin_padded; % avoiding inft - so we can continue
+%% Keeping only the central part of length N_b
+qb=qin((Nnft-Nb)/2+1:(Nnft+Nb)/2);
+left=1+Nb*(ii-1);
+right=left+Nb-1;
+% Updating different parts of the main array
+q(left:right)=qb;
+q=q*sqrt(Pn); % Converting to the r.w.u.
+toc
+disp('(for INFT @Tx)');
+%% Split-step
+%% TBD. Currently does essentially nothing
+%Average input optical power per burst [W]
+Pave=dt*sum(abs(q((Nbursts*Nb-Nb)/2+1:(Nb*Nbursts+Nb)/2)).^2)/Tb;
+fprintf('The average power in dbm = %5.2f\n',10*log10(Pave/1e-3));
+%Calling the split-step routine
+tic
+qz=q;
+%% The next part TBD:
+%if ~no_ss
+%    if lumped
+%        qz=ssftm_niko_loss(q,dt,dz/Ln,Nspans,Nsps,-1,gamma_eff,alpha*Ln,nase*noise);
+%    else
+%        ssftm_niko(qz,dt,dz/Ln,Nsps*Nspans,-1,1,D*noise,true,true);
+%        qz=ssftm_niko(qz,dt,dz/Ln,Nsps*Nspans,-1,1,D*noise,false,false);
+%    end
+%end
+toc
+disp('(for split-step)');
+I0=abs(q.^2)/1e-3;
+%I0=10*log10(I0);
+I1=abs(qz.^2)/1e-3;
+%I1=10*log10(I1);
+figure
+plot(t,I0);
+hold on
+plot(t,I1);
+for ii=0:Nbursts
+    line([(ii-1/2-(Nbursts-1)/2)*Tb  (ii-1/2-(Nbursts-1)/2)*Tb], ...
+        [min(I1) max(I0)],'Color','red','LineStyle','--');
 end
+xlabel('Time, ps');
+ylabel('Power, mW');
+legend('Initial optical field','Final optical field','Location','SouthWest')
+xlim([-1,1]*Tb*Nbursts)
+%% Forward NFT @RX
+tic
+fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+uout=zeros(Nbursts,Ns); % Final NFT spectrum for each burst
+qz=qz/sqrt(Pn); % Rescale the pulse to the soliton units
+for ii=1:Nbursts
+    % Selecting current burst only
+    left=1+Nb*(ii-1);
+    right=left+Nb-1;
+    qb=qz(left:right);
+    %Pad with zeros up to size N_NFT
+    q_padded=zeros(1,Nnft);
+    if Nnft>Nb
+        q_padded(Nnft/2-Nb/2+1:Nnft/2+Nb/2)=qb;
+    else % Just take the central part ot the burst
+        q_padded=qb(Nb/2-Nnft/2+1:Nb/2+Nnft/2);    
+    end
+    %Forward NFT
+    contspec= mex_fnft_nsev(q_padded, tau, XI, +1, 'M', Nnft,'skip_bs','cstype_ab');
+    bout_padded=contspec(Nnft+1:2*Nnft); %b-coefficient is the second part
+    % Select the central N_s = N_{sc} N_{os} samples
+    bout=bout_padded(Nnft/2-Ns/2+1:Nnft/2+Ns/2);
+    % Postcompensation
+    if no_ss
+        bout=bout.*exp(1i*xi.^2*(L/Zn));
+    else
+        bout=bout.*exp(-1i*xi.^2*(L/Zn)); 
+    end
+    %Reversing the scaling
+    uout(ii,:)=sqrt(-log(1-abs(bout).^2)).*exp(1i*angle(bout));
+    subplot(1,Nbursts,ii);
+    pp = plot(xi,abs(uin(ii,:)),xi,abs(uout(ii,:)));
+    xlabel('Nonlinear frequency, \xi');
+    ylabel('|u(\xi)|');
+    legend('Initial spectrum','Final spectrum','Location','SouthWest')
+    title(strcat('Burst #',num2str(ii)))
+    saveas(fig,'spectrums.jpg');
+end
+toc
+disp('(for forward NFT)');
+%% Demodulation and data processing (OFDM)
+dataModOut=zeros(Nbursts,Nsc); %Received constellation points
+%uout = uin; % Short circuit for debugging (de)modulator
+for ii=1:Nbursts
+    c=ifft(fft(psi_xi).*fft(uout(ii,:)))/(mu*Nos); %Matched filtering
+    c=downsample(c,Nos); %Downsampling
+    dataModOut(ii,:)=[c(1:Nsc/2), c(Nsc/2+2*Nghost+1:Nsc+2*Nghost)]; % Skiping ghost symbols in dataMod;
+end
+%% Constellation diagramm
+sPlotFig =scatterplot(reshape(dataMod,[1,numel(dataMod)]),1,0,'w*');
+%sPlotFig =scatterplot(positions,1,0,'k*');
+hold on
+%Updating the constellations
+scatterplot(dataModOut,1,0,'go',sPlotFig);
+set(sPlotFig, 'NumberTitle', 'off','Name', sprintf('%s','Constellation diagram'));
+title('Constellation diagram');
+xlabel('I')
+ylabel('Q')
+saveas(sPlotFig,'scatter.png');
+
+
 
 
 function Psi=rrc_impulse(t,Ts,bet)
@@ -230,4 +226,18 @@ function Psi=rrc_impulse(t,Ts,bet)
     Psi=temp*4/(pi*sqrt(Ts));
     poles=isinf(temp);
     Psi(poles)= (bet/sqrt(Ts))*(-(2/pi)*cos(pi*(1+bet)/(4*bet))+sin(pi*(1+bet)/(4*bet)));
+end
+
+function my_plot(x,y,xlbl,ylbl, name)
+    if isempty(x)
+        x=1:length(y);
+    end
+    fig = figure()
+    plot(x,y);
+    xlabel(xlbl);
+    title(ylbl);
+    grid on;
+    % save to file and print the path
+    saveas(fig, name);
+    fprintf('Saved to %s\n', name);
 end
