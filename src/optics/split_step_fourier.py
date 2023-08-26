@@ -19,8 +19,8 @@ class SplitStepFourier:
                  verbose=False
                  ):
 
-        # Z_0 = t0 ** 2/abs(b2)
-        # self.P_0 = 1/(gamma*Z_0)
+        Z_0 = t0 ** 2/abs(b2)
+        self.P_0 = 1/(gamma*Z_0)
 
         self.gamma = gamma
         self.b2 = b2
@@ -46,7 +46,7 @@ class SplitStepFourier:
                           f"\t3) enlarge z_n\n")
 
     def __call__(self, a) -> np.ndarray:
-        # a = a*np.sqrt(self.P_0)
+        a = a*np.sqrt(self.P_0)
 
         Nt = np.max(a.shape)  # length
 
@@ -70,7 +70,7 @@ class SplitStepFourier:
             a = half_step * np.fft.fft(a)
 
         a = np.fft.ifft(a)
-        # a /= np.sqrt(self.P_0)
+        a /= np.sqrt(self.P_0)
 
         return a
 

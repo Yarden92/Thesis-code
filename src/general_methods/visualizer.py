@@ -277,18 +277,53 @@ class Visualizer:
 
     @staticmethod
     def plot_amp_and_phase(x, y, xlabel=None, y_name=r'x', title=""):
-        y_name = y_name.replace('$', '') # remove $ from y_name
+        y_name = y_name.replace('$', '')  # remove $ from y_name
         Visualizer.double_plot(
             title=title,
             y1=np.abs(y),
             y2=np.angle(y),
             x1_vec=x,
             x2_vec=x,
-            xlabel1=xlabel, 
+            xlabel1=xlabel,
             xlabel2=xlabel,
-            name1=rf'$|{y_name}|$', 
+            name1=rf'$|{y_name}|$',
             name2=rf'$\angle {y_name}$'
-            )
+        )
+
+    @staticmethod
+    def plot_real_imag(x, y, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+        Visualizer.double_plot(
+            title=title,
+            y1=np.real(y),
+            y2=np.imag(y),
+            x1_vec=x,
+            x2_vec=x,
+            xlabel1=xlabel,
+            xlabel2=xlabel,
+            name1=rf'$real({y_name})$',
+            name2=rf'$imag({y_name})$'
+        )
+
+    @staticmethod
+    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = np.abs(y)
+        y2 = np.abs(y_ref)
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
+
+        abs_name = rf'$|{y_name}|$'
+        phs_name = rf'$\angle {y_name}$'
+        lgnd = ['pred', 'ref']
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
 
     @staticmethod
     def plot_loss_vec(train_loss_vec, valid_loss_vec):
