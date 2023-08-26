@@ -9,7 +9,7 @@ from src.general_methods.signal_processing import SP
 
 class SplitStepFourier:
     def __init__(self,
-                 b2=-20e-27, # TODO: change to nano
+                 b2=-20e-27,  # TODO: change to nano
                  gamma=0.003,
                  t0=125e-12,
                  dt=1,
@@ -19,16 +19,15 @@ class SplitStepFourier:
                  verbose=False
                  ):
 
-        Z_0 = t0 ** 2/abs(b2)
+        Z_0 = t0 ** 2 / abs(b2)
         self.P_0 = 1/(gamma*Z_0)
 
-        self.gamma = gamma
         self.b2 = b2
-        self.dz = dz
+        self.gamma = gamma
         self.t0 = t0
-        self.z_n = z_n
-
         self.dt = dt
+        self.z_n = z_n
+        self.dz = dz
 
         self.D = self._calculate_D()
         self.noise_amplitude = np.sqrt(self.D * self.dz / self.dt)
@@ -41,38 +40,37 @@ class SplitStepFourier:
 
         if self.N < 1:
             warnings.warn(f"there are not enough ({self.N}) steps in split algo do at least one of the following: \n"
-                          f"\t1) reduce h\n"
-                          f"\t2) enlarge t0\n"
-                          f"\t3) enlarge z_n\n")
+                          f"\t1) reduce dz\n"
+                          f"\t2) enlarge z_n\n")
 
-    def __call__(self, a) -> np.ndarray:
-        a = a*np.sqrt(self.P_0)
+    def __call__(self, q: np.ndarray) -> np.ndarray:
+        u = q*np.sqrt(self.P_0)
 
-        Nt = np.max(a.shape)  # length
+        Nt = np.max(u.shape)  # length
 
         w = 2.0 * np.pi / (float(Nt) * self.dt) * np.fft.fftshift(np.arange(-Nt / 2.0, Nt / 2.0))
 
         # Half-step linear propagation
         half_step = np.exp((1j * self.b2 / 2.0 * w ** 2) * self.dz / 2.0)
 
-        a = np.fft.fft(a)
+        u = np.fft.fft(u)
         for _ in range(self.N):
             # First half-step linear propagation
-            a = np.fft.ifft(a * half_step)
+            u = np.fft.ifft(u * half_step)
 
             # Noise addition
-            a += self._get_noise(Nt)
+            u += self._get_noise(Nt)
 
             # Nonlinear propagation
-            a *= np.exp(1j * self.gamma * self.dz * np.abs(a) ** 2)
+            u *= np.exp(1j * self.gamma * self.dz * np.abs(u) ** 2)
 
             # Second half-step linear propagation
-            a = half_step * np.fft.fft(a)
+            u = half_step * np.fft.fft(u)
 
-        a = np.fft.ifft(a)
-        a /= np.sqrt(self.P_0)
+        u = np.fft.ifft(u)
+        u /= np.sqrt(self.P_0)
 
-        return a
+        return u
 
     def params_to_dict(self):
         return {
@@ -133,18 +131,17 @@ class SplitStepFourier:
         return noise
 
     def _calculate_D(self):
-        h = 6.62607015e-34 # planck constant
-        lambda_0 = 1.55 * 1e-6 # wavelength
-        C = 299792458 # speed of light
-        K_T = 1.1 
-        X_dB = 0.2 #dB/km -> TODO: do we need to do something with the km?
+        h = 6.62607015e-34  # planck constant
+        lambda_0 = 1.55 * 1e-6  # wavelength
+        C = 299792458  # speed of light
+        K_T = 1.1
+        X_dB = 0.2  # dB/km -> TODO: do we need to do something with the km?
         # X = 10 ** (X_dB / 10) # fiber loss coefficient
-        X = (X_dB / 10) * np.log(10) * 1e-3 # fiber loss coefficient
-        v_0 = C / lambda_0 # frequency
+        X = (X_dB / 10) * np.log(10) * 1e-3  # fiber loss coefficient
+        v_0 = C / lambda_0  # frequency
 
-        D = 0.5 * h * v_0 * K_T * X   #   D= 7.38e-20
+        D = 0.5 * h * v_0 * K_T * X  # D= 7.38e-20
         return D
-
 
 
 def tester():
