@@ -29,6 +29,9 @@ class PostEqualizer(Block):
         else:
             b_out1 = x * np.exp(1j * self.xi**2 * (self.span_length/self.Zn))
 
+        # clip b1 to |b1| < 1
+        b_out1 = np.clip(b_out1, -1, 1)
+
         # descale
         u1_out = np.sqrt(-np.log(1 - np.abs(b_out1)**2)) * np.exp(1j * np.angle(b_out1))
 
@@ -43,3 +46,6 @@ class PostEqualizer(Block):
 
         self._outputs = [b_out1, u1_out, u_out]
         return u_out
+    
+    def get_output_names(self):
+        return ["b_out1 (post compensated)", "u1_out (descaled)", "u_out (de-normalized)"]

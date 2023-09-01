@@ -29,9 +29,13 @@ class INFT(Block):
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
         res = nsev_inverse(self.xi_padded, self.t_padded,
                            x,
-                           self.bound_states, self.discspec, cst=self.cst, dst=self.dst)
+                           self.bound_states, self.discspec, cst=self.cst, dst=self.dst,
+                           display_c_msg=False)
         q_in = res['q']
         qb = q_in[self.crop_l:self.crop_r]  # removing padding
         q_p = qb*np.sqrt(self.Pn)
         self._outputs = [q_in, qb, q_p]
         return q_p
+    
+    def get_output_names(self):
+        return ["q_in (after inft)", "qb (cropped)", "q_p (physical units)"]

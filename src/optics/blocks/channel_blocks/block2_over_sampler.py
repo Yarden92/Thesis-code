@@ -22,3 +22,6 @@ class OverSampling(Block):
 
         self._outputs = [y]
         return y
+    
+    def get_output_names(self):
+        return ["c1 (over sampled c_in)"]

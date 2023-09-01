@@ -26,7 +26,7 @@ class NFT(Block):
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
         res = nsev(x, 
                    self.t_padded, Xi1=self.XI[0], Xi2=self.XI[1], M=self.Nnft, 
-                   display_c_msg=True, cst=self.cst)
+                   display_c_msg=False, cst=self.cst)
         assert res['return_value'] == 0, "NFT failed"
         b_out_padded = res['cont_b']
 
@@ -34,3 +34,6 @@ class NFT(Block):
 
         self._outputs = [b_out_padded, b_out]
         return b_out
+
+    def get_output_names(self):
+        return ["b_out_padded", "b_out (cropped)"]

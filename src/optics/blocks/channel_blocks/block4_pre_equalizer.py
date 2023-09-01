@@ -31,3 +31,6 @@ class PreEqualizer(Block):
 
         self._outputs = [u1, b_in1, b_in, b_in_padded]
         return b_in_padded
+
+    def get_output_names(self):
+        return ["u1 (normalized)", "b_in1 (scaled)", "b_in (pre compensated)", "b_in_padded"]

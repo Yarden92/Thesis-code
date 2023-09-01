@@ -33,3 +33,6 @@ class MatchFilter(Block):
 
         self._outputs = [c_out1, c_out]
         return c_out
+
+    def get_output_names(self):
+        return ["c_out1 (convlolved with rrc again)", "c_out (down sampled)"]

@@ -30,3 +30,6 @@ class Modulator(Block):
 
         self._outputs = [message_s_bin, c_in]
         return c_in
+    
+    def get_output_names(self):
+        return ["message_s_bin", "c_in"]

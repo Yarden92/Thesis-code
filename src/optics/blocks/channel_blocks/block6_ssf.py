@@ -58,3 +58,6 @@ class SSF(Block):
 
         self._outputs = [qz, q_s, q_pad]
         return q_pad
+
+    def get_output_names(self):
+        return ["qz (after ssf)", "q_s (soliton units)", "q_pad (padded)"]

@@ -24,3 +24,6 @@ class Decoder(Block):
 
         self._outputs = [s_out]
         return s_out
+    
+    def get_output_names(self):
+        return ["s_out (binary)"]

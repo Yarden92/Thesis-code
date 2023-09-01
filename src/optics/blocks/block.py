@@ -15,6 +15,10 @@ class Block(ABC):
         # returns the necessary output for the next block
         pass
 
+    @abstractmethod
+    def get_output_names(self):
+        # returns the names of the outputs
+        pass
 
     @final
     def get_outputs(self):

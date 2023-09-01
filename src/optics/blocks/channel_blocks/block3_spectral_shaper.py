@@ -28,5 +28,8 @@ class SpectralShaper(Block):
         u_in = np.fft.ifft(np.fft.fft(x) * self.psi_t)
         self._outputs = [u_in]
         return u_in
+    
+    def get_output_names(self):
+        return ["u_in"]
 
     
