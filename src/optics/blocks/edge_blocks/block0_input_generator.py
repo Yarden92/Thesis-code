@@ -11,7 +11,7 @@ class InputGeneratorConfig:
 
 class InputGenerator:
     name = BlockNames.BLOCK_0_INPUT_GENERATOR
-    def __init__(self, config):
+    def __init__(self, config, extra_inputs: dict):
         self.config = config
         self._outputs = []
         self.M_QAM = config.M_QAM
@@ -21,3 +21,8 @@ class InputGenerator:
     def execute(self) -> np.ndarray:
         message_s_int = np.random.randint(0,self.M_QAM, size=self.N_sc)
         return message_s_int
+
+    def get_outputs(self):
+        if not self._outputs:
+            raise Exception("Block needs to be executed first")
+        return self._outputs

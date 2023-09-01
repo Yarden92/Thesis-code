@@ -17,7 +17,7 @@ from src.optics.blocks.edge_blocks.block11_evaluator import EvaluatorConfig
 
 
 @dataclass
-class MainConfig:
+class ChannelConfig:
 
     # System Configuration:
     W: float = 0.05             # Total bandwidth, estimated [THz]
@@ -63,7 +63,8 @@ class MainConfig:
 
 
 @dataclass
-class ChannelConfig:
+class ChannelBlocksConfigs:
+    # This is an auto-generated config - there's no need to manually create yaml file for that.
     # THESE NAMES MUST BE ALIGNED WITH BLOCK NAMES
     input_generator_config: InputGeneratorConfig = field(default_factory=InputGeneratorConfig)
     modulator_config: ModulatorConfig = field(default_factory=ModulatorConfig)
@@ -82,7 +83,7 @@ class ChannelConfig:
 class ConfigConverter:
 
     @staticmethod
-    def main_config_to_block_configs(config: MainConfig):
+    def main_config_to_block_configs(config: ChannelConfig) -> ChannelBlocksConfigs:
         input_config = InputGeneratorConfig(
             M_QAM=config.M_QAM,
             N_sc=config.N_sc,
@@ -147,7 +148,7 @@ class ConfigConverter:
             N_sc=config.N_sc,
         )
 
-        return ChannelConfig(
+        return ChannelBlocksConfigs(
             input_generator_config=input_config,
             modulator_config=modulator_config,
             over_sampler_config=over_sampler_config,
@@ -163,7 +164,7 @@ class ConfigConverter:
         )
 
     @staticmethod
-    def _calc_extra_inputs(config: MainConfig):
+    def _calc_extra_inputs(config: ChannelConfig):
         # axes
         Ns = config.N_sc*config.Nos                           # The number of meaningful points
         Nnft = int(4*2**(np.ceil(np.log2(Ns))))              # The number of points for NFT - round up to a power of 2
@@ -195,7 +196,7 @@ class ConfigConverter:
         return extra_inputs
 
     @staticmethod
-    def fetch_config(configs: ChannelConfig,name):
+    def fetch_config(configs: ChannelBlocksConfigs,name):
         if name==BlockNames.BLOCK_0_INPUT_GENERATOR:
             return configs.input_generator_config
         elif name==BlockNames.BLOCK_1_MODULATOR:

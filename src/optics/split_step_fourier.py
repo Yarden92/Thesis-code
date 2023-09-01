@@ -137,10 +137,12 @@ class SplitStepFourier:
         K_T = 1.1
         X_dB = 0.2  # dB/km -> TODO: do we need to do something with the km?
         # X = 10 ** (X_dB / 10) # fiber loss coefficient
-        X = (X_dB / 10) * np.log(10) * 1e-3  # fiber loss coefficient
-        v_0 = C / lambda_0  # frequency
+        # X = (X_dB / 10) * np.log(10) * 1e-3  # fiber loss coefficient
+        X = (X_dB / 10) * np.log(10) # fiber loss coefficient [km]
+        v_0 = C / lambda_0  # frequency 
 
         D = 0.5 * h * v_0 * K_T * X  # D= 7.38e-20
+        D = D * 1e12 # D= 7.38e-8 [v*ps/km]
         return D
 
 
