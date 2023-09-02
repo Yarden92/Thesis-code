@@ -313,17 +313,34 @@ class Visualizer:
         if title:
             fig.suptitle(title)
 
-        y1 = np.abs(y)
-        y2 = np.abs(y_ref)
+        y1 = np.abs(y)**2
+        y2 = np.abs(y_ref)**2
         y3 = np.angle(y)
         y4 = np.angle(y_ref)
 
-        abs_name = rf'$|{y_name}|$'
+        abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'
         lgnd = ['pred', 'ref']
 
         Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
+
+    @staticmethod
+    def compare_stem_bits(y, y_ref, zm_max_index=50, title='sampled bits (real)'):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = np.real(y)
+        y2 = np.real(y_ref)
+        y3 = np.real(y[:zm_max_index])
+        y4 = np.real(y_ref[:zm_max_index])
+        x12 = np.arange(len(y1))
+        x34 = np.arange(zm_max_index)
+        lgnd = ['pred', 'ref']
+
+        Visualizer.my_plot(x12, y1, x12, y2, name='full scale', ax=ax1, legend=lgnd, function='stem', hold=True)
+        Visualizer.my_plot(x34, y3, x34, y4, name='crop in', ax=ax2, legend=lgnd, function='stem')
 
     @staticmethod
     def plot_loss_vec(train_loss_vec, valid_loss_vec):

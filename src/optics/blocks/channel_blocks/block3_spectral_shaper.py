@@ -20,16 +20,16 @@ class SpectralShaper(Block):
         bet = config.bet
         Ts = config.Ts
         fs = config.Nos/Ts
-        h_ind, psi_xi = rrcosfilter(N=Ns, alpha=bet, Ts=Ts, Fs=fs)
-        self.psi_t = np.fft.fft(psi_xi)  # can be saved for efficiency
+        h_ind, self.psi_xi = rrcosfilter(N=Ns, alpha=bet, Ts=Ts, Fs=fs)
+        self.psi_t = np.fft.fft(self.psi_xi)  # can be saved for efficiency
 
 
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
         u_in = np.fft.ifft(np.fft.fft(x) * self.psi_t)
-        self._outputs = [u_in]
+        self._outputs = [u_in, self.psi_xi, self.psi_t]
         return u_in
     
     def get_output_names(self):
-        return ["u_in"]
+        return ["u_in", "psi_xi", "psi_t"]
 
     
