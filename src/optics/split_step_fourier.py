@@ -20,7 +20,9 @@ class SplitStepFourier:
                  ):
 
         Z_0 = t0 ** 2 / abs(b2)
-        self.P_0 = 1/(gamma*Z_0)
+        P_0_before_fix = 1/(gamma*Z_0)
+        P_0_fixer = 1e4
+        self.P_0 = P_0_before_fix*P_0_fixer # why this fix? --------------------
 
         self.b2 = b2
         self.gamma = gamma
@@ -105,8 +107,6 @@ class SplitStepFourier:
             dz=1000
         )
 
-    # def set_dt(self, dt):
-    #     self.dt = dt
 
     def plot_input(self, t, x) -> None:
         Visualizer.my_plot(t, np.abs(x), name='input pulse |x(t)|', xlabel='time', ylabel='amplitude')
@@ -134,14 +134,15 @@ class SplitStepFourier:
         lambda_0 = 1.55 * 1e-6  # wavelength [m]
         C = 299792458  # speed of light [m/s]
         K_T = 1.1   # [unitless]
-        X_dB = 0.2  # [dB/km]
-        # X = 10 ** (X_dB / 10) # fiber loss coefficient
-        X = (X_dB / 10) * np.log(10) * 1e-3  # fiber loss coefficient [1/m]
-        # X = (X_dB / 10) * np.log(10) # fiber loss coefficient [km]
+        X_dBkm = 0.2  # fiber loss coefficient [dB/km]
+        X_km = 10 ** (X_dBkm / 10) # [1/km]
+        X = X_km * 1e-3  #  [1/m]
         nu_0 = C / lambda_0  # frequency [Hz]
 
-        D = 0.5 * h * nu_0 * K_T * X  # D= 3.24e-24 [J*s/s/m=J/m]
-        D = D * 1e15 # D= 3.25e-9 [v*ps/km]
+        D_Jm = 0.5 * h * nu_0 * K_T * X  # D= 3.24e-24 [J/m=Ws/m]
+        normalizer = 1e12*1e3 # ps->s and m->km
+        D = D_Jm * normalizer # D= 7.38e-8 [v*ps/km]
+
         return D
 
 
@@ -169,37 +170,9 @@ def tester():
 
     y = ssf(x)
 
-    # ssf.plot_input(tau_vec, x)
-    # ssf.plot_output(tau_vec, y)
     Visualizer.my_plot(tau_vec, np.abs(x), tau_vec, np.abs(y), name='output |y(y)|', xlabel='time',
                        legend=['in', 'out'])
 
-
-# def test2_test_snrs():
-#     # init input signal
-#     Po = .00064
-#     C = -2
-#     Ao = np.sqrt(Po)
-#     to = 125e-12
-#     tau_vec = np.arange(-4096e-12, 4095e-12, 1e-12)
-#     x = Ao*np.exp(-((1 + 1j*(-C))/2.0)*(tau_vec/to) ** 2)
-#     x = np.array(x)
-
-#     snr_list = [-10, -5, 0, 5, 10]
-#     os.makedirs('snrs', exist_ok=True)
-
-#     for snr in snr_list:
-#         ssf = SplitStepFourier(
-#             dt=1,
-#             z_n=100e3,
-#             h=200,
-#             snr=snr
-#         )
-#         y = ssf(x)
-#         Visualizer.my_plot(tau_vec, np.abs(x), tau_vec, np.abs(y),
-#                            name=f'output |y(y)|, snr = {snr}',
-#                            xlabel='time', legend=['in', 'out'],
-#                            output_name=f'snrs/output_snr_{snr}.png')
 
 
 if __name__ == '__main__':
