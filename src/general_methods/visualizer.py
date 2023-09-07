@@ -220,12 +220,15 @@ class Visualizer:
         print(json.dumps(json_ob, indent=4))
 
     @staticmethod
-    def plot_bers(us, bers_vecs, legends=None, output_path=None):
+    def plot_bers(us, bers_vecs, legends=None, output_path=None, log_mu: bool = False):
         plt.figure(figsize=[10, 5])
         for bers in bers_vecs:
             mean = bers.mean(axis=-1)
             std = bers.std(axis=-1)
-            plt.semilogy(us, bers)
+            if log_mu:
+                plt.loglog(us, bers)
+            else:
+                plt.semilogy(us, bers)
             # plt.fill_between(us,mean-std,mean+std,alpha=0.4)
 
         plt.xlabel('normalizing factor'), plt.ylabel('BER')

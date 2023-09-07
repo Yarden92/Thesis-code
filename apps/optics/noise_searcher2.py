@@ -21,6 +21,7 @@ class NoiseSearcherConfig:
     mu_start: float = 0.05      # start value of mu vector (linearly spaced)
     mu_end: float = 0.4         # end value of mu vector
     num_of_mu: int = 30         # number of mu values
+    mu_scale: str = 'linear'    # scale of mu vector (linear or log)
     n_realisation: int = 20     # number of realisations for each mu
     is_print: bool = True       # whether to print the BER map results
     is_plot: bool = True        # whether to plot the BER map results
@@ -35,7 +36,11 @@ def main(config: NoiseSearcherConfig):
     if config.load_path:
         BERs, mu_range = ns.load_ber_map(config.load_path)
     else:
-        mu_range = np.linspace(config.mu_start, config.mu_end, num=config.num_of_mu)
+        if config.mu_scale == 'linear':
+            mu_range = np.linspace(config.mu_start, config.mu_end, num=config.num_of_mu)
+        elif config.mu_scale == 'log':
+            mu_range = np.logspace(np.log10(config.mu_start), np.log10(config.mu_end), num=config.num_of_mu)
+
         BERs = ns.create_BER_vec(mu_range, n_realisation=config.n_realisation)
 
     if config.is_save:
@@ -98,9 +103,9 @@ class NoiseSearcher2:
         mus = np.load(os.path.join(dir_path, 'mu.npy'))
         return BERs, mus
 
-    def plot_ber_map(self, BERs, mus):
+    def plot_ber_map(self, BERs, mus, log_mu=False):
         # plot BER vs mus
-        Visualizer.plot_bers(mus,[BERs])
+        Visualizer.plot_bers(mus,[BERs], log_mu=log_mu)
 
     def _save_fig(self, root_dir=output_plots_path):
         timestamp = time.strftime("%Y.%m.%d-%H.%M.%S")
@@ -124,7 +129,5 @@ class NoiseSearcher2:
 
 
 if __name__ == "__main__":
-    # config = pyrallis.parse(NoiseSearcherConfig)
-    config_path = './config/noise_searcher2/long_search.yml'
-    config = pyrallis.parse(NoiseSearcherConfig, config_path=config_path)
+    config = pyrallis.parse(NoiseSearcherConfig)
     main(config)

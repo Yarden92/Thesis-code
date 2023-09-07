@@ -1,8 +1,8 @@
-mu_start: 0.001
-mu_end: 10
-num_of_mu: 50
+mu_start: 1e-2
+mu_end: 1e7
+num_of_mu: 30
 mu_scale: 'log'
-n_realisation: 50
+n_realisation: 10
 is_print: false
 is_plot: false
 is_save: true
