@@ -1,4 +1,4 @@
-function u1= ssftm(u0,dt,dz,nz,beta2,gamma,alpha,D)
+function u1= ssftm_v2(u0,dt,dz,nz,beta2,gamma,alpha,D)
 
 % This function solves the NSE for pulse propagation in an optical fiber using the split-step Fourier transfer method
 % The distributed noise is added to the signal at each time step.
