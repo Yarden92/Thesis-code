@@ -1,8 +1,14 @@
+from dataclasses import asdict
+import os
+from attr import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
 from IPython.display import Math, display, Markdown
+import json
+
+import pyrallis
 
 from src.general_methods.signal_processing import SP
 
@@ -284,7 +290,7 @@ class Visualizer:
         Visualizer.double_plot(
             title=title,
             y1=np.abs(y),
-            y2=np.angle(y),
+            y2=np.angle(y) * 180 / np.pi,
             x1_vec=x,
             x2_vec=x,
             xlabel1=xlabel,
@@ -309,24 +315,68 @@ class Visualizer:
         )
 
     @staticmethod
-    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
+    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+        if square:
+            y1 = np.abs(y)**2
+            y2 = np.abs(y_ref)**2
+            abs_name = rf'$|{y_name}|^2$'
+        else:
+            y1 = np.abs(y)
+            y2 = np.abs(y_ref)
+            abs_name = rf'$|{y_name}|$'
+        y3 = np.angle(y) * 180 / np.pi
+        y4 = np.angle(y_ref) * 180 / np.pi
+
+        phs_name = rf'$\angle {y_name}$'
+        lgnd = ['pred', 'ref']
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
+
+    @staticmethod
+    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
         if title:
             fig.suptitle(title)
 
-        y1 = np.abs(y)**2
-        y2 = np.abs(y_ref)**2
-        y3 = np.angle(y)
-        y4 = np.angle(y_ref)
+        y1 = 30 + 10*np.log10(np.abs(y)**2)
+        y2 = 30 + 10*np.log10(np.abs(y_ref)**2)
+        y3 = np.angle(y) * 180 / np.pi
+        y4 = np.angle(y_ref) * 180 / np.pi
 
         abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'
         lgnd = ['pred', 'ref']
 
-        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[dBm]", legend=lgnd, hold=True)
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
+
+    @staticmethod
+    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = np.abs(y)**2*1e3
+        y2 = np.abs(y_ref)**2*1e3
+        y3 = np.angle(y) * 180 / np.pi
+        y4 = np.angle(y_ref) * 180 / np.pi
+
+        abs_name = rf'$|{y_name}|^2$'
+        phs_name = rf'$\angle {y_name}$'
+        lgnd = ['pred', 'ref']
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[mW]", function='semilogy', legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, ylabel="[deg]", legend=lgnd)
 
     @staticmethod
     def compare_stem_bits(y, y_ref, zm_max_index=50, title='sampled bits (real)'):
@@ -372,3 +422,24 @@ class Visualizer:
         txt += ', '.join(map(str, vec[-n_end:]))
         txt += ']'
         return txt
+
+    @staticmethod
+    def print_config(conf) -> None:
+        if type(conf) == dict:
+            conf_dict = conf
+        else: # if its a dataclass:
+            conf_dict = asdict(conf)
+        conf_json = json.dumps(conf_dict, indent=4)
+        print(conf_json)
+
+        # temp_file = 'temp.yml'
+        # # pretty print dict based config using json
+        # pyrallis.dump(dataclass_conf_instance, open(temp_file,'w'))
+        # # with open(temp_file, 'w') as f:
+        # #     pyrallis.dump(dataclass_conf_instance, f)
+        # with open(temp_file, 'r') as f:
+        #     config = json.load(f)
+        # print(json.dumps(config, indent=4))
+        
+        # os.remove(temp_file)
+
