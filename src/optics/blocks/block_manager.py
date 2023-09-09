@@ -3,9 +3,9 @@ from src.optics.blocks.channel_blocks.block1_modulator import Modulator
 from src.optics.blocks.channel_blocks.block2_over_sampler import OverSampling
 from src.optics.blocks.channel_blocks.block3_spectral_shaper import SpectralShaper
 from src.optics.blocks.channel_blocks.block4_pre_equalizer import PreEqualizer
-from src.optics.blocks.channel_blocks.block5_inft import INFT
-from src.optics.blocks.channel_blocks.block6_ssf import SSF
-from src.optics.blocks.channel_blocks.block7_nft import NFT
+from src.optics.blocks.channel_blocks.block5_inft import Inft
+from src.optics.blocks.channel_blocks.block6_ssf import Ssf
+from src.optics.blocks.channel_blocks.block7_nft import Nft
 from src.optics.blocks.channel_blocks.block8_post_equalizer import PostEqualizer
 from src.optics.blocks.channel_blocks.block9_match_filter import MatchFilter
 from src.optics.blocks.channel_blocks.block10_decoder import Decoder
@@ -23,9 +23,9 @@ class BlockManager:
         blocks.append(OverSampling)
         blocks.append(SpectralShaper)
         blocks.append(PreEqualizer)
-        blocks.append(INFT)
-        blocks.append(SSF)
-        blocks.append(NFT)
+        blocks.append(Inft)
+        blocks.append(Ssf)
+        blocks.append(Nft)
         blocks.append(PostEqualizer)
         blocks.append(MatchFilter)
         blocks.append(Decoder)

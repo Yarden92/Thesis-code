@@ -7,6 +7,10 @@ class SP:
         return np.linalg.norm(x, ord=2)
 
     @staticmethod
+    def signal_power_dbm(x: np.ndarray, dt, Tb) -> float:
+        return 10*np.log10(np.sum(np.abs(x)**2)*dt/Tb/1e-3)
+
+    @staticmethod
     def peak(x: np.ndarray) -> float:
         return np.max(np.abs(x))
 

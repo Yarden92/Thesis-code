@@ -1,4 +1,6 @@
-from attr import dataclass
+from dataclasses import asdict
+import json
+from dataclasses import dataclass
 import numpy as np
 
 from src.optics.blocks.block_names import BlockNames
@@ -11,11 +13,11 @@ class InputGeneratorConfig:
 
 class InputGenerator:
     name = BlockNames.BLOCK_0_INPUT_GENERATOR
-    def __init__(self, config, extra_inputs: dict):
+    def __init__(self, config: InputGeneratorConfig, extra_inputs: dict):
         self.config = config
         self._outputs = []
-        self.M_QAM = config.M_QAM
-        self.N_sc = config.N_sc
+        self.M_QAM = self.config.M_QAM
+        self.N_sc = self.config.N_sc
         
 
     def execute(self) -> np.ndarray:

@@ -22,9 +22,9 @@ class ChannelConfig:
     # System Configuration:
     W: float = 0.05             # Total bandwidth, estimated [THz]
     Nspans: int = 12            # The number of spans
-    span_length: int = 80       # Transmission span [km]
+    La: int = 80                # Transmission span [km]
     M_QAM: int = 64             # QAM order (2,4,16,64,256)
-    Ts: float = 1               # Symbol period [??]
+    Ts: float = 1               # Symbol period for rrc [unitless]
 
     # Modulation and Coding:
     Nos: int = 16               # Oversampling factor (must be even)
@@ -35,29 +35,41 @@ class ChannelConfig:
     with_noise: bool = True     # whether to add noise or not
 
     # Fiber and Dispersion:
-    alphadB: float = 0.2        # Power loss db/km
     beta2: float = -21          # ps^2/km
     gamma: float = 1.27         # Nonlinear coefficient in [1/km*W]
     dz: float = 0.2             # Z-step, [km] - initial step estimate
+    K_T: float = 1.1            # [unitless]
+    chi: float = 0.0461         # Fiber loss coefficient [1/km]
+
+    # general cs stuff
+    verbose: bool = False            # whether to print stuff or not
+
+    # post init stuffs
+    L: float = field(init=False)
+    T_guardband: float = field(init=False)
+    N_sc_raw: float = field(init=False)
+    N_sc: int = field(init=False)
+    T0: float = field(init=False)
+    Tb: float = field(init=False)
+    Tn: float = field(init=False)
+    Zn: float = field(init=False)
+    Pn: float = field(init=False)
+
 
     def __post_init__(self):
         # direct calculations
-        self.total_propagation_distance = self.span_length*self.Nspans  # km
-        self.alpha = self.alphadB*np.log(10)/10                         # Power loss [1/km]
+        self.L = self.La*self.Nspans  # km
 
         # calculations
-        self.T_guardband = 1.5*np.pi*self.W*abs(self.beta2)*self.total_propagation_distance  # guard band [ps] + 50%
+        self.T_guardband = 1.5*np.pi*self.W*abs(self.beta2)*self.L  # guard band [ps] + 50%
         self.N_sc_raw = self.W*self.T_guardband / (self.eta-1)  # The required number of subcarriers
         self.N_sc = int(2**np.ceil(np.log2(self.N_sc_raw)))     # rounded to nearest factor of two
         self.T0 = self.N_sc/self.W                              # Useful symbol duration, normalization time [ps]
         self.Tb = self.T0*self.eta                              # Burst width
-        self.G = np.exp(self.alpha*self.span_length)            # The power gain factor
-        if self.G > 1:
-            self.gamma_eff = self.gamma*(self.G-1)/(self.G*np.log(self.G))
 
         self.Tn = self.T0/(np.pi*(1+self.bet))             # [ps]
         self.Zn = self.Tn**2/abs(self.beta2)               # [km]
-        self.Pn = 1/(self.gamma_eff*self.Zn)               # [W]
+        self.Pn = 1/(self.gamma*self.Zn)               # [W]
 
         # self.Nsps = np.ceil(self.span_length/self.dz)               # Required number of steps per span
 
@@ -66,18 +78,18 @@ class ChannelConfig:
 class ChannelBlocksConfigs:
     # This is an auto-generated config - there's no need to manually create yaml file for that.
     # THESE NAMES MUST BE ALIGNED WITH BLOCK NAMES
-    input_generator_config: InputGeneratorConfig = field(default_factory=InputGeneratorConfig)
-    modulator_config: ModulatorConfig = field(default_factory=ModulatorConfig)
-    over_sampler_config: OverSamplingConfig = field(default_factory=OverSamplingConfig)
-    spectral_shaping_config: SpectralShaperConfig = field(default_factory=SpectralShaperConfig)
-    pre_equalizer_config: PreEqualizerConfig = field(default_factory=PreEqualizerConfig)
-    inft_config: INFTConfig = field(default_factory=INFTConfig)
-    ssf_config: SSFConfig = field(default_factory=SSFConfig)
-    nft_config: NFTConfig = field(default_factory=NFTConfig)
-    post_equalizer_config: PostEqualizerConfig = field(default_factory=PostEqualizerConfig)
-    match_filter_config: MatchFilterConfig = field(default_factory=MatchFilterConfig)
-    decoder_config: DecoderConfig = field(default_factory=DecoderConfig)
-    evaluator_config: EvaluatorConfig = field(default_factory=EvaluatorConfig)
+    input_generator_config:     InputGeneratorConfig    = field(default_factory=InputGeneratorConfig)
+    modulator_config:           ModulatorConfig         = field(default_factory=ModulatorConfig)
+    over_sampler_config:        OverSamplingConfig      = field(default_factory=OverSamplingConfig)
+    spectral_shaping_config:    SpectralShaperConfig    = field(default_factory=SpectralShaperConfig)
+    pre_equalizer_config:       PreEqualizerConfig      = field(default_factory=PreEqualizerConfig)
+    inft_config:                INFTConfig              = field(default_factory=INFTConfig)
+    ssf_config:                 SSFConfig               = field(default_factory=SSFConfig)
+    nft_config:                 NFTConfig               = field(default_factory=NFTConfig)
+    post_equalizer_config:      PostEqualizerConfig     = field(default_factory=PostEqualizerConfig)
+    match_filter_config:        MatchFilterConfig       = field(default_factory=MatchFilterConfig)
+    decoder_config:             DecoderConfig           = field(default_factory=DecoderConfig)
+    evaluator_config:           EvaluatorConfig         = field(default_factory=EvaluatorConfig)
 
 
 class ConfigConverter:
@@ -105,7 +117,7 @@ class ConfigConverter:
 
         pre_equalizer_config = PreEqualizerConfig(
             mu=config.mu,
-            span_length=config.span_length,
+            L=config.L,
             Zn=config.Zn,
         )
 
@@ -115,10 +127,11 @@ class ConfigConverter:
 
         ssf_config = SSFConfig(
             beta2=config.beta2,
-            gamma_eff=config.gamma_eff,
-            T0=config.T0,
+            gamma=config.gamma,
             dz=config.dz,
-            span_length=config.span_length,
+            K_T=config.K_T,
+            chi=config.chi,
+            L=config.L,
             with_ssf=config.with_ssf,
             with_noise=config.with_noise,
             Pn=config.Pn,
@@ -129,7 +142,7 @@ class ConfigConverter:
         post_equalizer_config = PostEqualizerConfig(
             Zn=config.Zn,
             mu=config.mu,
-            span_length=config.span_length,
+            L=config.L,
             with_ssf=config.with_ssf,
         )
 
@@ -164,7 +177,7 @@ class ConfigConverter:
         )
 
     @staticmethod
-    def _calc_extra_inputs(config: ChannelConfig):
+    def _calc_extra_inputs(config: ChannelConfig) -> dict:
         # axes
         Ns = config.N_sc*config.Nos                           # The number of meaningful points
         Nnft = int(4*2**(np.ceil(np.log2(Ns))))              # The number of points for NFT - round up to a power of 2

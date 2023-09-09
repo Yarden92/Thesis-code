@@ -10,7 +10,7 @@ class INFTConfig:
     Pn: float
 
 
-class INFT(Block):
+class Inft(Block):
     name = BlockNames.BLOCK_5_INFT
     def __init__(self, config: INFTConfig, extra_inputs: dict) -> None:
         super().__init__(config, extra_inputs)

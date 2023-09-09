@@ -8,7 +8,7 @@ from src.optics.blocks.block_names import BlockNames
 class PostEqualizerConfig:
     Zn: float = 50
     mu: float = 1
-    span_length: float = 80
+    L: float = 1000
     with_ssf: bool = True
 
 class PostEqualizer(Block):
@@ -17,7 +17,7 @@ class PostEqualizer(Block):
         super().__init__(config, extra_inputs)
         self.Zn = config.Zn
         self.mu = config.mu
-        self.span_length = config.span_length
+        self.L = config.L
         self.with_ssf = config.with_ssf
         self.xi = extra_inputs['xi']
 
@@ -25,9 +25,9 @@ class PostEqualizer(Block):
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
         # post compensate
         if self.with_ssf:
-            b_out1 = x * np.exp(-1j * self.xi**2 * (self.span_length/self.Zn))
+            b_out1 = x * np.exp(-1j * self.xi**2 * (self.L/self.Zn))
         else:
-            b_out1 = x * np.exp(1j * self.xi**2 * (self.span_length/self.Zn))
+            b_out1 = x * np.exp(1j * self.xi**2 * (self.L/self.Zn))
 
         # clip b1 to |b1| < 1
         b_out1 = np.clip(b_out1, -1, 1)

@@ -9,7 +9,7 @@ class NFTConfig:
     pass
 
 
-class NFT(Block):
+class Nft(Block):
     name = BlockNames.BLOCK_7_NFT
     def __init__(self, config: NFTConfig, extra_inputs: dict) -> None:
         super().__init__(config, extra_inputs)
