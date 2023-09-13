@@ -1,8 +1,9 @@
-mu_start: 0.001
-mu_end: 10
+name: 'long_fixed_channel'
+mu_start: 1e-2
+mu_end: 1e2
 num_of_mu: 50
 mu_scale: 'log'
-n_realisation: 50
+n_realisation: 100
 is_print: false
 is_plot: false
 is_save: true
@@ -10,7 +11,7 @@ channel_config:
   # System Configuration:
   W: 0.05               # Total bandwidth, estimated [THz]
   Nspans: 12            # The number of spans
-  span_length: 80       # Transmission span [km]
+  La: 80       # Transmission span [km]
   M_QAM: 16             # QAM order (2,4,16,64,256)
   Ts: 1                 # Symbol period [??]
 
@@ -23,7 +24,8 @@ channel_config:
   with_noise: True      # whether to add noise or not
 
   # Fiber and Dispersion:
-  alphadB: 0.2          # Power loss db/km
   beta2: -21            # ps^2/km
   gamma: 1.27           # Nonlinear coefficient in [1/km*W]
   dz: 0.2               # Z-step, [km] - initial step estimate
+  K_T: 1.13
+  chi: 0.0461

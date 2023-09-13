@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import os
+import sys
 import time
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
@@ -18,6 +19,7 @@ output_bers_path = '/data/yarcoh/thesis_data/data/outputs/ber_maps'
 output_plots_path = '/data/yarcoh/thesis_data/data/outputs/ber_plots'
 @dataclass
 class NoiseSearcherConfig:
+    name: str = ''              # name of the experiment
     mu_start: float = 0.05      # start value of mu vector (linearly spaced)
     mu_end: float = 0.4         # end value of mu vector
     num_of_mu: int = 30         # number of mu values
@@ -44,7 +46,7 @@ def main(config: NoiseSearcherConfig):
         BERs = ns.create_BER_vec(mu_range, n_realisation=config.n_realisation)
 
     if config.is_save:
-        ns.save_ber_map(BERs, mu_range)
+        ns.save_ber_map(BERs, mu_range, name=config.name)
 
     if config.is_print:
         ns.print_ber_vec(BERs, mu_range)
@@ -82,9 +84,10 @@ class NoiseSearcher2:
             BERs[i] = BER
         return BERs
 
-    def save_ber_map(self, BERs, mus, root_dir=output_bers_path):
+    def save_ber_map(self, BERs, mus, name:str='', root_dir=output_bers_path):
         timestamp = time.strftime("%Y.%m.%d-%H.%M.%S")
-        sub_dir_path = os.path.abspath(os.path.join(root_dir, timestamp))
+        dir_name = f'{timestamp}_{name}'
+        sub_dir_path = os.path.abspath(os.path.join(root_dir, dir_name))
         os.makedirs(sub_dir_path, exist_ok=True)
         path_ber = os.path.join(sub_dir_path, f'ber.npy')
         path_mu = os.path.join(sub_dir_path, f'mu.npy')
@@ -129,5 +132,9 @@ class NoiseSearcher2:
 
 
 if __name__ == "__main__":
-    config = pyrallis.parse(NoiseSearcherConfig)
+    if len(sys.argv) > 1:
+        config = pyrallis.parse(NoiseSearcherConfig)
+    else:
+        config_path = '/home/yarcoh/projects/thesis-code4/config/noise_searcher2/quick_map.yml'
+        config = pyrallis.parse(NoiseSearcherConfig, config_path)
     main(config)

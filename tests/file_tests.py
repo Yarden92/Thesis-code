@@ -48,7 +48,7 @@ def test2_data_generation():
                               gamma=0.003,
                               t0=125e-12,
                               dt=1,
-                              z_n=1000e3,
+                              L=1000e3,
                               dz=200
                           ),
                           verbose=False)
