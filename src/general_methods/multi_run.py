@@ -28,7 +28,7 @@ def run_n_times2(cs: ChannelSimulator2, n=10, pbar=None) -> (float, int):
     num_errors = 0
     for r in range(n):
         try:
-            num_errors += cs.simulate()[1]
+            num_errors += cs.simulate_and_analyze()[1]
         except Exception as e:
             print(f'Error in run {r}: {e}')
             num_errors += cs.block11.N_bin

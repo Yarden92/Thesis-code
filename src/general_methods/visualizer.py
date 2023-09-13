@@ -290,7 +290,7 @@ class Visualizer:
         Visualizer.double_plot(
             title=title,
             y1=np.abs(y),
-            y2=np.angle(y) * 180 / np.pi,
+            y2=np.angle(y),
             x1_vec=x,
             x2_vec=x,
             xlabel1=xlabel,
@@ -329,8 +329,8 @@ class Visualizer:
             y1 = np.abs(y)
             y2 = np.abs(y_ref)
             abs_name = rf'$|{y_name}|$'
-        y3 = np.angle(y) * 180 / np.pi
-        y4 = np.angle(y_ref) * 180 / np.pi
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
 
         phs_name = rf'$\angle {y_name}$'
         lgnd = ['pred', 'ref']
@@ -348,8 +348,8 @@ class Visualizer:
 
         y1 = 30 + 10*np.log10(np.abs(y)**2)
         y2 = 30 + 10*np.log10(np.abs(y_ref)**2)
-        y3 = np.angle(y) * 180 / np.pi
-        y4 = np.angle(y_ref) * 180 / np.pi
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
 
         abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'
@@ -368,8 +368,8 @@ class Visualizer:
 
         y1 = np.abs(y)**2*1e3
         y2 = np.abs(y_ref)**2*1e3
-        y3 = np.angle(y) * 180 / np.pi
-        y4 = np.angle(y_ref) * 180 / np.pi
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
 
         abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'

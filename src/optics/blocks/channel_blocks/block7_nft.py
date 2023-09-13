@@ -10,6 +10,7 @@ class NFTConfig:
 
 
 class Nft(Block):
+    # TODO move cropping part to next stage (Equalizer)
     name = BlockNames.BLOCK_7_NFT
     def __init__(self, config: NFTConfig, extra_inputs: dict) -> None:
         super().__init__(config, extra_inputs)
@@ -19,8 +20,8 @@ class Nft(Block):
         self.Nnft = extra_inputs['Nnft']
         self.Ns = extra_inputs['Ns']
         self.cst = 1
-        self.crop_l = (self.Nnft-self.Ns)//2
-        self.crop_r = (self.Nnft+self.Ns)//2
+        self.crop_l = (self.Nnft-self.Ns)//2-1
+        self.crop_r = (self.Nnft+self.Ns)//2-1
 
 
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:

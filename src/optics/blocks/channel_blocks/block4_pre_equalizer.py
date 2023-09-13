@@ -19,7 +19,7 @@ class PreEqualizer(Block):
         self.L = config.L
         Nnft = extra_inputs['Nnft']
         Ns = extra_inputs['Ns']
-        self.pads = ((Nnft-Ns))//2
+        self.pads = ((Nnft-Ns))//2-1, ((Nnft-Ns))//2+1
         self.xi = extra_inputs['xi']
         self.Zn = config.Zn
 
@@ -27,7 +27,7 @@ class PreEqualizer(Block):
         u1 = self.mu*x                                                      # normalizing
         b_in1 = np.sqrt(1-np.exp(-np.abs(u1)**2))*np.exp(1j*np.angle(u1))   # #scaling
         b_in = b_in1*np.exp(-1j*self.xi**2*(self.L/self.Zn))      # Pre-compensation
-        b_in_padded = np.pad(b_in, (self.pads, self.pads), mode='constant', constant_values=0) # padding
+        b_in_padded = np.pad(b_in, self.pads, mode='constant', constant_values=0) # padding
 
         self._outputs = [u1, b_in1, b_in, b_in_padded]
         return b_in_padded

@@ -152,7 +152,7 @@ class SplitStepFourier:
         return noise_vecs
     
     def _gen_w_axis(self) -> np.ndarray:
-        w = 2.0 * np.pi / (float(self.Nt) * self.dt) * np.fft.fftshift(np.arange(-self.Nt / 2.0, self.Nt / 2.0))
+        w = 2.0 * np.pi / (self.Nt * self.dt) * np.fft.fftshift(np.arange(-self.Nt / 2.0, self.Nt / 2.0))
         return w
 
 

@@ -45,15 +45,15 @@ class ChannelConfig:
     verbose: bool = False            # whether to print stuff or not
 
     # post init stuffs
-    L: float = field(init=False)
-    T_guardband: float = field(init=False)
-    N_sc_raw: float = field(init=False)
-    N_sc: int = field(init=False)
-    T0: float = field(init=False)
-    Tb: float = field(init=False)
-    Tn: float = field(init=False)
-    Zn: float = field(init=False)
-    Pn: float = field(init=False)
+    N_sc:             int = field(default=0)
+    T_guardband:    float = field(default=0)
+    N_sc_raw:       float = field(default=0)
+    L:              float = field(default=0)
+    T0:             float = field(default=0)
+    Tb:             float = field(default=0)
+    Tn:             float = field(default=0)
+    Zn:             float = field(default=0)
+    Pn:             float = field(default=0)
 
 
     def __post_init__(self):

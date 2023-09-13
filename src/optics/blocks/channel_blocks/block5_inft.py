@@ -12,6 +12,7 @@ class INFTConfig:
 
 class Inft(Block):
     name = BlockNames.BLOCK_5_INFT
+
     def __init__(self, config: INFTConfig, extra_inputs: dict) -> None:
         super().__init__(config, extra_inputs)
         Nnft = extra_inputs['Nnft']
@@ -20,7 +21,7 @@ class Inft(Block):
         self.t_padded = extra_inputs['t_padded']
         self.bound_states = []
         self.discspec = []
-        self.cst = 1  # continuous spectrum type - default is None
+        self.cst = 1  # mistakenly 2 is actually equivalent to b of xi (rather than 1 as described)
         self.dst = 0  # default is None
         self.crop_l = (Nnft-Nb)//2
         self.crop_r = (Nnft+Nb)//2
@@ -36,6 +37,6 @@ class Inft(Block):
         q_p = qb*np.sqrt(self.Pn)
         self._outputs = [q_in, qb, q_p]
         return q_p
-    
+
     def get_output_names(self):
         return ["q_in (after inft)", "qb (cropped)", "q_p (physical units)"]
