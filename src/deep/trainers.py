@@ -47,6 +47,7 @@ class Trainer:
         self.train_state_vec = TrainStateVector()
 
     def attach_to_device(self, device):
+        self.device = device
         self.model = self.model.to(device)
         self.l_metric = self.l_metric.to(device)
         self.train_dataloader = self.train_dataloader  # WIP
@@ -132,7 +133,8 @@ class Trainer:
         model_class = eval(model_class_name)
         trainer.model = model_class()
         trainer.model.load_state_dict(model_state_dict)
-        trainer.model.to(device)
+        trainer.attach_to_device(device)
+        # trainer.model.to(device)
 
         # # fix h -> dz
         # if 'ssf' in trainer.train_dataset.config and 'h' in trainer.train_dataset.config['ssf']:

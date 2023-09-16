@@ -22,7 +22,7 @@ class PostEqualizer(Block):
         self.xi = extra_inputs['xi']
 
 
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_inputs, ) -> np.ndarray:
         # post compensate
         if self.with_ssf:
             b_out1 = x * np.exp(-1j * self.xi**2 * (self.L/self.Zn))
@@ -30,9 +30,12 @@ class PostEqualizer(Block):
             b_out1 = x * np.exp(1j * self.xi**2 * (self.L/self.Zn))
 
         # clip b1 to |b1| < 1
-        b_out1 = np.clip(b_out1, -1, 1)
+        max_val = np.max(np.abs(b_out1))
+        if max_val >= 1:
+            b_out1 = b_out1 / max_val * 0.999999
 
         # descale
+        
         u1_out = np.sqrt(-np.log(1 - np.abs(b_out1)**2)) * np.exp(1j * np.angle(b_out1))
 
         #de-normalize

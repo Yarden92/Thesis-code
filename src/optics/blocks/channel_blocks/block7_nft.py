@@ -25,16 +25,17 @@ class Nft(Block):
 
 
     def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
-        res = nsev(x, 
-                   self.t_padded, Xi1=self.XI[0], Xi2=self.XI[1], M=self.Nnft, 
+        res = nsev(x, self.t_padded, Xi1=self.XI[0], Xi2=self.XI[1], M=self.Nnft, 
                    display_c_msg=False, cst=self.cst)
-        assert res['return_value'] == 0, "NFT failed"
+        # if res['return_value'] != 0:
+        #     print(f'NFT failed with error code {res["return_value"]}')
+            # raise Exception(f"nsev failed with error code {res['return_value']}")
         b_out_padded = res['cont_b']
 
         b_out = b_out_padded[self.crop_l:self.crop_r] # removing padding
 
-        self._outputs = [b_out_padded, b_out]
+        self._outputs = [b_out_padded, b_out, res['return_value']]
         return b_out
 
     def get_output_names(self):
-        return ["b_out_padded", "b_out (cropped)"]
+        return ["b_out_padded", "b_out (cropped)", "nsev return value"]

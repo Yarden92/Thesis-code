@@ -9,3 +9,8 @@ def silent_execute():
     yield
     sys.stdout = save_stdout
 
+
+@staticmethod
+def is_this_a_notebook() -> bool:
+    return 'IPython' in sys.modules
+

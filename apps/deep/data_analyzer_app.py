@@ -28,13 +28,13 @@ def main(config):
         config.mu = da.params['mu_start']
 
     if config.is_single_item:
-        da.plot_single_sample(mu=config.mu, data_id=config.i, is_save=config.is_save_to_file)
+        da.plot_single_sample_b(mu=config.mu, data_id=config.i, is_save=config.is_save_to_file)
         if config.is_upload_to_wandb:
             print('Warning: uploading single item to wandb is not fully supported yet...')  # TODO: complete this
             da.wandb_log_single_sample(mu=config.mu, data_id=config.i)
 
     if config.is_full_ber:
-        da.plot_full_ber_graph(permute_limit=config.num_x_per_folder, is_save=config.is_save_to_file)
+        da.plot_full_ber_graph(permute_limit=config.num_x_per_folder, is_save_fig=config.is_save_to_file)
         if config.is_upload_to_wandb:
             da.wandb_log_ber_vs_mu(n=config.num_x_per_folder)
 

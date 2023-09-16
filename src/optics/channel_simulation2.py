@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 import pyrallis
 import time
@@ -21,7 +22,7 @@ class ChannelSimulator2:
         self.blocks: list = pack_of_blocks[1]
         self.block11: Evaluator = pack_of_blocks[2]
 
-    def simulate_and_analyze(self) -> (float, int):
+    def simulate_and_analyze(self) -> Tuple[float, int]:
         # output:
         #   ber: bit error rate (float)
         #   num_errors: number of errors (int)
@@ -54,16 +55,37 @@ class ChannelSimulator2:
             block_name = self.blocks[i].name
             print(f'{dt:.2f} seconds - to evaluate block {i} ({block_name}) ')        
 
-    def get_io_samples(self) -> (np.ndarray, np.ndarray):
+    def get_io_samples(self) -> Tuple[np.ndarray, np.ndarray]:
         # u_in, psi_xi, psi_t             = self.blocks[2].get_outputs()
         u1, b_in1, b_in, b_in_padded = self.blocks[3].get_outputs()
-        b_out_padded, b_out = self.blocks[6].get_outputs()
+        b_out_padded, b_out, is_error = self.blocks[6].get_outputs()
         # b_out1, u1_out, u_out           = self.blocks[7].get_outputs()
 
         x = b_out  # dirty
         y = b_in  # clean
 
         return x, y
+    
+    def io_to_msg(self, b: np.ndarray) -> np.ndarray:
+        # roll forward the middle stage in the channel until message is reached
+        # input: b_in / b_out from io_samples
+
+        u = self.blocks[7].execute(b, None) # post equalizer
+        c = self.blocks[8].execute(u, None) # match filter
+        s = self.blocks[9].execute(c, None) # binary message
+
+        return s
+    
+    def io_to_c_constellation(self, b: np.ndarray) -> np.ndarray:
+        # roll forward the middle stage in the channel until c_out is reached (constellation point)
+        # input: b_in / b_out from io_samples
+
+        u = self.blocks[7].execute(b, None)
+        c = self.blocks[8].execute(u, None)
+
+        return c
+
+
 
     def _initiate_blocks(self) -> (InputGenerator, list, Evaluator):
         blocks = [[]] * 10
@@ -96,6 +118,7 @@ class ChannelSimulator2:
         return None
 
     def update_mu(self, mu) -> None:
+        self.channel_config.mu = float(mu)        
         self.get_block(BlockNames.BLOCK_4_PRE_EQUALIZER).mu = mu
         self.get_block(BlockNames.BLOCK_8_POST_EQUALIZER).mu = mu
 

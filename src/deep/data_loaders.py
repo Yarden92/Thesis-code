@@ -1,4 +1,6 @@
 import concurrent
+from copy import copy
+from dataclasses import dataclass
 import json
 import os
 from abc import ABC
@@ -8,22 +10,29 @@ from glob import glob
 from typing import Tuple, Union
 
 import numpy as np
+import pyrallis
 import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from src.deep.standalone_methods import GeneralMethods, DataType
+from src.general_methods.text_methods import is_this_a_notebook
 from src.optics.channel_simulation import ChannelSimulator
+from src.optics.channel_simulation2 import ChannelSimulator2
+from src.optics.config_manager import ChannelConfig
 
-x_file_name = 'data_x.npy'
-y_file_name = 'data_y.npy'
-conf_file_name = 'conf.json'
+@dataclass
+class FileNames:
+    x: str = 'data_x.npy'
+    y: str = 'data_y.npy'
+    conf_json: str = 'conf.json'
+    conf_yml: str = 'conf.yml'
 
 
 class OpticDataset(Dataset, ABC):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range]) -> None:
         super().__init__()
-        self.config = None
+        self.config: ChannelConfig = None
         self.mean = 0
         self.std = 1
         self.cropped_mu = 0
@@ -44,7 +53,7 @@ class OpticDataset(Dataset, ABC):
 def get_datasets_set(data_dir_path: str, dataset_type=OpticDataset,
                      train_ds_ratio=0.5, val_ds_ratio=0.2, test_ds_ratio=0.3):
     assert train_ds_ratio + val_ds_ratio + test_ds_ratio <= 1, "train, val and test ratios must sum up to 1 or less"
-    n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
+    n_total = len(glob(f'{data_dir_path}/*{FileNames.x}'))
     # if ds_limit:
     #     n_total = min(n_total, ds_limit)
     stop_index_train = int(n_total*train_ds_ratio)
@@ -72,10 +81,11 @@ class DatasetNormal(OpticDataset):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None) -> None:
         super().__init__(data_dir_path, data_indices)
         self.data_dir_path = os.path.abspath(data_dir_path)
-        self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{x_file_name}')))
+        self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{FileNames.x}')))
         self.cropped_mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
 
-        self.config = read_conf(self.data_dir_path)
+        # self.config = read_conf(self.data_dir_path)
+        self.config = FilesReadWrite.read_channel_conf2(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
         self.n = len(self.data_indices)
 
@@ -138,18 +148,17 @@ class SeparatedRealImagDataset(DatasetNormal):
 class FilesReadWrite:
 
     @staticmethod
-    def read_folder(dir: str, verbose: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
-        # example: dir = f'data/10_samples_mu=0.001'
+    def read_folder(dir: str, verbose: bool = False) -> Tuple[np.ndarray, np.ndarray, ChannelConfig]:
+        # conf_N is the number of files that supposed to be in the folder
 
-        conf_read = read_conf(dir)
+        conf_read = FilesReadWrite.read_channel_conf2(dir)
         num_files = len(os.listdir(dir))
         N = int((num_files - 1)/2)
-        assert os.path.basename(dir).startswith(f'{N}'), f'wrong number ({N}) of files in folder: {dir}'
 
         all_x, all_y = [], []
         for i in range(N):
-            x_path = os.path.join(dir, f'{i}_{x_file_name}')
-            y_path = os.path.join(dir, f'{i}_{y_file_name}')
+            x_path = os.path.join(dir, f'{i}_{FileNames.x}')
+            y_path = os.path.join(dir, f'{i}_{FileNames.y}')
             x = np.load(x_path)
             y = np.load(y_path)
             all_x.append(x)
@@ -159,19 +168,41 @@ class FilesReadWrite:
             print(f'loaded {len(all_x)} x files and {len(all_y)} y files.')
 
         return all_x, all_y, conf_read
+    
+    @staticmethod
+    def read_channel_conf2(dir: str, _conf_file_name=FileNames.conf_yml) -> ChannelConfig:
+        conf_path = f'{dir}/{_conf_file_name}'
+        if is_this_a_notebook():
+            conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
+        else:
+            conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
+        return conf
+
 
 
 def read_xy(dir: str, i: int):
-    x = np.load(f'{dir}/{i}_{x_file_name}')
-    y = np.load(f'{dir}/{i}_{y_file_name}')
+    x = np.load(f'{dir}/{i}_{FileNames.x}')
+    y = np.load(f'{dir}/{i}_{FileNames.y}')
     return x, y
 
+def create_channels(template_conf) -> Tuple[ChannelSimulator2, ChannelSimulator2]:
+    original_ssf = template_conf.with_ssf
+    conf_for_input = copy(template_conf)
+    conf_for_output = copy(template_conf)
+    conf_for_input.with_ssf = False
+    assert conf_for_output.with_ssf == original_ssf, "this code is not correct"
+    
+    cs_for_input = ChannelSimulator2(conf_for_input)
+    cs_for_output = ChannelSimulator2(conf_for_output)
 
-def read_conf(dir, _conf_file_name=conf_file_name):
-    conf_path = f'{dir}/{_conf_file_name}'
-    with open(conf_path, 'r') as f:
-        conf_read = json.load(f)
-    return conf_read
+    return cs_for_input, cs_for_output
+
+
+# def read_conf(dir, _conf_file_name=FileNames.conf_json):
+#     conf_path = f'{dir}/{_conf_file_name}'
+#     with open(conf_path, 'r') as f:
+#         conf_read = json.load(f)
+#     return conf_read
 
 
 def save_conf(path, conf):
@@ -180,15 +211,16 @@ def save_conf(path, conf):
 
 
 def save_xy(dir, x, y, i):
-    x_path = f'{dir}/{i}_{x_file_name}'
-    y_path = f'{dir}/{i}_{y_file_name}'
+    x_path = f'{dir}/{i}_{FileNames.x}'
+    y_path = f'{dir}/{i}_{FileNames.y}'
     with open(x_path, 'wb') as f:
         np.save(f, x)
     with open(y_path, 'wb') as f:
         np.save(f, y)
 
-def gen_data(data_len, num_symbols, mu_vec, cs: ChannelSimulator, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1,
-              data_type=DataType.spectrum):
+
+def gen_data(data_len, num_symbols, mu_vec, cs: ChannelSimulator2, root_dir='data', tqdm=tqdm, logger_path=None,
+             max_workers=1, data_type=DataType.spectrum):
     vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
     assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
     mu_delta = mu_vec[1] - mu_vec[0]
@@ -206,14 +238,14 @@ def gen_data(data_len, num_symbols, mu_vec, cs: ChannelSimulator, root_dir='data
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {}
         for mu_i, mu in enumerate(mu_vec):
-            dir = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits_mu}f}'
-            os.makedirs(dir, exist_ok=True)
+            dir_path = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits_mu}f}'
+            os.makedirs(dir_path, exist_ok=True)
             cs.normalization_factor = mu
             conf = cs.params_to_dict()
             conf['data_type'] = data_type
-            save_conf(f'{dir}/{conf_file_name}', conf)
+            save_conf(f'{dir_path}/{FileNames.conf_json}', conf)
             for i in range(data_len):
-                f_i = executor.submit(_gen_data_i, cs, dir, i, mu, data_type)
+                f_i = executor.submit(_gen_data_i, cs, dir_path, i, mu, data_type)
                 futures[f_i] = (mu, i)
 
         print('initiating data generation...')

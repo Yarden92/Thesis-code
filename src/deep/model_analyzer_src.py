@@ -1,14 +1,17 @@
 import os
 import numpy as np
+from tqdm.auto import tqdm
 
 import wandb
-from src.deep.data_loaders import DatasetNormal, get_datasets_set
+from src.deep.data_loaders import DatasetNormal, create_channels, get_datasets_set
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 from src.general_methods.visualizer import Visualizer
 from src.deep.standalone_methods import GeneralMethods as GM
 from src.optics.channel_simulation import ChannelSimulator
 from torch.utils.data import DataLoader
+
+from src.optics.channel_simulation2 import ChannelSimulator2
 
 
 class ModelAnalyzer:
@@ -130,19 +133,19 @@ class ModelAnalyzer:
         )
 
     def plot_constelation(self, indices: list):
-        m_qam = self.trainer.train_dataset.config.get('m_qam')
-        cs = ChannelSimulator.from_dict(self.trainer.train_dataset.config)
+        m_qam = self.trainer.train_dataset.config.M_QAM
+        cs_in, cs_out = create_channels(self.trainer.train_dataset.config)
 
         x, y, preds = np.array([]), np.array([]), np.array([])
-        for i in indices:
+        for i in tqdm(indices):
             x_i, y_i, preds_i = self.trainer.test_single_item(i, plot=False)
-            x9 = cs.steps8_to_9(x_i)
-            y9 = cs.steps8_to_9(y_i)
-            pred9 = cs.steps8_to_9(preds_i)
+            c_out_y = cs_in.io_to_c_constellation(y_i)
+            c_out_x = cs_out.io_to_c_constellation(x_i)
+            c_out_preds = cs_out.io_to_c_constellation(preds_i)
 
-            x = np.concatenate((x, x9))  # dirty
-            y = np.concatenate((y, y9))  # clean
-            preds = np.concatenate((preds, pred9))
+            y = np.concatenate((y, c_out_y))  # clean
+            x = np.concatenate((x, c_out_x))  # dirty
+            preds = np.concatenate((preds, c_out_preds))
 
         Visualizer.plot_constellation_map_with_3_data_vecs(x, preds, y, m_qam,
                                                            'constellation map',

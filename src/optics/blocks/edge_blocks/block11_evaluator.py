@@ -17,7 +17,7 @@ class Evaluator:
         self.N_bin = self.N_sc * np.log2(M_QAM)
         self.verbose = config.verbose
 
-    def calc_ber(self, x: np.ndarray, y: np.ndarray) -> float:
+    def calc_ber(self, x: np.ndarray, y: np.ndarray) -> (int, float):
         # inputs:
             # two binary arrays of the same length
         num_errors = (x != y).sum()

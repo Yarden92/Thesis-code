@@ -315,7 +315,7 @@ class Visualizer:
         )
 
     @staticmethod
-    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True):
+    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True, lgnd = ['pred', 'ref']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -333,13 +333,12 @@ class Visualizer:
         y4 = np.angle(y_ref)
 
         phs_name = rf'$\angle {y_name}$'
-        lgnd = ['pred', 'ref']
 
         Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
 
     @staticmethod
-    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
+    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['pred', 'ref']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -353,13 +352,25 @@ class Visualizer:
 
         abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'
-        lgnd = ['pred', 'ref']
 
         Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[dBm]", legend=lgnd, hold=True)
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
 
+    # @staticmethod
+    # def plot_signal_dbm(x, y, xlabel=r'$\xi$', y_name=r'x',square=True):
+    #     y_name = y_name.replace('$', '')  # remove $ from y_name
+    #     if square:
+    #         y_name = rf'$|{y_name}|^2$'
+    #         y = 30 + 10*np.log10(np.abs(y)**2)
+    #     else:
+    #         y_name = rf'$|{y_name}|$'
+    #         y = 30 + 10*np.log10(np.abs(y))
+
+    #     Visualizer.my_plot(x, y, name=y_name, xlabel=xlabel, ylabel="[dBm]")
+
+
     @staticmethod
-    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title=""):
+    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['pred', 'ref']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -373,7 +384,6 @@ class Visualizer:
 
         abs_name = rf'$|{y_name}|^2$'
         phs_name = rf'$\angle {y_name}$'
-        lgnd = ['pred', 'ref']
 
         Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[mW]", function='semilogy', legend=lgnd, hold=True)
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, ylabel="[deg]", legend=lgnd)
