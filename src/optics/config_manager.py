@@ -43,6 +43,7 @@ class ChannelConfig:
 
     # general cs stuff
     verbose: bool = False            # whether to print stuff or not
+    io_type: str = 'b1'              # 'b' or 'b1'
 
     # post init stuffs
     N_sc:             int = field(default=0)

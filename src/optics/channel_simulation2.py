@@ -21,6 +21,7 @@ class ChannelSimulator2:
         self.block0: InputGenerator = pack_of_blocks[0]
         self.blocks: list = pack_of_blocks[1]
         self.block11: Evaluator = pack_of_blocks[2]
+        self.io_type = channel_config.io_type
 
     def simulate_and_analyze(self) -> Tuple[float, int]:
         # output:
@@ -57,37 +58,56 @@ class ChannelSimulator2:
 
     def get_io_samples(self) -> Tuple[np.ndarray, np.ndarray]:
         # u_in, psi_xi, psi_t             = self.blocks[2].get_outputs()
-        u1, b_in1, b_in, b_in_padded = self.blocks[3].get_outputs()
-        b_out_padded, b_out, is_error = self.blocks[6].get_outputs()
-        # b_out1, u1_out, u_out           = self.blocks[7].get_outputs()
+        u1, b_in1, b_in, b_in_padded    = self.blocks[3].get_outputs()
+        b_out_padded, b_out, is_error   = self.blocks[6].get_outputs()
+        b_out1, u1_out, u_out           = self.blocks[7].get_outputs()
 
-        x = b_out  # dirty
-        y = b_in  # clean
+        if self.io_type == 'b':
+            x = b_out  # dirty
+            y = b_in  # clean
+        elif self.io_type == 'b1':
+            x = b_out1  # dirty
+            y = b_in1  # clean
 
         return x, y
     
-    def io_to_msg(self, b: np.ndarray) -> np.ndarray:
+    def io_to_msg(self, x: np.ndarray) -> np.ndarray:
         # roll forward the middle stage in the channel until message is reached
-        # input: b_in / b_out from io_samples
+        
+        if self.io_type == 'b':
+            b = x
+            b1 =    self.blocks[7].post_compensate(b)
+        elif self.io_type == 'b1':
+            b1 = x
 
-        u = self.blocks[7].execute(b, None) # post equalizer
+        b1 =    self.blocks[7].clip(b1)
+        u1 =    self.blocks[7].descale(b1)
+        u =     self.blocks[7].de_normalize(u1)
+        u =     self.blocks[7].clear_nans(u)
         c = self.blocks[8].execute(u, None) # match filter
         s = self.blocks[9].execute(c, None) # binary message
 
         return s
     
-    def io_to_c_constellation(self, b: np.ndarray) -> np.ndarray:
+    def io_to_c_constellation(self, x: np.ndarray) -> np.ndarray:
         # roll forward the middle stage in the channel until c_out is reached (constellation point)
-        # input: b_in / b_out from io_samples
-
-        u = self.blocks[7].execute(b, None)
-        c = self.blocks[8].execute(u, None)
+        if self.io_type == 'b':
+            b = x
+            b1 =    self.blocks[7].post_compensate(b)
+        elif self.io_type == 'b1':
+            b1 = x
+            
+        b1 =    self.blocks[7].clip(b1)
+        u1 =    self.blocks[7].descale(b1)
+        u =     self.blocks[7].de_normalize(u1)
+        u =     self.blocks[7].clear_nans(u)
+        c =     self.blocks[8].execute(u, None)
 
         return c
 
 
 
-    def _initiate_blocks(self) -> (InputGenerator, list, Evaluator):
+    def _initiate_blocks(self) -> Tuple[InputGenerator, list, Evaluator]:
         blocks = [[]] * 10
         # for block_class in BlockManager.get_channel_block_classes():
         #     block_config = ConfigConverter.fetch_config(self.configs, block_class.name)

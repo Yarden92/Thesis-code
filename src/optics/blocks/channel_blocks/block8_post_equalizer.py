@@ -22,33 +22,46 @@ class PostEqualizer(Block):
         self.xi = extra_inputs['xi']
 
 
-    def execute(self, x: np.ndarray, extra_inputs, ) -> np.ndarray:
-        # post compensate
-        if self.with_ssf:
-            b_out1 = x * np.exp(-1j * self.xi**2 * (self.L/self.Zn))
-        else:
-            b_out1 = x * np.exp(1j * self.xi**2 * (self.L/self.Zn))
-
-        # clip b1 to |b1| < 1
-        max_val = np.max(np.abs(b_out1))
-        if max_val >= 1:
-            b_out1 = b_out1 / max_val * 0.999999
-
-        # descale
-        
-        u1_out = np.sqrt(-np.log(1 - np.abs(b_out1)**2)) * np.exp(1j * np.angle(b_out1))
-
-        #de-normalize
-        u_out = u1_out / self.mu
-
-        # replace nan with previous neighbors
-        nan_mask = np.isnan(u_out)
-        nan_indices = np.where(nan_mask)[0]
-        for i in nan_indices:
-            u_out[i] = u_out[i-1]
+    def execute(self, b: np.ndarray, extra_inputs, ) -> np.ndarray:
+        b_out1 = self.post_compensate(b)
+        b_out1 = self.clip(b_out1)
+        u1_out = self.descale(b_out1)
+        u_out = self.de_normalize(u1_out)
+        u_out = self.clear_nans(u_out)
 
         self._outputs = [b_out1, u1_out, u_out]
         return u_out
     
     def get_output_names(self):
         return ["b_out1 (post compensated)", "u1_out (descaled)", "u_out (de-normalized)"]
+    
+    def post_compensate(self, b: np.ndarray) -> np.ndarray:
+        if self.with_ssf:
+            b1 = b * np.exp(-1j * self.xi**2 * (self.L/self.Zn))
+        else:
+            b1 = b * np.exp(1j * self.xi**2 * (self.L/self.Zn))
+
+        return b1
+    
+    def clip(self, b1: np.ndarray) -> np.ndarray:
+        # clip b1 to |b1| < 1
+        max_val = np.max(np.abs(b1))
+        if max_val >= 1:
+            b1 = b1 / max_val * 0.999999
+        return b1
+
+    def descale(self, b1: np.ndarray) -> np.ndarray:
+        u1 = np.sqrt(-np.log(1 - np.abs(b1)**2)) * np.exp(1j * np.angle(b1))
+        return u1
+
+    def de_normalize(self, u1: np.ndarray) -> np.ndarray:
+        u = u1 / self.mu
+        return u
+    
+    def clear_nans(self, u: np.ndarray) -> np.ndarray:
+        # replace nan with previous neighbors
+        nan_mask = np.isnan(u)
+        nan_indices = np.where(nan_mask)[0]
+        for i in nan_indices:
+            u[i] = u[i-1]
+        return u

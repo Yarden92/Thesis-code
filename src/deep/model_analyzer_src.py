@@ -8,9 +8,7 @@ from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 from src.general_methods.visualizer import Visualizer
 from src.deep.standalone_methods import GeneralMethods as GM
-from src.optics.channel_simulation import ChannelSimulator
 from torch.utils.data import DataLoader
-
 from src.optics.channel_simulation2 import ChannelSimulator2
 
 
@@ -125,7 +123,7 @@ class ModelAnalyzer:
         Visualizer.my_plot(
             indices, np.abs(x),
             indices, np.abs(y),
-            indices, np.abs(preds),
+            indices, np.abs(preds+y),
             # indices, np.abs(delta),
             legend=['x (dirty)', 'y (clean)', 'preds'],
             # legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
@@ -141,15 +139,15 @@ class ModelAnalyzer:
             x_i, y_i, preds_i = self.trainer.test_single_item(i, plot=False)
             c_out_y = cs_in.io_to_c_constellation(y_i)
             c_out_x = cs_out.io_to_c_constellation(x_i)
-            c_out_preds = cs_out.io_to_c_constellation(preds_i)
+            c_out_preds = cs_out.io_to_c_constellation(preds_i+y_i)
 
             y = np.concatenate((y, c_out_y))  # clean
             x = np.concatenate((x, c_out_x))  # dirty
             preds = np.concatenate((preds, c_out_preds))
 
-        Visualizer.plot_constellation_map_with_3_data_vecs(x, preds, y, m_qam,
+        Visualizer.plot_constellation_map_with_3_data_vecs(x, y, preds, m_qam,
                                                            'constellation map',
-                                                           ['dirty', 'preds', 'clean'])
+                                                           ['dirty', 'clean', 'preds'])
         # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
         # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
         # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')
