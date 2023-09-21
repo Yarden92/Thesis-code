@@ -1,0 +1,16 @@
+lr: 1e-3  
+min_lr: 1e-5
+epochs: 20
+batch_size: 1 
+train_ds_ratio: 0.01 
+val_ds_ratio: 0.01
+test_ds_ratio: 0.3
+input_data_path: '/data/yarcoh/thesis_data/data/datasets/b/1000samples_50mu/mu=0.41' 
+output_model_path: '/data/yarcoh/thesis_data/data/test_models' 
+device: 'cuda'
+wandb_project: 'models_v4_debug' 
+model_name: "test"  # name of the run in wandb
+ds_limit: 0
+model_class: "UnetWithSkips" 
+is_analyze_after: false
+verbose: true
