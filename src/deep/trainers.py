@@ -7,7 +7,7 @@ import torch.optim
 import wandb
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from src.deep.data_loaders import OpticDataset, SeparatedRealImagDataset
 from src.deep.metrics import Metrics
@@ -17,7 +17,7 @@ from src.general_methods.visualizer import Visualizer
 
 import torch
 
-LOG_INTERVAL = 100
+LOG_INTERVAL = 2
 
 
 class Trainer:
@@ -59,7 +59,7 @@ class Trainer:
         mini_batch_size = min(mini_batch_size, len(self.train_dataset), len(self.val_dataset))
 
         # train
-        epoch_range = _tqdm(range(num_epochs)) if _tqdm else range(num_epochs)
+        epoch_range = _tqdm(range(num_epochs),'looping on epochs') if _tqdm else range(num_epochs)
         for epoch in epoch_range:
             self.epoch_step(self.train_dataloader, self._step_train, name="train", epoch=epoch, _tqdm=_tqdm)
             if self.scheduler:
@@ -71,15 +71,15 @@ class Trainer:
     def epoch_step(self, dataloader, step, name: str, epoch: int, _tqdm) -> None:
         rng = enumerate(dataloader)
         if _tqdm:
-            rng = _tqdm(rng, total=len(dataloader),leave=False)
+            rng = _tqdm(rng, total=len(dataloader),leave=False, desc=f"{name} epoch {epoch}")
         for i, batch in rng:
             x, y = batch
             loss, pred = step(x, y)
             if i % LOG_INTERVAL == 0:
                 iteration_num = epoch * len(dataloader) + i
-                wandb.log({f"{name}_loss": loss.item(), "iteration": iteration_num})
+                wandb.log({f"{name}_loss": loss.item(), f"{name}_iteration": iteration_num})
                 if name == "train":
-                    wandb.log({f'lr': self.optim.param_groups[0]['lr'], "iteration": iteration_num})
+                    wandb.log({f'lr': self.optim.param_groups[0]['lr'], f"{name}_iteration": iteration_num})
 
     def _step_train(self, x, y):
         loss, pred = self._step_validate(x, y)

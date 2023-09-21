@@ -315,7 +315,7 @@ class Visualizer:
         )
 
     @staticmethod
-    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True, lgnd = ['pred', 'ref']):
+    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True, lgnd = ['Rx', 'Tx']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -338,7 +338,7 @@ class Visualizer:
         Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
 
     @staticmethod
-    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['pred', 'ref']):
+    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['Rx', 'Tx']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -370,7 +370,7 @@ class Visualizer:
 
 
     @staticmethod
-    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['pred', 'ref']):
+    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['Rx', 'Tx']):
         y_name = y_name.replace('$', '')  # remove $ from y_name
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))

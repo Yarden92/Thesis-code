@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+import sys
 
 import pyrallis
 import torch
@@ -24,6 +25,7 @@ class SingleModelTrainConfig:
     # train_val_ratio: float = 0.8  # train vs val ratio
     train_ds_ratio: float = 0.05  # train vs dataset ratio
     val_ds_ratio: float = 0.03  # val vs dataset ratio
+    test_ds_ratio: float = 0.02  # test vs dataset ratio
     input_data_path: str = './data/datasets/qam1024_160x20/160_samples_mu=0.008'  # path to data
     output_model_path: str = './data/test_models'  # path to save model
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'  # device to use
@@ -54,7 +56,8 @@ def single_model_main(config: SingleModelTrainConfig):
     train_dataset, val_dataset, _ = data_loaders.get_datasets_set(config.input_data_path, DATASETTYPE,
                                                                      train_ds_ratio=config.train_ds_ratio,
                                                                      val_ds_ratio=config.val_ds_ratio,
-                                                                     ds_limit=config.ds_limit)
+                                                                     test_ds_ratio=config.test_ds_ratio,
+                                                                     )
 
     wandb.init(project=config.wandb_project, entity="yarden92", name=config.model_name,
                tags=[f'mu={train_dataset.cropped_mu}', f'{get_platform()}', f'ds={len(train_dataset)}'])
@@ -85,5 +88,9 @@ def single_model_main(config: SingleModelTrainConfig):
 
 
 if __name__ == '__main__':
-    config = pyrallis.parse(config_class=SingleModelTrainConfig)
+    if len(sys.argv) > 1:
+        config = pyrallis.parse(config_class=SingleModelTrainConfig)
+    else:
+        config_path = './config/model_generator/test.yml'
+        config = pyrallis.parse(SingleModelTrainConfig, config_path)
     single_model_main(config)
