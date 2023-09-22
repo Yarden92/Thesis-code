@@ -11,7 +11,7 @@ class EvaluatorConfig:
 
 class Evaluator:
     name = BlockNames.BLOCK_11_EVALUATOR
-    def __init__(self, config: EvaluatorConfig, extra_inputs: dict) -> None:
+    def __init__(self, config: EvaluatorConfig) -> None:
         M_QAM = config.M_QAM
         self.N_sc = config.N_sc
         self.N_bin = self.N_sc * np.log2(M_QAM)

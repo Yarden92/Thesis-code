@@ -6,25 +6,28 @@ from src.optics.myFNFTpy.FNFTpy.fnft_nsev_wrapper import nsev
 
 @dataclass
 class NFTConfig:
-    pass
+    xi_padded: np.ndarray
+    t_padded: np.ndarray
+    Nnft: int
+    Ns: int
 
 
 class Nft(Block):
     # TODO move cropping part to next stage (Equalizer)
     name = BlockNames.BLOCK_7_NFT
-    def __init__(self, config: NFTConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
-        self.t_padded = extra_inputs['t_padded']
-        xi_padded = extra_inputs['xi_padded']
+    def __init__(self, config: NFTConfig) -> None:
+        super().__init__(config)
+        self.Ns = config.Ns
+        self.Nnft = config.Nnft
+        self.t_padded = config.t_padded
+        xi_padded = config.xi_padded
         self.XI = (xi_padded[0], xi_padded[-1])
-        self.Nnft = extra_inputs['Nnft']
-        self.Ns = extra_inputs['Ns']
         self.cst = 1
         self.crop_l = (self.Nnft-self.Ns)//2-1
         self.crop_r = (self.Nnft+self.Ns)//2-1
 
 
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         res = nsev(x, self.t_padded, Xi1=self.XI[0], Xi2=self.XI[1], M=self.Nnft, 
                    display_c_msg=False, cst=self.cst)
         # if res['return_value'] != 0:

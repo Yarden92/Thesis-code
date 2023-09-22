@@ -5,12 +5,12 @@ import numpy as np
 
 class Block(ABC):
     name = "Abstract format for Block"
-    def __init__(self, config: object, extra_inputs: dict) -> None:
+    def __init__(self, config: object) -> None:
         self.config = config
         self._outputs = []
 
     @abstractmethod
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         # execute the block and save all the outputs in self._output
         # returns the necessary output for the next block
         pass

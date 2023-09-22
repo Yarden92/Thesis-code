@@ -13,7 +13,7 @@ class InputGeneratorConfig:
 
 class InputGenerator:
     name = BlockNames.BLOCK_0_INPUT_GENERATOR
-    def __init__(self, config: InputGeneratorConfig, extra_inputs: dict):
+    def __init__(self, config: InputGeneratorConfig):
         self.config = config
         self._outputs = []
         self.M_QAM = self.config.M_QAM

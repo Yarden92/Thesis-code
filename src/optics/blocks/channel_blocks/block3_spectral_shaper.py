@@ -11,12 +11,13 @@ class SpectralShaperConfig:
     bet: float = 0.2
     Ts: float = 1
     Nos: int = 16
+    Ns: int = 16
 
 class SpectralShaper(Block):
     name = BlockNames.BLOCK_3_SPECTRAL_SHAPER
-    def __init__(self, config: SpectralShaperConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
-        Ns = extra_inputs['Ns']
+    def __init__(self, config: SpectralShaperConfig) -> None:
+        super().__init__(config)
+        Ns = config.Ns
         bet = config.bet
         Ts = config.Ts
         fs = config.Nos/Ts
@@ -24,7 +25,7 @@ class SpectralShaper(Block):
         self.psi_t = np.fft.fft(self.psi_xi)  # can be saved for efficiency
 
 
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         u_in = np.fft.ifft(np.fft.fft(x) * self.psi_t)
         self._outputs = [u_in, self.psi_xi, self.psi_t]
         return u_in

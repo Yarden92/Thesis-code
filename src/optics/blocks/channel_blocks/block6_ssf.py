@@ -18,15 +18,18 @@ class SSFConfig:
     with_noise: bool = True
     # verbose: bool = False
     Pn: float = 0   # W
+    dt: float = 0.2 # ps
+    Nnft: int = 1024
+    Nb: int = 16
 
 
 class Ssf(Block):
     name = BlockNames.BLOCK_6_SSF
-    def __init__(self, config: SSFConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
-        dt = extra_inputs['dt']
-        Nnft = extra_inputs['Nnft']
-        Nb = extra_inputs['Nb']
+    def __init__(self, config: SSFConfig) -> None:
+        super().__init__(config)
+        dt = config.dt
+        Nnft = config.Nnft
+        Nb = config.Nb
         # verbose = config.verbose
         self.with_ssf = config.with_ssf
         self.Pn = config.Pn
@@ -45,7 +48,7 @@ class Ssf(Block):
             # verbose=verbose,
         )
 
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         if self.with_ssf:
             qz = self.ssf(x)
         else:

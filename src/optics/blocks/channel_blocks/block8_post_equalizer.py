@@ -10,19 +10,20 @@ class PostEqualizerConfig:
     mu: float = 1
     L: float = 1000
     with_ssf: bool = True
+    xi: np.ndarray = np.array([])
 
 class PostEqualizer(Block):
     name = BlockNames.BLOCK_8_POST_EQUALIZER
-    def __init__(self, config: PostEqualizerConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
+    def __init__(self, config: PostEqualizerConfig) -> None:
+        super().__init__(config)
         self.Zn = config.Zn
         self.mu = config.mu
         self.L = config.L
         self.with_ssf = config.with_ssf
-        self.xi = extra_inputs['xi']
+        self.xi = config.xi
 
 
-    def execute(self, b: np.ndarray, extra_inputs, ) -> np.ndarray:
+    def execute(self, b: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         b_out1 = self.post_compensate(b)
         b_out1 = self.clip(b_out1)
         u1_out = self.descale(b_out1)

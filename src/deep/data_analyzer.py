@@ -120,7 +120,7 @@ class DataAnalyzer():
         x, y = self._get_xy(data_id, sub_name)
 
 
-        xi = self.cs_for_input.extra_inputs['xi']
+        xi = self.cs_for_input.channel_config.xi
         y_dirty = x
         y_ref = y
         xlabel = r'$\xi$'
@@ -143,6 +143,31 @@ class DataAnalyzer():
             out_path = f'{self.path}/{PATHS.analysis_dir}/{sub_name}'
             os.makedirs(out_path, exist_ok=True)
             print(f'saving image is currently not supported')
+
+    def plot_constelation(self,  mu: float,  data_indices: list):
+        m_qam = self.cs_for_input.channel_config.M_QAM
+        mu_cropped = mu or self.params['mu_start']  # default to first mu
+        sub_name = self._get_sub_folder_name(mu_cropped)
+        mu_actual = self._get_full_mu(sub_name)
+        # update mu:
+        self.cs_for_input.update_mu(mu_actual)
+        self.cs_for_output.update_mu(mu_actual)
+
+        long_x, long_y = np.array([]), np.array([])
+        for i in tqdm(data_indices):
+            x_i, y_i = self._get_xy(i, sub_name)
+            c_out_y = self.cs_for_input.io_to_c_constellation(y_i)
+            c_out_x = self.cs_for_output.io_to_c_constellation(x_i)
+
+            long_y = np.concatenate((long_y, c_out_y))  # clean
+            long_x = np.concatenate((long_x, c_out_x))  # dirty
+
+        Visualizer.plot_constellation_map_with_k_data_vecs([long_x, long_y], m_qam,
+                                                           '',
+                                                           ['dirty', 'clean'])
+        # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
+        # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
+        # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')
 
 
     def calc_ber_for_sub_folder(self, mu, n=5, _tqdm=None):
@@ -288,7 +313,6 @@ class DataAnalyzer():
         # x is the dirty signal, y is the clean signal
         dir = self.path + '/' + sub_name
         dataset = DatasetNormal(dir)
-        print(f'the folder {dir} contains {len(dataset)} samples')
         x, y = dataset.get_numpy_xy(data_id)
         return x, y
 

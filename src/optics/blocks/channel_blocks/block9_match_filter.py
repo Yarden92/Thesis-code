@@ -10,13 +10,14 @@ class MatchFilterConfig:
     Nos: int = 16
     bet: float = 0.2
     Ts: float = 1
+    Ns: int = 16
 
 
 class MatchFilter(Block):
     name = BlockNames.BLOCK_9_MATCH_FILTER
-    def __init__(self, config: MatchFilterConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
-        Ns = extra_inputs['Ns']
+    def __init__(self, config: MatchFilterConfig) -> None:
+        super().__init__(config)
+        Ns = config.Ns
         bet = config.bet
         Ts = config.Ts
         self.Nos = config.Nos
@@ -27,7 +28,7 @@ class MatchFilter(Block):
         h_ind, psi_xi = rrcosfilter(N=Ns, alpha=bet, Ts=Ts, Fs=fs)
         self.psi_t = np.fft.fft(psi_xi)  # can be saved for efficiency
 
-    def execute(self, x: np.ndarray, extra_inputs) -> np.ndarray:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
         c_out1 = np.fft.ifft(self.psi_t*np.fft.fft(x)) / self.Nos  # convolve with RRC again
         c_out = c_out1[self.start:self.stop:self.step]  # downsample
 

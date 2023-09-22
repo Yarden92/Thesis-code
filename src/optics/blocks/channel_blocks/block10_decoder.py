@@ -12,13 +12,13 @@ class DecoderConfig:
 
 class Decoder(Block):
     name = BlockNames.BLOCK_10_DECODER
-    def __init__(self, config: DecoderConfig, extra_inputs: dict) -> None:
-        super().__init__(config, extra_inputs)
+    def __init__(self, config: DecoderConfig) -> None:
+        super().__init__(config)
         self.M_QAM = config.M_QAM
         self.sps = int(np.log2(self.M_QAM))
         self.modem = ModulationPy.QAMModem(self.M_QAM, soft_decision=False)
 
-    def execute(self, x: np.ndarray, extra_inputs) -> None:
+    def execute(self, x: np.ndarray, extra_runtime_inputs) -> None:
         s_out = self.modem.demodulate(x)
         # TODO: pack bits to integers: SP.packbits(s_out, self.sps)
 

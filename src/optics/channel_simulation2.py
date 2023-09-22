@@ -16,7 +16,6 @@ class ChannelSimulator2:
     def __init__(self, channel_config: ChannelConfig) -> None:
         self.channel_config = channel_config
         self.cb_configs = ConfigConverter.main_config_to_block_configs(channel_config)
-        self.extra_inputs = ConfigConverter._calc_extra_inputs(channel_config)
         pack_of_blocks = self._initiate_blocks()
         self.block0: InputGenerator = pack_of_blocks[0]
         self.blocks: list = pack_of_blocks[1]
@@ -68,6 +67,8 @@ class ChannelSimulator2:
         elif self.io_type == 'b1':
             x = b_out1  # dirty
             y = b_in1  # clean
+        else:
+            raise Exception(f'io_type={self.io_type} is not supported')    
 
         return x, y
     
@@ -111,20 +112,20 @@ class ChannelSimulator2:
         blocks = [[]] * 10
         # for block_class in BlockManager.get_channel_block_classes():
         #     block_config = ConfigConverter.fetch_config(self.configs, block_class.name)
-        #     blocks.append(block_class(block_config, self.extra_inputs))
+        #     blocks.append(block_class(block_config))
 
-        block0:     InputGenerator = InputGenerator(self.cb_configs.input_generator_config, self.extra_inputs)
-        blocks[0]:  Modulator = Modulator(self.cb_configs.modulator_config, self.extra_inputs)
-        blocks[1]:  OverSampling = OverSampling(self.cb_configs.over_sampler_config, self.extra_inputs)
-        blocks[2]:  SpectralShaper = SpectralShaper(self.cb_configs.spectral_shaping_config, self.extra_inputs)
-        blocks[3]:  PreEqualizer = PreEqualizer(self.cb_configs.pre_equalizer_config, self.extra_inputs)
-        blocks[4]:  Inft = Inft(self.cb_configs.inft_config, self.extra_inputs)
-        blocks[5]:  Ssf = Ssf(self.cb_configs.ssf_config, self.extra_inputs)
-        blocks[6]:  Nft = Nft(self.cb_configs.nft_config, self.extra_inputs)
-        blocks[7]:  PostEqualizer = PostEqualizer(self.cb_configs.post_equalizer_config, self.extra_inputs)
-        blocks[8]:  MatchFilter = MatchFilter(self.cb_configs.match_filter_config, self.extra_inputs)
-        blocks[9]:  Decoder = Decoder(self.cb_configs.decoder_config, self.extra_inputs)
-        block11:    Evaluator = Evaluator(self.cb_configs.evaluator_config, self.extra_inputs)
+        block0:     InputGenerator = InputGenerator(self.cb_configs.input_generator_config)
+        blocks[0]:  Modulator = Modulator(self.cb_configs.modulator_config)
+        blocks[1]:  OverSampling = OverSampling(self.cb_configs.over_sampler_config)
+        blocks[2]:  SpectralShaper = SpectralShaper(self.cb_configs.spectral_shaping_config)
+        blocks[3]:  PreEqualizer = PreEqualizer(self.cb_configs.pre_equalizer_config)
+        blocks[4]:  Inft = Inft(self.cb_configs.inft_config)
+        blocks[5]:  Ssf = Ssf(self.cb_configs.ssf_config)
+        blocks[6]:  Nft = Nft(self.cb_configs.nft_config)
+        blocks[7]:  PostEqualizer = PostEqualizer(self.cb_configs.post_equalizer_config)
+        blocks[8]:  MatchFilter = MatchFilter(self.cb_configs.match_filter_config)
+        blocks[9]:  Decoder = Decoder(self.cb_configs.decoder_config)
+        block11:    Evaluator = Evaluator(self.cb_configs.evaluator_config)
 
         return block0, blocks, block11
 
