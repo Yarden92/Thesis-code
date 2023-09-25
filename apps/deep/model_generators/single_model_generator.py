@@ -92,6 +92,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         config = pyrallis.parse(config_class=SingleModelTrainConfig)
     else:
-        config_path = './config/model_generator/test.yml'
+        config_path = './config/model_generator/skip_unet_channel2_quick_c_ds.yml'
         config = pyrallis.parse(SingleModelTrainConfig, config_path)
     single_model_main(config)
