@@ -1,5 +1,6 @@
 import json
 import os
+import warnings
 
 import numpy as np
 import torch.cuda
@@ -23,7 +24,8 @@ LOG_INTERVAL = 2
 class Trainer:
     def __init__(self, train_dataset: OpticDataset, val_dataset: OpticDataset, model: nn.Module = None,
                  device: str = "cpu", batch_size: int = 1,
-                 l_metric=None, optim=None, scheduler=None, config: dict = None):
+                 l_metric=None, optim=None, scheduler=None, config: dict = None,
+                 lambda_reg: float = 0.001):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -45,6 +47,7 @@ class Trainer:
         self.val_dataloader = self.val_dataloader  # WIP
 
         self.train_state_vec = TrainStateVector()
+        self.lambda_reg = lambda_reg
 
     def attach_to_device(self, device):
         self.device = device
@@ -91,19 +94,32 @@ class Trainer:
     def _step_validate(self, x, y):
         x, y = x.to(self.device), y.to(self.device)
         pred = self.model(x)
-        loss: Tensor = self.l_metric(y, pred)
+        # loss: Tensor = self.l_metric(y, pred)
+
+        # this stage was added by gpt:
+        # Regularization term
+        reg_loss = 0.0
+        for param in self.model.parameters():
+            reg_loss += torch.norm(param, p=2)  # L2 regularization
+
+        # Add regularization term to the loss
+        loss = self.l_metric(y, pred) + self.lambda_reg * reg_loss
+
         return loss, pred
 
-    def save3(self, dir_path: str = "saved_models", endings: str = ""):
+    def save3(self, dir_path: str = "saved_models", model_name: str = "unnamed_model", endings: str = ""):
         # create dir if it doesn't exist
-        model_name = self.model.__class__.__name__
-        if model_name == "NLayersModel":
-            model_name = f"{self.model.n_layers}_layers_model"
+        # model_name = self.model.__class__.__name__
+        # if model_name == "NLayersModel":
+        #     model_name = f"{self.model.n_layers}_layers_model"
+        unique_folder_name = self._get_unique_folder_name(dir_path, model_name)
         ds_size = len(self.train_dataset) + len(self.val_dataset)
         n_epochs = self.train_state_vec.num_epochs
         mu = self.train_dataset.cropped_mu
-        sub_dir_path = f"{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs{endings}"
+        # sub_dir_path = f"{dir_path}/mu-{mu}__{ds_size}ds__{model_name}__{n_epochs}epochs{endings}"
+        sub_dir_path = os.path.join(dir_path, unique_folder_name)
         os.makedirs(sub_dir_path, exist_ok=True)
+        print(f'saving model data to: {sub_dir_path}')
 
         # save trainer to the same dir
         torch.save(self.model.state_dict(), sub_dir_path + "/model_state_dict.pt")
@@ -198,6 +214,20 @@ class Trainer:
             ds.data_dir_path = os.path.abspath(f"{new_dataset_path}{extension}")
             if verbose:
                 print(f"updating path to:\n\t{ds.data_dir_path}")
+
+    def _get_unique_folder_name(self, dir_path: str, model_name: str) -> str:
+        # look at dir, for all folders named model_name and return new name <model_name>_v$ where $ is latest
+        count = 1+ sum(1 for folder in os.listdir(dir_path) if model_name in folder)
+        unique_folder_name = f"{model_name}_v{count}"
+        
+        # just to make sure that its actually unique:
+        while os.path.exists(os.path.join(dir_path, unique_folder_name)):
+            warnings.warn(f"model: [{model_name}] is messy, keep it clean with no higher version than {count}")
+            unique_folder_name += "_1"
+        
+        return unique_folder_name
+
+        
 
 
 class TrainStateVector:
