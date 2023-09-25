@@ -1,9 +1,9 @@
-num_samples: 10  # for each mu
-num_mus: 5
+num_samples: 500  # for each mu
+num_mus: 10
 mu_start: 0.1
-mu_end: 1
+mu_end: 0.8
 logger_path: './logs'
-output_path: '/data/yarcoh/thesis_data/data/datasets/b1'
+output_path: '/data/yarcoh/thesis_data/data/datasets/c'
 to_collect_ber: True
 num_workers: 0
 
@@ -30,4 +30,4 @@ channel_config:
   dz: 0.2               # Z-step, [km] - initial step estimate
   K_T: 1.13
   chi: 0.0461
-  io_type: 'b1'
+  io_type: 'c'

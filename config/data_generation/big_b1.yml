@@ -1,11 +1,10 @@
-num_samples: 10  # for each mu
-num_mus: 5
+num_samples: 30000  # for each mu
+num_mus: 20
 mu_start: 0.1
 mu_end: 1
 logger_path: './logs'
 output_path: '/data/yarcoh/thesis_data/data/datasets/b1'
 to_collect_ber: True
-num_workers: 0
 
 
 channel_config:
