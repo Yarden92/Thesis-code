@@ -15,7 +15,7 @@ from src.deep.standalone_methods import DataType
 from src.general_methods.signal_processing import SP
 from src.general_methods.visualizer import Visualizer
 from src.optics.channel_simulation2 import ChannelSimulator2
-from src.optics.config_manager import ChannelConfig
+from src.optics.config_manager import ChannelConfig, ConfigManager
 
 class PATHS:
     analysis_dir = '_analysis'
@@ -28,8 +28,8 @@ class DataAnalyzer():
                  load_ber_path=None):
         self.path = data_folder_path.rstrip('/')
         self.base_name = os.path.basename(self.path)
-        self.params, conf = self.fetch_params()
-        self.cs_for_input, self.cs_for_output = create_channels(conf)
+        self.params, self.conf = self.fetch_params()
+        self.cs_for_input, self.cs_for_output = create_channels(self.conf)
         self.is_wandb_init = False
         self.is_box_plot = is_box_plot
 
@@ -91,12 +91,13 @@ class DataAnalyzer():
                 continue
             sub_path = f"{self.path}/{sub_name}"
             # conf = data_loaders.read_conf(sub_path)
-            conf = FilesReadWrite.read_channel_conf2(sub_path)
+            # conf = FilesReadWrite.read_channel_conf2(sub_path)
+            conf = ConfigManager.read_config(sub_path)
             mu_vec.append(conf.mu)
             conf_list.append(conf)
             num_files = len(os.listdir(sub_path))
             assert num_files == 1 + 2 * \
-                num_samples, f'ERROR at {sub_name}: num_files={num_files} != 1+2*num_samples={num_samples}'
+                num_samples, f'ERROR at {sub_name}: [num_files={num_files}] != 1+2*[num_samples={num_samples}]'
 
         assert len(conf_list) == num_mus, 'num of sub directories dont match num of mus from headline'
         assert len(mu_vec) == num_mus, 'num of sub directories dont match num of mus from headline'
@@ -209,11 +210,11 @@ class DataAnalyzer():
     def _init_wandb(self):
         if self.is_wandb_init:
             return
-        data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
-        data_type = DataType(data_type).name
+        # data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
+        # data_type = DataType(data_type).name
         mu_range = f'{self.params["mu_start"]}-{self.params["mu_end"]}'
-        qam = self.params['conf']['m_qam']
-        run_name = f'{self.base_name}__{data_type}'
+        qam = self.conf.M_QAM #  self.params['conf']['m_qam']
+        run_name = f'{self.base_name}' # __{data_type}'
         wandb.init(project="data_analyze", entity="yarden92", name=run_name,
                    tags=[
                        f'{standalone_methods.get_platform()}',

@@ -9,7 +9,6 @@ from src.deep.trainers import Trainer
 from src.general_methods.visualizer import Visualizer
 from src.deep.standalone_methods import GeneralMethods as GM
 from torch.utils.data import DataLoader
-from src.optics.channel_simulation2 import ChannelSimulator2
 
 
 class ModelAnalyzer:
@@ -21,6 +20,7 @@ class ModelAnalyzer:
         self.ds_len = len(self.trainer.train_dataset) + len(self.trainer.val_dataset)
         self.mu = self.trainer.train_dataset.cropped_mu
         self.outputs = {}
+        self.cs_in, self.cs_out = create_channels(self.trainer.train_dataset.config)
 
     def _init_wandb(self):
         if wandb.run is not None:  # if already logged in
@@ -116,30 +116,56 @@ class ModelAnalyzer:
     def plot_single_item(self, i):
         _ = self.trainer.test_single_item(i, plot=True)
 
-    def plot_single_item_together(self, i, normalize=True):
+    def plot_single_item_together(self, i, zm_indices=None):
+        xi_axis = self.cs_in.channel_config.xi
         x, y, preds = self.trainer.test_single_item(i, plot=False)
-        # delta = np.abs(x) - np.abs(y)
-        indices = np.arange(len(x))
+        if zm_indices:
+            x = x[zm_indices]
+            y = y[zm_indices]
+            preds = preds[zm_indices]
+            xi_axis = xi_axis[zm_indices]
+        io_type = self.trainer.train_dataset.config.io_type
+
         Visualizer.my_plot(
-            indices, np.abs(x),
-            indices, np.abs(y),
-            indices, np.abs(preds+y),
-            # indices, np.abs(delta),
-            legend=['x (dirty)', 'y (clean)', 'preds'],
-            # legend=['x (dirty)', 'y (clean)', 'preds', 'delta'],
-            name=f'after {self.trainer.train_state_vec.num_epochs} epochs'
+            xi_axis, np.abs(y),
+            xi_axis, np.abs(x),
+            xi_axis, np.abs(preds),
+            legend=[
+                rf'${io_type}(\xi)$ [Tx]',
+                rf'$\hat {io_type}(\xi)$ [Rx]',
+                rf'$\widetilde {io_type}(\xi)$ [pred]'
+            ],
+            name=f'{io_type} - after {self.trainer.train_state_vec.num_epochs} epochs',
+            xlabel=r'$\xi$'
+        )
+
+    def plot_stems(self, i, zm_indices=None):
+        x, y, preds = self.trainer.test_single_item(i, plot=False)
+
+        c_x = self.cs_in.io_to_c_constellation(x)
+        c_y = self.cs_out.io_to_c_constellation(y)
+        c_preds = self.cs_out.io_to_c_constellation(preds)
+
+        Visualizer.data_trio_plot(
+            np.real(c_y),
+            np.real(c_x),
+            np.real(c_preds),
+            zm_indices,
+            title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
+            xlabel=r'n',
+            function='stem',
+            names=[rf'$c[n]$ [Tx]', rf'$\hat c[n]$ [Rx]', rf'$\widetilde c[n]$ [pred]'],
         )
 
     def plot_constelation(self, indices: list):
         m_qam = self.trainer.train_dataset.config.M_QAM
-        cs_in, cs_out = create_channels(self.trainer.train_dataset.config)
 
         x, y, preds = np.array([]), np.array([]), np.array([])
         for i in tqdm(indices):
             x_i, y_i, preds_i = self.trainer.test_single_item(i, plot=False)
-            c_out_y = cs_in.io_to_c_constellation(y_i)
-            c_out_x = cs_out.io_to_c_constellation(x_i)
-            c_out_preds = cs_out.io_to_c_constellation(preds_i+y_i)
+            c_out_y = self.cs_in.io_to_c_constellation(y_i)
+            c_out_x = self.cs_out.io_to_c_constellation(x_i)
+            c_out_preds = self.cs_out.io_to_c_constellation(preds_i)
 
             y = np.concatenate((y, c_out_y))  # clean
             x = np.concatenate((x, c_out_x))  # dirty
@@ -184,6 +210,35 @@ class ModelAnalyzer:
                 title=title,
                 xname="sample index")})
 
+    def upload_stems_to_wandb(self, i):
+        x, y, preds = self.trainer.test_single_item(i, plot=False)
+        c_x = self.cs_in.io_to_c_constellation(x)
+        c_y = self.cs_out.io_to_c_constellation(y)
+        c_preds = self.cs_out.io_to_c_constellation(preds)
+        indices = np.arange(len(c_x))
+
+        self._init_wandb()
+        for v, title in [(c_x, 'c_x (dirty)'), (c_y, 'c_y (clean)'), (c_preds, 'c_preds')]:
+            wandb.log({title: wandb.plot.line_series(
+                xs=indices,
+                ys=[v.real, v.imag],
+                keys=['real', 'imag'],
+                title=title,
+                xname="sample index")})
+
+        zm_indices = range(0, min(50, len(c_x)))
+
+        Visualizer.data_trio_plot(
+            np.real(c_y),
+            np.real(c_x),
+            np.real(c_preds),
+            zm_indices,
+            title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
+            xlabel=r'n',
+            function='stem',
+            names=[rf'$c[n]$ [Tx]', rf'$\hat c[n]$ [Rx]', rf'$\widetilde c[n]$ [pred]'],
+        )
+
     def load_test_dataset(self, dataset_path: str, train_ds_ratio, val_ds_ratio, test_ds_ratio,
                           is_reset_wandb=True) -> None:
         _, _, test_dataset = get_datasets_set(dataset_path, DatasetNormal, train_ds_ratio, val_ds_ratio, test_ds_ratio)
@@ -192,5 +247,7 @@ class ModelAnalyzer:
         self.trainer.val_dataset = test_dataset
         self.trainer.val_dataloader = test_dataloader
         self.trainer.train_dataset.config = test_dataset.config
+        self.cs_in, self.cs_out = create_channels(self.trainer.train_dataset.config)
+
         if is_reset_wandb:
             self._reset_wandb()

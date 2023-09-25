@@ -25,3 +25,11 @@ class SP:
         binary_matrix = binary_matrix_8bits[:, -num_bits:]  # take last num_bits columns
         binary_vec = binary_matrix.reshape(-1)  # unfold into vector
         return binary_vec
+    
+    @staticmethod
+    def calc_avg_dist(x: np.ndarray, y: np.ndarray) -> float:
+        # calculate average euclidean distance between x and y
+        avg_dist = np.mean(np.abs(x - y))
+        return avg_dist
+
+

@@ -1,5 +1,9 @@
 from dataclasses import dataclass, field
+import os
 import numpy as np
+import pyrallis
+from src.general_methods.text_methods import FileNames, is_this_a_notebook
+
 from src.optics.blocks.block_names import BlockNames
 from src.optics.myFNFTpy.FNFTpy.fnft_nsev_inverse_wrapper import nsev_inverse_xi_wrapper
 from src.optics.blocks.edge_blocks.block0_input_generator import InputGeneratorConfig
@@ -43,7 +47,7 @@ class ChannelConfig:
 
     # general cs stuff
     verbose: bool = False            # whether to print stuff or not
-    io_type: str = 'b1'              # 'b' or 'b1'
+    io_type: str = 'b1'              # 'b' / 'b1' / 'c'
 
     # post init stuffs
     N_sc:           int = field(default=0)
@@ -66,11 +70,38 @@ class ChannelConfig:
     T2:             float = field(default=0)
 
     # axes
-    xi:             np.ndarray = field(default=np.array([])) # Array of upsampled nonlinear frequencies
-    xi_padded:      np.ndarray = field(default=np.array([])) # Array of padded nonlinear frequencies (for NFT)
-    t:              np.ndarray = field(default=np.array([])) # time axis
-    t_padded:       np.ndarray = field(default=np.array([])) # padded time axis
+    # xi:             np.ndarray = field(default=np.array([])) # Array of upsampled nonlinear frequencies
+    # xi_padded:      np.ndarray = field(default=np.array([])) # Array of padded nonlinear frequencies (for NFT)
+    # t:              np.ndarray = field(default=np.array([])) # time axis
+    # t_padded:       np.ndarray = field(default=np.array([])) # padded time axis
 
+    @property
+    def xi(self):
+        # Array of upsampled nonlinear frequencies
+        if not hasattr(self, '_xi'):
+            self._xi = np.arange(-self.Ns/2, self.Ns/2)/self.Nos
+        return self._xi
+        
+    @property
+    def xi_padded(self):
+        # Array of padded nonlinear frequencies (for NFT)
+        if not hasattr(self, '_xi_padded'):
+            self._xi_padded = np.linspace(self.XI[0], self.XI[1], self.Nnft)
+        return self._xi_padded
+    
+    @property
+    def t(self):
+        # time axis
+        if not hasattr(self, '_t'):
+            self._t = np.arange(-self.Nb/2, self.Nb/2)*self.dt
+        return self._t
+    
+    @property
+    def t_padded(self):
+        # padded time axis
+        if not hasattr(self, '_t_padded'):
+            self._t_padded = np.linspace(self.T1, self.T2, self.Nnft)
+        return self._t_padded      
 
 
     def __post_init__(self):
@@ -98,11 +129,12 @@ class ChannelConfig:
 
         self.T1 = self.dt*(-self.Nnft/2)/self.Tn
         self.T2 = self.dt*(self.Nnft/2-1)/self.Tn
-        _, XI = nsev_inverse_xi_wrapper(self.Nnft, self.T1, self.T2, self.Nnft, display_c_msg=True)
-        self.xi = np.arange(-self.Ns/2, self.Ns/2)/self.Nos    
-        self.xi_padded = np.linspace(XI[0], XI[1], self.Nnft)  
-        self.t = np.arange(-self.Nb/2, self.Nb/2)*self.dt
-        self.t_padded = np.linspace(self.T1, self.T2, self.Nnft)
+        _, self.XI = nsev_inverse_xi_wrapper(self.Nnft, self.T1, self.T2, self.Nnft, display_c_msg=True)
+        # self.xi = np.arange(-self.Ns/2, self.Ns/2)/self.Nos    
+        # self.xi_padded = np.linspace(self.XI[0], self.XI[1], self.Nnft)  
+        # self.t = np.arange(-self.Nb/2, self.Nb/2)*self.dt
+        # self.t_padded = np.linspace(self.T1, self.T2, self.Nnft)
+
 
 
 @dataclass
@@ -258,3 +290,61 @@ class ConfigConverter:
         else:
             raise Exception("No such block name")
         
+class ConfigManager:
+    @staticmethod
+    def save_config(dir: str, conf: ChannelConfig, _conf_file_name=FileNames.conf_yml):
+        os.makedirs(dir, exist_ok=True)
+        conf_path = f'{dir}/{_conf_file_name}'
+        with open(conf_path, 'w') as f:
+            pyrallis.dump(conf, f)
+
+    @staticmethod
+    def read_config(dir: str, _conf_file_name=FileNames.conf_yml) -> ChannelConfig:
+        conf_path = f'{dir}/{_conf_file_name}'
+        if is_this_a_notebook():
+            conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
+        else:
+            conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
+        # conf = ConfigManager._fill_config_from_loading(conf)
+        return conf
+    
+    @staticmethod
+    def refresh_config(conf: ChannelConfig) -> ChannelConfig:
+        # reload all post_init stuffs:
+        # take only the relevant inputs from conf and input that to ChannelConfig
+        valid_input = {}
+        for key in conf.__dict__.keys():
+            if key in ChannelConfig.__dataclass_fields__.keys():
+                valid_input[key] = conf.__dict__[key]
+        
+        conf2 = ChannelConfig(**valid_input)
+        return conf2
+
+
+    @staticmethod
+    def _clear_config_for_saving(conf: ChannelConfig) -> ChannelConfig:
+        # delete all __post_init__ stuffs
+        return conf
+
+    @staticmethod
+    def _fill_config_from_loading(conf: ChannelConfig) -> ChannelConfig:
+        # fill all the numpy arrays
+        _, XI =     nsev_inverse_xi_wrapper(conf.Nnft, conf.T1, conf.T2, conf.Nnft, display_c_msg=True)
+        conf.xi =           np.arange(-conf.Ns/2, conf.Ns/2)/conf.Nos    
+        conf.xi_padded =    np.linspace(XI[0], XI[1], conf.Nnft)  
+        conf.t =            np.arange(-conf.Nb/2, conf.Nb/2)*conf.dt
+        conf.t_padded =     np.linspace(conf.T1, conf.T2, conf.Nnft)
+        return conf
+
+        
+
+def test1_read_and_write_config():
+    conf = ConfigManager.read_config('./config/channel_simulation2', 'example.yml')
+    ConfigManager.save_config('./delete',conf)
+    conf2 = ConfigManager.read_config('./delete')
+    assert conf == conf2, "config is not the same after saving and loading"
+    return True
+
+if __name__ == '__main__':
+    test1_read_and_write_config()
+    print('test passed')

@@ -17,12 +17,12 @@ class OverSampling(Block):
         self.N_os = config.N_os
         self.Ns = config.Ns
 
-    def execute(self, x: np.ndarray, extra_runtime_inputs) -> np.ndarray:
-        y = np.zeros(self.Ns, dtype=np.complex64)
-        y[::self.N_os] = x
+    def execute(self, c_in: np.ndarray, extra_runtime_inputs) -> np.ndarray:
+        c_in1 = np.zeros(self.Ns, dtype=np.complex64)
+        c_in1[::self.N_os] = c_in
 
-        self._outputs = [y]
-        return y
+        self._outputs = [c_in1]
+        return c_in1
     
     def get_output_names(self):
         return ["c_in1 (over sampled c_in)"]

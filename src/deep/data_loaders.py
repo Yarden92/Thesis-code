@@ -1,31 +1,20 @@
-import concurrent
 from copy import copy
 from dataclasses import dataclass
 import json
 import os
 from abc import ABC
-from concurrent.futures import ProcessPoolExecutor
-from datetime import time, datetime
+from datetime import datetime
 from glob import glob
 from typing import Tuple, Union
 
 import numpy as np
-import pyrallis
 import torch
 from torch.utils.data import Dataset
-from tqdm import tqdm
 
-from src.deep.standalone_methods import GeneralMethods, DataType
-from src.general_methods.text_methods import is_this_a_notebook
+from src.deep.standalone_methods import GeneralMethods
+from src.general_methods.text_methods import FileNames
 from src.optics.channel_simulation2 import ChannelSimulator2
-from src.optics.config_manager import ChannelConfig
-
-@dataclass
-class FileNames:
-    x: str = 'data_x.npy'
-    y: str = 'data_y.npy'
-    conf_json: str = 'conf.json'
-    conf_yml: str = 'conf.yml'
+from src.optics.config_manager import ChannelConfig, ConfigManager
 
 
 class OpticDataset(Dataset, ABC):
@@ -84,7 +73,8 @@ class DatasetNormal(OpticDataset):
         self.cropped_mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
 
         # self.config = read_conf(self.data_dir_path)
-        self.config = FilesReadWrite.read_channel_conf2(self.data_dir_path)
+        # self.config = FilesReadWrite.read_channel_conf2(self.data_dir_path)
+        self.config = ConfigManager.read_config(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
         self.n = len(self.data_indices)
 
@@ -150,7 +140,8 @@ class FilesReadWrite:
     def read_folder(dir: str, verbose: bool = False) -> Tuple[np.ndarray, np.ndarray, ChannelConfig]:
         # conf_N is the number of files that supposed to be in the folder
 
-        conf_read = FilesReadWrite.read_channel_conf2(dir)
+        # conf_read = FilesReadWrite.read_channel_conf2(dir)
+        conf_read = ConfigManager.read_config(dir)
         num_files = len(os.listdir(dir))
         N = int((num_files - 1)/2)
 
@@ -167,16 +158,17 @@ class FilesReadWrite:
             print(f'loaded {len(all_x)} x files and {len(all_y)} y files.')
 
         return all_x, all_y, conf_read
-    
+
     @staticmethod
     def read_channel_conf2(dir: str, _conf_file_name=FileNames.conf_yml) -> ChannelConfig:
-        conf_path = f'{dir}/{_conf_file_name}'
-        if is_this_a_notebook():
-            conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
-        else:
-            conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
-        return conf
-
+        raise Exception("use the function from config_manager")
+        # conf_path = f'{dir}/{_conf_file_name}'
+        # if is_this_a_notebook():
+        #     conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
+        # else:
+        #     conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
+        # # conf = fill_config_from_loading(conf)
+        # return conf
 
 
 def read_xy(dir: str, i: int):
@@ -184,13 +176,14 @@ def read_xy(dir: str, i: int):
     y = np.load(f'{dir}/{i}_{FileNames.y}')
     return x, y
 
-def create_channels(template_conf) -> Tuple[ChannelSimulator2, ChannelSimulator2]:
+
+def create_channels(template_conf: ChannelConfig) -> Tuple[ChannelSimulator2, ChannelSimulator2]:
     original_ssf = template_conf.with_ssf
     conf_for_input = copy(template_conf)
     conf_for_output = copy(template_conf)
     conf_for_input.with_ssf = False
     assert conf_for_output.with_ssf == original_ssf, "this code is not correct"
-    
+
     cs_for_input = ChannelSimulator2(conf_for_input)
     cs_for_output = ChannelSimulator2(conf_for_output)
 

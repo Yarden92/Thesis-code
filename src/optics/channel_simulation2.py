@@ -56,10 +56,15 @@ class ChannelSimulator2:
             print(f'{dt:.2f} seconds - to evaluate block {i} ({block_name}) ')        
 
     def get_io_samples(self) -> Tuple[np.ndarray, np.ndarray]:
-        # u_in, psi_xi, psi_t             = self.blocks[2].get_outputs()
+
+        message_s_bin, c_in             = self.blocks[0].get_outputs()
+        c_in1                           = self.blocks[1].get_outputs()
+        u_in, psi_xi, psi_t             = self.blocks[2].get_outputs()
         u1, b_in1, b_in, b_in_padded    = self.blocks[3].get_outputs()
         b_out_padded, b_out, is_error   = self.blocks[6].get_outputs()
         b_out1, u1_out, u_out           = self.blocks[7].get_outputs()
+        c_out1, c_out                   = self.blocks[8].get_outputs()
+
 
         if self.io_type == 'b':
             x = b_out  # dirty
@@ -67,6 +72,10 @@ class ChannelSimulator2:
         elif self.io_type == 'b1':
             x = b_out1  # dirty
             y = b_in1  # clean
+        elif self.io_type == 'c':
+            x = c_out
+            y = c_in
+
         else:
             raise Exception(f'io_type={self.io_type} is not supported')    
 
@@ -76,16 +85,23 @@ class ChannelSimulator2:
         # roll forward the middle stage in the channel until message is reached
         
         if self.io_type == 'b':
-            b = x
+            b =     x
             b1 =    self.blocks[7].post_compensate(b)
+            b1 =    self.blocks[7].clip(b1)
+            u1 =    self.blocks[7].descale(b1)
+            u =     self.blocks[7].de_normalize(u1)
+            u =     self.blocks[7].clear_nans(u)
+            c =     self.blocks[8].execute(u, None) # match filter
         elif self.io_type == 'b1':
-            b1 = x
+            b1 =    x
+            b1 =    self.blocks[7].clip(b1)
+            u1 =    self.blocks[7].descale(b1)
+            u =     self.blocks[7].de_normalize(u1)
+            u =     self.blocks[7].clear_nans(u)
+            c =     self.blocks[8].execute(u, None) # match filter
+        elif self.io_type == 'c':
+            c =     x
 
-        b1 =    self.blocks[7].clip(b1)
-        u1 =    self.blocks[7].descale(b1)
-        u =     self.blocks[7].de_normalize(u1)
-        u =     self.blocks[7].clear_nans(u)
-        c = self.blocks[8].execute(u, None) # match filter
         s = self.blocks[9].execute(c, None) # binary message
 
         return s
@@ -95,14 +111,20 @@ class ChannelSimulator2:
         if self.io_type == 'b':
             b = x
             b1 =    self.blocks[7].post_compensate(b)
+            b1 =    self.blocks[7].clip(b1)
+            u1 =    self.blocks[7].descale(b1)
+            u =     self.blocks[7].de_normalize(u1)
+            u =     self.blocks[7].clear_nans(u)
+            c =     self.blocks[8].execute(u, None)
         elif self.io_type == 'b1':
             b1 = x
-            
-        b1 =    self.blocks[7].clip(b1)
-        u1 =    self.blocks[7].descale(b1)
-        u =     self.blocks[7].de_normalize(u1)
-        u =     self.blocks[7].clear_nans(u)
-        c =     self.blocks[8].execute(u, None)
+            b1 =    self.blocks[7].clip(b1)
+            u1 =    self.blocks[7].descale(b1)
+            u =     self.blocks[7].de_normalize(u1)
+            u =     self.blocks[7].clear_nans(u)
+            c =     self.blocks[8].execute(u, None)
+        elif self.io_type == 'c':
+            c = x
 
         return c
 

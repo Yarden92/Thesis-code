@@ -78,13 +78,14 @@ def single_model_main(config: SingleModelTrainConfig):
                       config=config.__dict__)
     # trainer.model.print_architecture(train_dataset[0])
     trainer.train(num_epochs=config.epochs, _tqdm=tqdm)
-    trainer.save3(config.output_model_path)
+    trainer.save3(config.output_model_path, config.model_name)
 
     print(f'finished training {config.model_name}')
     if config.is_analyze_after:
         ma = ModelAnalyzer(trainer)
         ma.upload_single_item_plots_to_wandb(i=0)
         ma.upload_bers_to_wandb()
+        ma.upload_stems_to_wandb(i=0)
 
 
 if __name__ == '__main__':
