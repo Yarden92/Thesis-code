@@ -29,3 +29,5 @@ channel_config:
   dz: 0.2               # Z-step, [km] - initial step estimate
   K_T: 1.13
   chi: 0.0461
+
+  
