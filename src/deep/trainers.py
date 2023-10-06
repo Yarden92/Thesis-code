@@ -15,8 +15,10 @@ from src.deep.metrics import Metrics
 from src.deep.models import *
 from src.deep.standalone_methods import GeneralMethods
 from src.general_methods.visualizer import Visualizer
+from torchsummary import summary
 
 import torch
+import torchviz
 
 LOG_INTERVAL = 2
 
@@ -64,10 +66,10 @@ class Trainer:
         # train
         epoch_range = _tqdm(range(num_epochs),'looping on epochs') if _tqdm else range(num_epochs)
         for epoch in epoch_range:
+            self.epoch_step(self.val_dataloader, self._step_validate, name="val", epoch=epoch, _tqdm=_tqdm)
             self.epoch_step(self.train_dataloader, self._step_train, name="train", epoch=epoch, _tqdm=_tqdm)
             if self.scheduler:
                 self.scheduler.step()
-            self.epoch_step(self.val_dataloader, self._step_validate, name="val", epoch=epoch, _tqdm=_tqdm)
 
             self.train_state_vec.add(self.model, 0, 0)
 
@@ -158,6 +160,17 @@ class Trainer:
         
 
         return trainer
+
+    def print_summary(self):
+        x, _ = self.val_dataset[0]
+        shape = x.shape
+        summary(self.model, shape, device="cuda")  
+
+    def plot_architecture(self, path: str = "model_architecture", format: str = "png"):
+        x, _ = self.val_dataset[0]
+        pred = self.model(x.to(self.device))
+        torchviz.make_dot(pred,params=dict(self.model.named_parameters())).render(path, format=format, cleanup=True)
+        print(f"saved model architecture to {path}.{format}")
 
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)

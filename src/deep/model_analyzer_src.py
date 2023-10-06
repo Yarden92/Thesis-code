@@ -43,17 +43,22 @@ class ModelAnalyzer:
 
         sorted_dirs = GM.sort_dirs_by_mu(os.listdir(base_path))
         # powers, org_bers, model_bers, ber_improvements = [], [], [], []
-        self.outputs['powers'], self.outputs['org_bers'], self.outputs['model_bers'], self.outputs['ber_improvements'] = [], [], [], []
+        # self.outputs['powers'] = []
+        self.outputs['mu'] = []
+        self.outputs['org_bers'], self.outputs['model_bers'], self.outputs['ber_improvements'] = [], [], []
         for folder_name in sorted_dirs:
             ds_path = os.path.join(base_path, folder_name)
             self.load_test_dataset(ds_path, train_ds_ratio, val_ds_ratio, test_ds_ratio, False)
             mu = self.trainer.val_dataset.cropped_mu
-            y_power = self.trainer.val_dataset.config['avg_y_power']
+            # y_power = self.trainer.val_dataset.config['avg_y_power']
             org_ber, model_ber, ber_improve = self.trainer.compare_ber(verbose_level=verbose_level, _tqdm=_tqdm)
 
             if verbose_level > 0:
                 print(
-                    f'mu={mu:.3f} | org_ber={org_ber:.2e} | model_ber={model_ber:.2e} |  ber_improve={ber_improve*100:03.0f}% | y_power={y_power:.2e}')
+                    f'mu={mu:.3f} | org_ber={org_ber:.2e} | model_ber={model_ber:.2e} |  ber_improve={ber_improve*100:03.0f}%'
+                    # f' | y_power={y_power:.2e}'
+                    )
+                    
                 # print((
                 #     f'\n----------------- BERs for mu={mu} ----------------\n'
                 #     f'org_ber={org_ber}, model_ber={model_ber}, ber_improvement={ber_improve}, y_power={y_power:.2e}'
@@ -63,16 +68,24 @@ class ModelAnalyzer:
             # org_bers.append(org_ber)
             # model_bers.append(model_ber)
             # ber_improvements.append(ber_improve)
-            self.outputs['powers'].append(y_power)
+            # self.outputs['powers'].append(y_power)
+            self.outputs['mu'].append(mu)
             self.outputs['org_bers'].append(org_ber)
             self.outputs['model_bers'].append(model_ber)
             self.outputs['ber_improvements'].append(ber_improve)
 
+        # x_axis = self.outputs['powers']
+        x_axis = self.outputs['mu']
+        
+
         Visualizer.my_plot(
-            self.outputs['powers'], self.outputs['org_bers'], self.outputs['powers'], self.outputs['model_bers'],
+            x_axis, self.outputs['org_bers'], 
+            x_axis, self.outputs['model_bers'],
             name='BERs vs. y power',
             legend=['org_ber', 'model_ber'],
-            xlabel='y power', ylabel='BER',
+            # xlabel='y power', 
+            xlabel='mu',
+            ylabel='BER',
             function='semilogy'
         )
 
@@ -124,19 +137,31 @@ class ModelAnalyzer:
             y = y[zm_indices]
             preds = preds[zm_indices]
             xi_axis = xi_axis[zm_indices]
-        io_type = self.trainer.train_dataset.config.io_type
+        io_type = self.cs_in.channel_config.io_type
 
-        Visualizer.my_plot(
-            xi_axis, np.abs(y),
-            xi_axis, np.abs(x),
-            xi_axis, np.abs(preds),
-            legend=[
-                rf'${io_type}(\xi)$ [Tx]',
-                rf'$\hat {io_type}(\xi)$ [Rx]',
-                rf'$\widetilde {io_type}(\xi)$ [pred]'
-            ],
-            name=f'{io_type} - after {self.trainer.train_state_vec.num_epochs} epochs',
-            xlabel=r'$\xi$'
+        if io_type == 'c':
+            Visualizer.data_trio_plot(
+                np.real(y),
+                np.real(x),
+                np.real(preds),
+                zm_indices,
+                title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
+                xlabel=r'n',
+                function='stem',
+                names=[rf'$c[n]$ [Tx]', rf'$\hat c[n]$ [Rx]', rf'$\widetilde c[n]$ [pred]'],
+            )
+        else:
+            Visualizer.my_plot(
+                xi_axis, np.abs(y),
+                xi_axis, np.abs(x),
+                xi_axis, np.abs(preds),
+                legend=[
+                    rf'${io_type}(\xi)$ [Tx]',
+                    rf'$\hat {io_type}(\xi)$ [Rx]',
+                    rf'$\widetilde {io_type}(\xi)$ [pred]'
+                ],
+                name=f'{io_type} - after {self.trainer.train_state_vec.num_epochs} epochs',
+                xlabel=r'$\xi$',
         )
 
     def plot_stems(self, i, zm_indices=None):

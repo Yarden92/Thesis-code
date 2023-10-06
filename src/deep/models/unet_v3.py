@@ -3,27 +3,27 @@ import torch.optim
 from torch import nn, Tensor
 
 
-class UnetWithSkips(nn.Module):
+class UnetV3(nn.Module):
 
     def __init__(self, in_channels=2) -> None:
         super().__init__()
 
         # down sampling
-        self.conv1 = nn.Conv1d(in_channels, 4, kernel_size=3, padding="same")
+        self.conv1 = nn.Conv1d(in_channels, 32, kernel_size=3, padding="same")
         self.tanh1 = nn.Tanh()
         self.pool1 = nn.MaxPool1d(2)
-        self.conv2 = nn.Conv1d(4, 8, kernel_size=3, padding="same")
+        self.conv2 = nn.Conv1d(32, 64, kernel_size=3, padding="same")
         self.tanh2 = nn.Tanh()
         self.pool2 = nn.MaxPool1d(2)
-        self.conv3 = nn.Conv1d(8, 16, kernel_size=3, padding="same")
+        self.conv3 = nn.Conv1d(64, 128, kernel_size=3, padding="same")
         self.tanh3 = nn.Tanh()
 
         # up sampling
-        self.upconv1 = nn.ConvTranspose1d(16, 8, kernel_size=3, stride=1, padding=1)
+        self.upconv1 = nn.ConvTranspose1d(128, 64, kernel_size=3, stride=1, padding=1)
         self.uptanh1 = nn.Tanh()
-        self.upconv2 = nn.ConvTranspose1d(8, 4, kernel_size=2, stride=2, padding=0)
+        self.upconv2 = nn.ConvTranspose1d(64, 32, kernel_size=2, stride=2, padding=0)
         self.uptanh2 = nn.Tanh()
-        self.upconv3 = nn.ConvTranspose1d(4, in_channels, kernel_size=2, stride=2, padding=0)
+        self.upconv3 = nn.ConvTranspose1d(32, in_channels, kernel_size=2, stride=2, padding=0)
 
     def forward(self, x: Tensor):
         # x.shape = (batch_size, 2, 1024)

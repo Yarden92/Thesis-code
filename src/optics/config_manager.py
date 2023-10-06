@@ -304,6 +304,7 @@ class ConfigManager:
         if is_this_a_notebook():
             conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
         else:
+            print(f'loading config from {conf_path}')
             conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
         # conf = ConfigManager._fill_config_from_loading(conf)
         return conf

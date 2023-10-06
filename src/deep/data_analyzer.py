@@ -74,7 +74,11 @@ class DataAnalyzer():
             self.ber_vec = np.load(ber_path)
             self.mu_vec = np.load(mu_path)
             self.num_permutations = np.load(ber_res_path)
+            if self.verbose_level > 0:
+                print(f'loaded ber from {ber_path}')
             return True
+        if self.verbose_level > 0:
+            print(f'no ber found at {ber_path}')
         return False
 
     def fetch_params(self) -> Tuple[dict, ChannelConfig]:

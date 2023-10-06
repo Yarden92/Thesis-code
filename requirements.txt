@@ -8,6 +8,8 @@ scikit-commpy==0.6.0 # newer version doesn't compile on mac M1
 tqdm
 jupyter
 torch
+torchviz
+torchsummary
 pyrallis
 wandb
 gpustat
