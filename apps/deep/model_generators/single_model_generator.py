@@ -20,6 +20,7 @@ from src.deep.trainers import Trainer
 class SingleModelTrainConfig:
     lr: float = 1e-3  # learning rate
     min_lr: float = 1e-5  # min learning rate
+    lambda_reg: float = 0.001  # regularization lambda (0 for no regularization)
     epochs: int = 3  # num of epochs
     batch_size: int = 1  # batch size
     # train_val_ratio: float = 0.8  # train vs val ratio
@@ -75,7 +76,9 @@ def single_model_main(config: SingleModelTrainConfig):
                       model=model, device=config.device,
                       l_metric=l_metric, optim=optim,
                       scheduler=scheduler,
-                      config=config.__dict__)
+                      config=config.__dict__,
+                      lambda_reg = config.lambda_reg,
+                      )
     # trainer.model.print_architecture(train_dataset[0])
     trainer.train(num_epochs=config.epochs, _tqdm=tqdm)
     trainer.save3(config.output_model_path, config.model_name)
@@ -92,6 +95,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         config = pyrallis.parse(SingleModelTrainConfig)
     else:
-        config_path = './config/model_generator/unet_v3_channel2_b1_noiseless_mu057.yml'
+        config_path = './config/model_generator/unet_v3_channel2_b1_noiseless_mu019_noreg.yml'
         config = pyrallis.parse(SingleModelTrainConfig, config_path)
     single_model_main(config)
