@@ -6,3 +6,4 @@ from .fc_7layers import Fc7Layers
 from .unet_with_skips import UnetWithSkips
 from .unet_with_skips_v2 import UnetWithSkipsV2
 from .unet_v3 import UnetV3
+from .unet_v4_simple import UnetV4Simple

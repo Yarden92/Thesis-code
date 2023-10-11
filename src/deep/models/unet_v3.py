@@ -30,18 +30,22 @@ class UnetV3(nn.Module):
         x1 = self.conv1(x)  # (batch_size, 4, 1024)
         x1 = self.tanh1(x1)
         x1 = self.pool1(x1)  # (batch_size, 4, 512)
+        
         x2 = self.conv2(x1)  # (batch_size, 8, 512)
         x2 = self.tanh2(x2)
         x2 = self.pool2(x2)  # (batch_size, 8, 256)
+        
         x3 = self.conv3(x2)  # (batch_size, 16, 256)
         x3 = self.tanh3(x3)
 
         y1 = self.upconv1(x3)  # (batch_size, 8, 256)
         y1 = y1 + x2
         y1 = self.uptanh1(y1)
+        
         y2 = self.upconv2(y1)  # (batch_size, 4, 512)
         y2 = y2 + x1
         y2 = self.uptanh2(y2)
+        
         y3 = self.upconv3(y2)
         # y3 = y3 + x
 

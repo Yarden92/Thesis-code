@@ -95,6 +95,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         config = pyrallis.parse(SingleModelTrainConfig)
     else:
-        config_path = './config/model_generator/unet_v3_channel2_b1_noiseless_mu038_noreg.yml'
+        config_path = './config/model_generator/unet_v4_b1_noiseless_mu043_noreg.yml'
         config = pyrallis.parse(SingleModelTrainConfig, config_path)
     single_model_main(config)
