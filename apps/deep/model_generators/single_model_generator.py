@@ -91,10 +91,21 @@ def single_model_main(config: SingleModelTrainConfig):
         ma.upload_stems_to_wandb(i=0)
 
 
+def show_and_choose_config(dir_path='./config/model_generator'):
+    # print all the config files in the dir with numbers and let the user choose one
+    # return the chosen config path
+    import os
+    files = os.listdir(dir_path)
+    for i, file in enumerate(files):
+        print(f'[{i}] {file}')
+    chosen = int(input('choose config file: '))
+    return os.path.join(dir_path, files[chosen])
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         config = pyrallis.parse(SingleModelTrainConfig)
     else:
-        config_path = './config/model_generator/unet_v4_b1_noiseless_mu043_noreg.yml'
+        config_path = show_and_choose_config()
         config = pyrallis.parse(SingleModelTrainConfig, config_path)
     single_model_main(config)

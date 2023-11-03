@@ -1,5 +1,6 @@
 import json
 import os
+from ssl import TLSVersion
 import warnings
 
 import numpy as np
@@ -27,7 +28,8 @@ class Trainer:
     def __init__(self, train_dataset: OpticDataset, val_dataset: OpticDataset, model: nn.Module = None,
                  device: str = "cpu", batch_size: int = 1,
                  l_metric=None, optim=None, scheduler=None, config: dict = None,
-                 lambda_reg: float = 0.001):
+                 lambda_reg: float = 0.001,
+                 ):
         # self.train_dataset, self.val_dataset = split_ds(dataset, train_val_split)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -64,7 +66,7 @@ class Trainer:
         mini_batch_size = min(mini_batch_size, len(self.train_dataset), len(self.val_dataset))
 
         # train
-        epoch_range = _tqdm(range(num_epochs),'looping on epochs') if _tqdm else range(num_epochs)
+        epoch_range = _tqdm(range(num_epochs), 'looping on epochs') if _tqdm else range(num_epochs)
         for epoch in epoch_range:
             self.epoch_step(self.val_dataloader, self._step_validate, name="val", epoch=epoch, _tqdm=_tqdm)
             self.epoch_step(self.train_dataloader, self._step_train, name="train", epoch=epoch, _tqdm=_tqdm)
@@ -76,7 +78,7 @@ class Trainer:
     def epoch_step(self, dataloader, step, name: str, epoch: int, _tqdm) -> None:
         rng = enumerate(dataloader)
         if _tqdm:
-            rng = _tqdm(rng, total=len(dataloader),leave=False, desc=f"{name} epoch {epoch}")
+            rng = _tqdm(rng, total=len(dataloader), leave=False, desc=f"{name} epoch {epoch}")
         for i, batch in rng:
             x, y = batch
             loss, pred = step(x, y)
@@ -96,7 +98,13 @@ class Trainer:
     def _step_validate(self, x, y):
         x, y = x.to(self.device), y.to(self.device)
         pred = self.model(x)
-        # loss: Tensor = self.l_metric(y, pred)
+        loss = self._get_loss(x, y, pred)
+
+        return loss, pred
+
+    def _get_loss(self, x, y, pred) -> Tensor:
+
+        loss: Tensor = self.l_metric(y, pred)
 
         # this stage was added by gpt:
         # Regularization term
@@ -105,9 +113,9 @@ class Trainer:
             reg_loss += torch.norm(param, p=2)  # L2 regularization
 
         # Add regularization term to the loss
-        loss = self.l_metric(y, pred) + self.lambda_reg * reg_loss
+        loss += self.lambda_reg * reg_loss
 
-        return loss, pred
+        return loss
 
     def save3(self, dir_path: str = "saved_models", model_name: str = "unnamed_model", endings: str = ""):
         # create dir if it doesn't exist
@@ -157,19 +165,18 @@ class Trainer:
         # # fix h -> dz
         # if 'ssf' in trainer.train_dataset.config and 'h' in trainer.train_dataset.config['ssf']:
         #     trainer.train_dataset.config['ssf']['dz'] = trainer.train_dataset.config['ssf'].pop('h')
-        
 
         return trainer
 
     def print_summary(self):
         x, _ = self.val_dataset[0]
         shape = x.shape
-        summary(self.model, shape, device="cuda")  
+        summary(self.model, shape, device="cuda")
 
     def plot_architecture(self, path: str = "model_architecture", format: str = "png"):
         x, _ = self.val_dataset[0]
         pred = self.model(x.to(self.device))
-        torchviz.make_dot(pred,params=dict(self.model.named_parameters())).render(path, format=format, cleanup=True)
+        torchviz.make_dot(pred, params=dict(self.model.named_parameters())).render(path, format=format, cleanup=True)
         print(f"saved model architecture to {path}.{format}")
 
     def plot_loss_vec(self):
@@ -230,17 +237,15 @@ class Trainer:
 
     def _get_unique_folder_name(self, dir_path: str, model_name: str) -> str:
         # look at dir, for all folders named model_name and return new name <model_name>_v$ where $ is latest
-        count = 1+ sum(1 for folder in os.listdir(dir_path) if model_name in folder)
+        count = 1 + sum(1 for folder in os.listdir(dir_path) if model_name in folder)
         unique_folder_name = f"{model_name}_v{count}"
-        
+
         # just to make sure that its actually unique:
         while os.path.exists(os.path.join(dir_path, unique_folder_name)):
             warnings.warn(f"model: [{model_name}] is messy, keep it clean with no higher version than {count}")
             unique_folder_name += "_1"
-        
-        return unique_folder_name
 
-        
+        return unique_folder_name
 
 
 class TrainStateVector:
@@ -303,3 +308,5 @@ class DoubleTrainer:
 
     def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         return super().test_single_item(i, title, verbose, plot)
+
+# TLV 7:00 -> ATHENS 9:30

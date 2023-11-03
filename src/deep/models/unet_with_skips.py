@@ -39,9 +39,11 @@ class UnetWithSkips(nn.Module):
         y1 = self.upconv1(x3)  # (batch_size, 8, 256)
         y1 = y1 + x2
         y1 = self.uptanh1(y1)
+
         y2 = self.upconv2(y1)  # (batch_size, 4, 512)
         y2 = y2 + x1
         y2 = self.uptanh2(y2)
+        
         y3 = self.upconv3(y2)
         # y3 = y3 + x
 
