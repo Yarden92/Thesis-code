@@ -80,31 +80,31 @@ class Trainer:
         if _tqdm:
             rng = _tqdm(rng, total=len(dataloader), leave=False, desc=f"{name} epoch {epoch}")
         for i, batch in rng:
-            x, y = batch
-            loss, pred = step(x, y)
+            Rx, Tx = batch
+            loss, pred_Tx = step(Rx, Tx)
             if i % LOG_INTERVAL == 0:
                 iteration_num = epoch * len(dataloader) + i
                 wandb.log({f"{name}_loss": loss.item(), f"{name}_iteration": iteration_num})
                 if name == "train":
                     wandb.log({f'lr': self.optim.param_groups[0]['lr'], f"{name}_iteration": iteration_num})
 
-    def _step_train(self, x, y):
-        loss, pred = self._step_validate(x, y)
+    def _step_train(self, Rx, Tx):
+        loss, pred_Tx = self._step_validate(Rx, Tx)
         self.optim.zero_grad()
         loss.backward()
         self.optim.step()
-        return loss, pred
+        return loss, pred_Tx
 
-    def _step_validate(self, x, y):
-        x, y = x.to(self.device), y.to(self.device)
-        pred = self.model(x)
-        loss = self._get_loss(x, y, pred)
+    def _step_validate(self, Rx, Tx):
+        Rx, Tx = Rx.to(self.device), Tx.to(self.device)
+        pred_Tx = self.model(Rx)
+        loss = self._get_loss(Rx, Tx, pred_Tx)
 
-        return loss, pred
+        return loss, pred_Tx
 
-    def _get_loss(self, x, y, pred) -> Tensor:
+    def _get_loss(self, Rx, Tx, pred_Tx) -> Tensor:
 
-        loss: Tensor = self.l_metric(y, pred)
+        loss: Tensor = self.l_metric(Tx, pred_Tx)
 
         # this stage was added by gpt:
         # Regularization term
@@ -184,25 +184,25 @@ class Trainer:
 
     def test_single_item(self, i: int, title=None, verbose=False, plot=True):
         # test the model once before training
-        x, y = self.val_dataset[i]
+        Rx, Tx = self.val_dataset[i]
         if verbose:
-            print(f"x.shape={x.shape}, y.shape={y.shape}")
-        x = x.to(self.device)
+            print(f"Rx.shape={Rx.shape}, Tx.shape={Tx.shape}")
+        Rx = Rx.to(self.device)
 
-        pred = self.model(x)
+        pred_Tx = self.model(Rx)
         # x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
-        x_np, y_np, pred_np = [GeneralMethods.torch_to_complex_numpy(t) for t in [x, y, pred]]
+        Rx_np, Tx_np, pred_Tx_np = [GeneralMethods.torch_to_complex_numpy(t) for t in [Rx, Tx, pred_Tx]]
         if verbose:
-            print(f"x_np.shape={x_np.shape},y_np.shape={y_np.shape},pred_np.shape={pred_np.shape}")
+            print(f"Rx_np.shape={Rx_np.shape},Tx_np.shape={Tx_np.shape},pred_Tx_np.shape={pred_Tx_np.shape}")
         if plot:
             title = title or f"after {self.train_state_vec.num_epochs} epochs"
-            Visualizer.data_trio_plot(x_np, y_np, pred_np, title=title)
+            Visualizer.data_trio_plot(Rx_np, Tx_np, pred_Tx_np, title=title)
         if verbose:
-            print((f"x power={np.mean(x_np ** 2)}\n"
-                   f"y power={np.mean(y_np ** 2)}\n"
-                   f"pred power={np.mean(pred_np ** 2):.2f}"))
+            print((f"Rx power={np.mean(Rx_np ** 2)}\n"
+                   f"Tx power={np.mean(Tx_np ** 2)}\n"
+                   f"pred_Tx power={np.mean(pred_Tx_np ** 2):.2f}"))
 
-        return x_np, y_np, pred_np
+        return Rx_np, Tx_np, pred_Tx_np
 
     def compare_ber(self, verbose_level: int = 1, _tqdm=None, num_x_per_folder=None):
         # compare the original raw BER with the equalized model's BER

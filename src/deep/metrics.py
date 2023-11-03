@@ -14,37 +14,37 @@ from src.optics.config_manager import ChannelConfig
 
 class Metrics:
     @staticmethod
-    def calc_ber_for_single_vec(x, y, 
+    def calc_ber_for_single_vec(Rx, Tx, 
                                 in_cs: ChannelSimulator2=None, out_cs: ChannelSimulator2=None,
                                 conf: ChannelConfig=None):
         # x,y can be either complex numpy or 2D torch
         assert (in_cs is not None and out_cs is not None) or conf is not None, "either cs or conf should be given"
         # check if x is a torch
-        if isinstance(x, torch.Tensor):
-            x, y = GeneralMethods.torch_to_complex_numpy(x), GeneralMethods.torch_to_complex_numpy(y)
+        if isinstance(Rx, torch.Tensor):
+            Rx, Tx = GeneralMethods.torch_to_complex_numpy(Rx), GeneralMethods.torch_to_complex_numpy(Tx)
         
         if conf is not None:
             in_cs, out_cs = create_channels(conf)
         
-        msg_in = in_cs.io_to_msg(y)
-        msg_out = out_cs.io_to_msg(x)
+        msg_in = in_cs.io_to_msg(Tx)
+        msg_out = out_cs.io_to_msg(Rx)
         
         num_errors_i, ber_i = in_cs.block11.calc_ber(msg_in, msg_out)
         return ber_i, num_errors_i
 
     @staticmethod
-    def calc_ber_for_folder(all_x_read, all_y_read, 
+    def calc_ber_for_folder(all_Rx_read, all_Tx_read, 
                             in_cs: ChannelSimulator2=None, out_cs: ChannelSimulator2=None,
                             verbose=True, _tqdm=None):
         num_errors = 0
         ber_vec = []
 
-        rng = zip(all_x_read, all_y_read)
+        rng = zip(all_Rx_read, all_Tx_read)
         if _tqdm is not None:
-            rng = _tqdm(rng, total=len(all_x_read), leave=False)
+            rng = _tqdm(rng, total=len(all_Rx_read), leave=False)
 
-        for x, y in rng:
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, in_cs, out_cs)
+        for Rx, Tx in rng:
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(Rx, Tx, in_cs, out_cs)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
 
@@ -77,12 +77,12 @@ class Metrics:
         # TODO: can we do it all in one batch? at least the model(x) part.
         rng = _tqdm(range(n)) if _tqdm else range(n)
         for i in rng:
-            (x, y) = dataset[i]
-            x = x.to(device)
-            x = x.unsqueeze(0)  # when fetching directly from dataset we need to wrap like dataloader does as 1x1xN
-            pred = model(x)
-            pred = pred.squeeze(0)
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(pred, y, cs_in, cs_out)
+            (Rx, Tx) = dataset[i]
+            Rx = Rx.to(device)
+            Rx = Rx.unsqueeze(0)  # when fetching directly from dataset we need to wrap like dataloader does as 1x1xN
+            pred_Tx = model(Rx)
+            pred_Tx = pred_Tx.squeeze(0)
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(pred_Tx, Tx, cs_in, cs_out)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
         return ber_vec, num_errors

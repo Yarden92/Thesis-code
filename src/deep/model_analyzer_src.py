@@ -131,19 +131,19 @@ class ModelAnalyzer:
 
     def plot_single_item_together(self, i, zm_indices=None):
         xi_axis = self.cs_in.channel_config.xi
-        x, y, preds = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
         if zm_indices:
-            x = x[zm_indices]
-            y = y[zm_indices]
-            preds = preds[zm_indices]
+            Rx = Rx[zm_indices]
+            Tx = Tx[zm_indices]
+            pred_Tx = pred_Tx[zm_indices]
             xi_axis = xi_axis[zm_indices]
         io_type = self.cs_in.channel_config.io_type
 
         if io_type == 'c':
             Visualizer.data_trio_plot(
-                np.real(y),
-                np.real(x),
-                np.real(preds),
+                np.real(Tx),
+                np.real(Rx),
+                np.real(pred_Tx),
                 zm_indices,
                 title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
                 xlabel=r'n',
@@ -152,9 +152,9 @@ class ModelAnalyzer:
             )
         else:
             Visualizer.my_plot(
-                xi_axis, np.abs(y),
-                xi_axis, np.abs(x),
-                xi_axis, np.abs(preds),
+                xi_axis, np.abs(Tx),
+                xi_axis, np.abs(Rx),
+                xi_axis, np.abs(pred_Tx),
                 legend=[
                     rf'${io_type}(\xi)$ [Tx]',
                     rf'$\hat {io_type}(\xi)$ [Rx]',
@@ -165,16 +165,16 @@ class ModelAnalyzer:
         )
 
     def plot_stems(self, i, zm_indices=None):
-        x, y, preds = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
 
-        c_x = self.cs_in.io_to_c_constellation(x)
-        c_y = self.cs_out.io_to_c_constellation(y)
-        c_preds = self.cs_out.io_to_c_constellation(preds)
+        c_Tx = self.cs_in.io_to_c_constellation(Tx)
+        c_Rx = self.cs_out.io_to_c_constellation(Rx)
+        c_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx)
 
         Visualizer.data_trio_plot(
-            np.real(c_y),
-            np.real(c_x),
-            np.real(c_preds),
+            np.real(c_Tx),
+            np.real(c_Rx),
+            np.real(c_pred_Tx),
             zm_indices,
             title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
             xlabel=r'n',
@@ -185,26 +185,23 @@ class ModelAnalyzer:
     def plot_constelation(self, indices: list):
         m_qam = self.trainer.train_dataset.config.M_QAM
 
-        x, y, preds = np.array([]), np.array([]), np.array([])
+        Rx, Tx, pred_Tx = np.array([]), np.array([]), np.array([])
         for i in tqdm(indices):
-            x_i, y_i, preds_i = self.trainer.test_single_item(i, plot=False)
-            c_out_y = self.cs_in.io_to_c_constellation(y_i)
-            c_out_x = self.cs_out.io_to_c_constellation(x_i)
-            c_out_preds = self.cs_out.io_to_c_constellation(preds_i)
+            Rx_i, Tx_i, pred_Tx_i = self.trainer.test_single_item(i, plot=False)
+            c_out_Tx = self.cs_in.io_to_c_constellation(Tx_i)
+            c_out_Rx = self.cs_out.io_to_c_constellation(Rx_i)
+            c_out_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx_i)
 
-            y = np.concatenate((y, c_out_y))  # clean
-            x = np.concatenate((x, c_out_x))  # dirty
-            preds = np.concatenate((preds, c_out_preds))
+            Tx = np.concatenate((Tx, c_out_Tx))  # clean
+            Rx = np.concatenate((Rx, c_out_Rx))  # dirty
+            pred_Tx = np.concatenate((pred_Tx, c_out_pred_Tx))
 
-        Visualizer.plot_constellation_map_with_3_data_vecs(x, y, preds, m_qam,
+        Visualizer.plot_constellation_map_with_3_data_vecs(Rx, Tx, pred_Tx, m_qam,
                                                            'constellation map',
-                                                           ['dirty', 'clean', 'preds'])
-        # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
-        # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
-        # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')
+                                                           ['Rx', 'Tx', 'pred_Tx'])
 
     def calc_norms(self, _tqdm=None, verbose_level=1, max_items=None):
-        x_norms, y_norms, preds_norms = 0, 0, 0
+        Rx_norms, Tx_norms, pred_Tx_norms = 0, 0, 0
         N = len(self.trainer.val_dataset)
         if max_items is not None:
             N = min(N, max_items)
@@ -212,22 +209,22 @@ class ModelAnalyzer:
         if _tqdm is not None:
             rng = _tqdm(rng)
         for i in rng:
-            x, y, preds = self.trainer.test_single_item(i, plot=False)
-            x_power = np.sum(np.abs(x) ** 2)
-            y_power = np.sum(np.abs(y) ** 2)
-            pred_power = np.sum(np.abs(preds) ** 2)
-            x_norms += x_power/N
-            y_norms += y_power/N
-            preds_norms += pred_power/N
+            Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+            Rx_power = np.sum(np.abs(Rx) ** 2)
+            Tx_power = np.sum(np.abs(Tx) ** 2)
+            pred_Tx_power = np.sum(np.abs(pred_Tx) ** 2)
+            Rx_norms += Rx_power/N
+            Tx_norms += Tx_power/N
+            pred_Tx_norms += pred_Tx_power/N
 
-        return x_norms, y_norms, preds_norms
+        return Rx_norms, Tx_norms, pred_Tx_norms
 
     def upload_single_item_plots_to_wandb(self, i):
-        x, y, preds = self.trainer.test_single_item(i, plot=False)
-        indices = np.arange(len(x))
+        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        indices = np.arange(len(Rx))
 
         self._init_wandb()
-        for v, title in [(x, 'x (dirty)'), (y, 'y (clean)'), (preds, 'preds')]:
+        for v, title in [(Rx, 'Rx'), (Tx, 'Tx'), (pred_Tx, 'pred Tx')]:
             wandb.log({title: wandb.plot.line_series(
                 xs=indices,
                 ys=[v.real, v.imag],
@@ -236,14 +233,14 @@ class ModelAnalyzer:
                 xname="sample index")})
 
     def upload_stems_to_wandb(self, i):
-        x, y, preds = self.trainer.test_single_item(i, plot=False)
-        c_x = self.cs_in.io_to_c_constellation(x)
-        c_y = self.cs_out.io_to_c_constellation(y)
-        c_preds = self.cs_out.io_to_c_constellation(preds)
-        indices = np.arange(len(c_x))
+        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        c_Tx = self.cs_in.io_to_c_constellation(Tx)
+        c_Rx = self.cs_out.io_to_c_constellation(Rx)
+        c_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx)
+        indices = np.arange(len(c_Rx))
 
         self._init_wandb()
-        for v, title in [(c_x, 'c_x (dirty)'), (c_y, 'c_y (clean)'), (c_preds, 'c_preds')]:
+        for v, title in [(c_Rx, 'c_Rx (dirty)'), (c_Tx, 'c_Tx (clean)'), (c_pred_Tx, 'c_pred_Tx')]:
             wandb.log({title: wandb.plot.line_series(
                 xs=indices,
                 ys=[v.real, v.imag],
@@ -251,12 +248,12 @@ class ModelAnalyzer:
                 title=title,
                 xname="sample index")})
 
-        zm_indices = range(0, min(50, len(c_x)))
+        zm_indices = range(0, min(50, len(c_Rx)))
 
         Visualizer.data_trio_plot(
-            np.real(c_y),
-            np.real(c_x),
-            np.real(c_preds),
+            np.real(c_Tx),
+            np.real(c_Rx),
+            np.real(c_pred_Tx),
             zm_indices,
             title=f'c[n] - after {self.trainer.train_state_vec.num_epochs} epochs',
             xlabel=r'n',
