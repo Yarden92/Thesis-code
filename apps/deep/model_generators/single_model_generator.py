@@ -96,6 +96,8 @@ def show_and_choose_config(dir_path='./config/model_generator'):
     # return the chosen config path
     import os
     files = os.listdir(dir_path)
+    # sort by name:
+    files.sort()
     for i, file in enumerate(files):
         print(f'[{i}] {file}')
     chosen = int(input('choose config file: '))
