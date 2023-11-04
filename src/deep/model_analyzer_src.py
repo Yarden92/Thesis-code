@@ -39,7 +39,7 @@ class ModelAnalyzer:
         wandb.run = None
 
     def plot_all_bers(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
-                      _tqdm=None, verbose_level=1):
+                      _tqdm=None, verbose_level=1, is_upload_to_wandb=False):
 
         sorted_dirs = GM.sort_dirs_by_mu(os.listdir(base_path))
         # powers, org_bers, model_bers, ber_improvements = [], [], [], []
@@ -89,6 +89,17 @@ class ModelAnalyzer:
             function='semilogy'
         )
 
+        if is_upload_to_wandb:
+            self._init_wandb()
+            for org_ber, model_ber, ber_improve, mu in zip(self.outputs['org_bers'], self.outputs['model_bers'],
+                                                           self.outputs['ber_improvements'], self.outputs['mu']):
+                wandb.log({
+                    'org_ber': org_ber,
+                    'model_ber': model_ber,
+                    'ber_improvement': ber_improve,
+                    'mu': mu
+                })
+
     def upload_all_bers_to_wandb(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
                                  _tqdm=None, verbose_level=1):
 
@@ -127,11 +138,11 @@ class ModelAnalyzer:
             print(f'org_ber={org_ber}, model_ber={model_ber}, ber_improvement={ber_improvement}')
 
     def plot_single_item(self, i):
-        _ = self.trainer.test_single_item(i, plot=True)
+        _ = self.trainer.test_single_item(i)
 
     def plot_single_item_together(self, i, zm_indices=None):
         xi_axis = self.cs_in.channel_config.xi
-        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
         if zm_indices:
             Rx = Rx[zm_indices]
             Tx = Tx[zm_indices]
@@ -165,7 +176,7 @@ class ModelAnalyzer:
         )
 
     def plot_stems(self, i, zm_indices=None):
-        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
 
         c_Tx = self.cs_in.io_to_c_constellation(Tx)
         c_Rx = self.cs_out.io_to_c_constellation(Rx)
@@ -187,7 +198,7 @@ class ModelAnalyzer:
 
         Rx, Tx, pred_Tx = np.array([]), np.array([]), np.array([])
         for i in tqdm(indices):
-            Rx_i, Tx_i, pred_Tx_i = self.trainer.test_single_item(i, plot=False)
+            Rx_i, Tx_i, pred_Tx_i = self.trainer.get_single_item(i)
             c_out_Tx = self.cs_in.io_to_c_constellation(Tx_i)
             c_out_Rx = self.cs_out.io_to_c_constellation(Rx_i)
             c_out_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx_i)
@@ -209,7 +220,7 @@ class ModelAnalyzer:
         if _tqdm is not None:
             rng = _tqdm(rng)
         for i in rng:
-            Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+            Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
             Rx_power = np.sum(np.abs(Rx) ** 2)
             Tx_power = np.sum(np.abs(Tx) ** 2)
             pred_Tx_power = np.sum(np.abs(pred_Tx) ** 2)
@@ -220,7 +231,7 @@ class ModelAnalyzer:
         return Rx_norms, Tx_norms, pred_Tx_norms
 
     def upload_single_item_plots_to_wandb(self, i):
-        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
         indices = np.arange(len(Rx))
 
         self._init_wandb()
@@ -233,7 +244,7 @@ class ModelAnalyzer:
                 xname="sample index")})
 
     def upload_stems_to_wandb(self, i):
-        Rx, Tx, pred_Tx = self.trainer.test_single_item(i, plot=False)
+        Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
         c_Tx = self.cs_in.io_to_c_constellation(Tx)
         c_Rx = self.cs_out.io_to_c_constellation(Rx)
         c_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx)

@@ -21,11 +21,11 @@ def test1_model_test():
     optim = torch.optim.Adam(model.parameters(), lr=1e-3)
     # %%
     trainer = Trainer(train_dataset=train_dataset, val_dataset=val_dataset, model=model, l_metric=l_metric, optim=optim)
-    trainer.test_single_item(0, verbose=True)
+    trainer.get_single_item(0, verbose=True)
 
     trainer.train(num_epochs=10, mini_batch_size=10)
 
-    trainer.test_single_item(0,f'after {trainer.train_state_vec.num_epochs} epochs')
+    trainer.get_single_item(0,f'after {trainer.train_state_vec.num_epochs} epochs')
 
     trainer.compare_ber(_tqdm=tqdm)
 

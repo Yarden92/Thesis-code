@@ -182,27 +182,29 @@ class Trainer:
     def plot_loss_vec(self):
         Visualizer.plot_loss_vec(self.train_state_vec.train_loss_vec, self.train_state_vec.val_loss_vec)
 
-    def test_single_item(self, i: int, title=None, verbose=False, plot=True):
+    
+    
+    def get_single_item(self, i: int):
         # test the model once before training
         Rx, Tx = self.val_dataset[i]
-        if verbose:
-            print(f"Rx.shape={Rx.shape}, Tx.shape={Tx.shape}")
+
         Rx = Rx.to(self.device)
 
         pred_Tx = self.model(Rx)
         # x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
         Rx_np, Tx_np, pred_Tx_np = [GeneralMethods.torch_to_complex_numpy(t) for t in [Rx, Tx, pred_Tx]]
+
+        return Rx_np, Tx_np, pred_Tx_np
+    
+    def test_single_item(self, i: int, title=None, verbose=False):
+        Rx_np, Tx_np, pred_Tx_np = self.get_single_item(i)
+        title = title or f"after {self.train_state_vec.num_epochs} epochs"
+        Visualizer.data_trio_plot(Rx_np, Tx_np, pred_Tx_np, title=title)
         if verbose:
             print(f"Rx_np.shape={Rx_np.shape},Tx_np.shape={Tx_np.shape},pred_Tx_np.shape={pred_Tx_np.shape}")
-        if plot:
-            title = title or f"after {self.train_state_vec.num_epochs} epochs"
-            Visualizer.data_trio_plot(Rx_np, Tx_np, pred_Tx_np, title=title)
-        if verbose:
             print((f"Rx power={np.mean(Rx_np ** 2)}\n"
                    f"Tx power={np.mean(Tx_np ** 2)}\n"
                    f"pred_Tx power={np.mean(pred_Tx_np ** 2):.2f}"))
-
-        return Rx_np, Tx_np, pred_Tx_np
 
     def compare_ber(self, verbose_level: int = 1, _tqdm=None, num_x_per_folder=None):
         # compare the original raw BER with the equalized model's BER
