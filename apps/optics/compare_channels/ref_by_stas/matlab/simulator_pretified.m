@@ -223,9 +223,9 @@ xlabel('I')
 ylabel('Q')
 saveas(sPlotFig,fullfile(plots_dir,'constellation.png'));
 
-function save_plot(x,y,xlbl,ylbl,dir, path)
+function save_plot(x, y, xlbl, ylbl, dir, path)
     fig = figure();
-    plot(x,y);
+    plot(x, y);
     xlabel(xlbl);
     ylabel(ylbl);
     saveas(fig,fullfile(dir,path));

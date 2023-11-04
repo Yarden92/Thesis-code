@@ -67,19 +67,19 @@ class ChannelSimulator2:
 
 
         if self.io_type == 'b':
-            x = b_out  # dirty
-            y = b_in  # clean
+            Rx = b_out  # dirty
+            Tx = b_in  # clean
         elif self.io_type == 'b1':
-            x = b_out1  # dirty
-            y = b_in1  # clean
+            Rx = b_out1  # dirty
+            Tx = b_in1  # clean
         elif self.io_type == 'c':
-            x = c_out
-            y = c_in
+            Rx = c_out
+            Tx = c_in
 
         else:
             raise Exception(f'io_type={self.io_type} is not supported')    
 
-        return x, y
+        return Rx, Tx
     
     def io_to_msg(self, x: np.ndarray) -> np.ndarray:
         # roll forward the middle stage in the channel until message is reached

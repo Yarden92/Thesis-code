@@ -94,24 +94,7 @@ def multiple_models_main(main_config: MultiModelConfig.TrainConfig):
     print('finished all models')
 
 
-# def train_model(model: nn.Module, train_ds, val_ds, run_name: str, lr: float, epochs: int, batch_size: int, device,
-#                 output_model_path: str):
-#     l_metric = nn.MSELoss()  # or L1Loss
-#     optim = torch.optim.Adam(model.parameters(), lr=lr)
-#
-#     trainer = Trainer(train_dataset=train_ds, val_dataset=val_ds, batch_size=batch_size,
-#                       model=model, device=device,
-#                       l_metric=l_metric, optim=optim,
-#                       config={})
-#
-#     x, y = train_ds[0]
-#     trainer.model.print_architecture(x.to(device))
-#     trainer.train(num_epochs=epochs)
-#     trainer.save3(output_model_path)
-#
-#     print(f'finished training {run_name}')
-#
-#     return trainer
+
 
 
 if __name__ == '__main__':

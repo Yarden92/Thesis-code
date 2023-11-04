@@ -122,26 +122,24 @@ class DataAnalyzer():
         mu_cropped = mu or self.params['mu_start']  # default to first mu
         sub_name = self._get_sub_folder_name(mu_cropped)
         mu_actual = self._get_full_mu(sub_name)
-        x, y = self._get_xy(data_id, sub_name)
+        Rx, Tx = self._get_Rx_Tx(data_id, sub_name)
 
 
         xi = self.cs_for_input.channel_config.xi
-        y_dirty = x
-        y_ref = y
         xlabel = r'$\xi$'
         y_name = r'b(\xi)'
         title = fr'signal compared for $\mu$={mu_actual:.2e}, i={data_id}'
-        lgnd = ['x - dirty (after channel)', 'y - clean (before channel)']
+        lgnd = ['Rx - dirty (after channel)', 'Tx - clean (before channel)']
 
-        Visualizer.compare_amp_and_phase(xi, y_dirty, y_ref, xlabel, y_name, title, square=False, lgnd=lgnd)
+        Visualizer.compare_amp_and_phase(xi, Rx, Tx, xlabel, y_name, title, square=False, lgnd=lgnd)
 
-        x_power = SP.signal_power(x)
-        print(f'x_power={x_power}')
+        Rx_power = SP.signal_power(Rx)
+        print(f'Rx_power={Rx_power}')
 
-        y_power = SP.signal_power(y)
-        print(f'y_power={y_power}')
+        Tx_power = SP.signal_power(Tx)
+        print(f'Tx_power={Tx_power}')
 
-        ber, num_errors = Metrics.calc_ber_for_single_vec(x, y, self.cs_for_input, self.cs_for_output)
+        ber, num_errors = Metrics.calc_ber_for_single_vec(Rx, Tx, self.cs_for_input, self.cs_for_output)
         print(f'ber={ber}')
 
         if is_save:
@@ -160,7 +158,7 @@ class DataAnalyzer():
 
         long_x, long_y = np.array([]), np.array([])
         for i in tqdm(data_indices):
-            x_i, y_i = self._get_xy(i, sub_name)
+            x_i, y_i = self._get_Rx_Tx(i, sub_name)
             c_out_y = self.cs_for_input.io_to_c_constellation(y_i)
             c_out_x = self.cs_for_output.io_to_c_constellation(x_i)
 
@@ -247,13 +245,13 @@ class DataAnalyzer():
         self._init_wandb()
         sub_name = self._get_sub_folder_name(mu)
         full_mu = self._get_full_mu(sub_name)
-        x, y = self._get_xy(data_id, sub_name)
-        abs_x, abs_y = np.abs(x), np.abs(y)
-        indices = np.arange(len(x))
+        Rx, Tx = self._get_Rx_Tx(data_id, sub_name)
+        abs_Rx, abs_Tx = np.abs(Rx), np.abs(Tx)
+        indices = np.arange(len(Rx))
         wandb.log({'abs signal': wandb.plot.line_series(
             xs=indices,
-            ys=[abs_x, abs_y],
-            keys=['dirty', 'clean'],
+            ys=[abs_Rx, abs_Tx],
+            keys=['Rx', 'Tx'],
             title=f'abs signal, mu={mu}, i={data_id}',
             xname="index")})
 
@@ -314,12 +312,12 @@ class DataAnalyzer():
         self.mu_vec = None
         self.num_permutations = 0
 
-    def _get_xy(self, data_id, sub_name):
+    def _get_Rx_Tx(self, data_id, sub_name):
         # x is the dirty signal, y is the clean signal
         dir = self.path + '/' + sub_name
         dataset = DatasetNormal(dir)
-        x, y = dataset.get_numpy_xy(data_id)
-        return x, y
+        Rx, Tx = dataset.get_numpy_xy(data_id)
+        return Rx, Tx
 
     def _count_digits(self, subfolder_name):
         mu = subfolder_name.split('=')[1]

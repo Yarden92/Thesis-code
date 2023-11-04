@@ -228,12 +228,12 @@ function Psi=rrc_impulse(t,Ts,bet)
     Psi(poles)= (bet/sqrt(Ts))*(-(2/pi)*cos(pi*(1+bet)/(4*bet))+sin(pi*(1+bet)/(4*bet)));
 end
 
-function my_plot(x,y,xlbl,ylbl, name)
+function my_plot(x, y, xlbl, ylbl, name)
     if isempty(x)
         x=1:length(y);
     end
     fig = figure()
-    plot(x,y);
+    plot(x, y);
     xlabel(xlbl);
     title(ylbl);
     grid on;

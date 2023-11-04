@@ -15,9 +15,9 @@ class GeneralMethods:
         return np_vec[0] + 1j*np_vec[1]
 
     @staticmethod
-    def normalize_xy(x, y, mean, std):
-        return x, y  # TODO: somethings wrong here
-        return (x - mean)/std, (y - mean)/std
+    def normalize_xy(Rx, Tx, mean, std):
+        return Rx, Tx  # TODO: somethings wrong here
+        return (Rx - mean)/std, (Tx - mean)/std
 
     @staticmethod
     def calc_statistics_for_dataset(dataset):
@@ -32,13 +32,13 @@ class GeneralMethods:
         return mu
 
     @staticmethod
-    def power_ratio(x, y):
-        x_power = np.mean(np.abs(x)**2)
-        y_power = np.mean(np.abs(y)**2)
-        if x_power > y_power:
-            return x_power/y_power
+    def power_ratio(Rx, Tx):
+        Rx_power = np.mean(np.abs(Rx)**2)
+        Tx_power = np.mean(np.abs(Tx)**2)
+        if Rx_power > Tx_power:
+            return Rx_power/Tx_power
         else:
-            return y_power/x_power
+            return Tx_power/Rx_power
 
     @staticmethod
     def sort_dirs_by_mu(dirs: list) -> list:

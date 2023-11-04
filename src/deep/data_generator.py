@@ -98,8 +98,8 @@ class DataGenerator:
                 ber, num_errors = self.cs.simulate_and_analyze()
             else:
                 self.cs.quick_simulate()
-            x, y = self.cs.get_io_samples()
-            self.save_xy(dir_path, x, y, i)
+            Rx, Tx = self.cs.get_io_samples()
+            self.save_xy(dir_path, Rx, Tx, i)
         except Exception as e:
             print(f'error at mu={mu}, i={i}: {e}')
         return ber
@@ -110,10 +110,10 @@ class DataGenerator:
         # pbar.set_description(f'ber_vec={self.ber_vec}')
 
 
-    def save_xy(self, dir, x, y, i):
-        x_path = f'{dir}/{i}_{FileNames.x}'
-        y_path = f'{dir}/{i}_{FileNames.y}'
+    def save_xy(self, dir, Rx, Tx, i):
+        x_path = f'{dir}/{i}_{FileNames.Rx}'
+        y_path = f'{dir}/{i}_{FileNames.Tx}'
         with open(x_path, 'wb') as f:
-            np.save(f, x)
+            np.save(f, Rx)
         with open(y_path, 'wb') as f:
-            np.save(f, y)
+            np.save(f, Tx)

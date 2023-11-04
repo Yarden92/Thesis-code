@@ -17,7 +17,7 @@ class Metrics:
     def calc_ber_for_single_vec(Rx, Tx, 
                                 in_cs: ChannelSimulator2=None, out_cs: ChannelSimulator2=None,
                                 conf: ChannelConfig=None):
-        # x,y can be either complex numpy or 2D torch
+        # Rx, Tx can be either complex numpy or 2D torch
         assert (in_cs is not None and out_cs is not None) or conf is not None, "either cs or conf should be given"
         # check if x is a torch
         if isinstance(Rx, torch.Tensor):
@@ -58,9 +58,9 @@ class Metrics:
         n = min(num_x_per_folder or len(dataset), len(dataset))
         rng = _tqdm(range(n)) if _tqdm else range(n)
         for i in rng:
-            x, y = dataset[i]
-            # x, y = ml_ops.torch_to_complex_numpy(x), ml_ops.torch_to_complex_numpy(y)
-            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(x, y, cs_in, cs_out)
+            Rx, Tx = dataset[i]
+
+            ber_i, num_errors_i = Metrics.calc_ber_for_single_vec(Rx, Tx, cs_in, cs_out)
             ber_vec.append(ber_i)
             num_errors += num_errors_i
 
@@ -124,10 +124,10 @@ class Metrics:
         return ber_vec, mu_vec
 
 
-def trim_data(x, y, n=None):
+def trim_data(Rx, Tx, n=None):
     if n is None:
-        return x, y
-    if n > len(x):
-        print(f'warning: requested {n} samples for BER but only {len(x)} were found')
-        return x, y
-    return x[:n], y[:n]
+        return Rx, Tx
+    if n > len(Rx):
+        print(f'warning: requested {n} samples for BER but only {len(Rx)} were found')
+        return Rx, Tx
+    return Rx[:n], Tx[:n]

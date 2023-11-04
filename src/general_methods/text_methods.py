@@ -27,7 +27,7 @@ def is_this_a_notebook() -> bool:
 
 @dataclass
 class FileNames:
-    x: str = 'data_x.npy'
-    y: str = 'data_y.npy'
+    Rx: str = 'data_x.npy'
+    Tx: str = 'data_y.npy'
     conf_json: str = 'conf.json'
     conf_yml: str = 'conf.yml'
