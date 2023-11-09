@@ -57,8 +57,8 @@ class ModelAnalyzer:
                 print(
                     f'mu={mu:.3f} | org_ber={org_ber:.2e} | model_ber={model_ber:.2e} |  ber_improve={ber_improve*100:03.0f}%'
                     # f' | y_power={y_power:.2e}'
-                    )
-                    
+                )
+
                 # print((
                 #     f'\n----------------- BERs for mu={mu} ----------------\n'
                 #     f'org_ber={org_ber}, model_ber={model_ber}, ber_improvement={ber_improve}, y_power={y_power:.2e}'
@@ -76,14 +76,13 @@ class ModelAnalyzer:
 
         # x_axis = self.outputs['powers']
         x_axis = self.outputs['mu']
-        
 
         Visualizer.my_plot(
-            x_axis, self.outputs['org_bers'], 
+            x_axis, self.outputs['org_bers'],
             x_axis, self.outputs['model_bers'],
             name='BERs vs. y power',
             legend=['org_ber', 'model_ber'],
-            # xlabel='y power', 
+            # xlabel='y power',
             xlabel='mu',
             ylabel='BER',
             function='semilogy'
@@ -173,7 +172,7 @@ class ModelAnalyzer:
                 ],
                 name=f'{io_type} - after {self.trainer.train_state_vec.num_epochs} epochs',
                 xlabel=r'$\xi$',
-        )
+            )
 
     def plot_stems(self, i, zm_indices=None):
         Rx, Tx, pred_Tx = self.trainer.get_single_item(i)
@@ -193,7 +192,7 @@ class ModelAnalyzer:
             names=[rf'$c[n]$ [Tx]', rf'$\hat c[n]$ [Rx]', rf'$\widetilde c[n]$ [pred]'],
         )
 
-    def plot_constelation(self, indices: list):
+    def plot_constelation(self, indices: list, colors=None):
         m_qam = self.trainer.train_dataset.config.M_QAM
 
         Rx, Tx, pred_Tx = np.array([]), np.array([]), np.array([])
@@ -203,13 +202,11 @@ class ModelAnalyzer:
             c_out_Rx = self.cs_out.io_to_c_constellation(Rx_i)
             c_out_pred_Tx = self.cs_in.io_to_c_constellation(pred_Tx_i)
 
-            Tx = np.concatenate((Tx, c_out_Tx))  # clean
             Rx = np.concatenate((Rx, c_out_Rx))  # dirty
             pred_Tx = np.concatenate((pred_Tx, c_out_pred_Tx))
+            Tx = np.concatenate((Tx, c_out_Tx))  # clean
 
-        Visualizer.plot_constellation_map_with_3_data_vecs(Rx, Tx, pred_Tx, m_qam,
-                                                           'constellation map',
-                                                           ['Rx', 'Tx', 'pred_Tx'])
+        Visualizer.plot_constellation_map_with_3_data_vecs(Rx, pred_Tx, Tx, m_qam, 'constellation map', ['Rx', 'pred_Tx','Tx'], colors)
 
     def calc_norms(self, _tqdm=None, verbose_level=1, max_items=None):
         Rx_norms, Tx_norms, pred_Tx_norms = 0, 0, 0

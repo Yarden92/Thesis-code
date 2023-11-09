@@ -62,7 +62,9 @@ class Visualizer:
 
     @staticmethod
     def plot_constellation_map_with_3_data_vecs(data_vec, data_vec2, data_vec3, m_qam,
-                                                title_ending, legend):
+                                                title_ending, legend, colors=None):
+        if colors is not None:
+            plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
         Visualizer.plot_constellation_map_with_k_data_vecs([data_vec, data_vec2, data_vec3], m_qam,
                                                            title_ending, legend)
         # modem = ModulationPy.QAMModem(m_qam)
