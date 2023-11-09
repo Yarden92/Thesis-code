@@ -1,0 +1,17 @@
+lr: 1e-3  
+min_lr: 1e-5
+lambda_reg: 0  # regularization lambda (0 for no regularization)
+epochs: 10
+batch_size: 1 
+train_ds_ratio: 0.4 
+val_ds_ratio: 0.02
+test_ds_ratio: 0.0
+input_data_path: '/data/yarcoh/thesis_data/data/datasets/b1/30000samples_20mu/mu=0.43' 
+output_model_path: '/data/yarcoh/thesis_data/data/test_models' 
+device: 'cuda'
+wandb_project: 'models_v4_debug' 
+model_name: "unet_v5_depth9_30k_M32_noised_b1_mu043_noreg"  # name of the run in wandb
+ds_limit: 0
+model_class: "UnetV5Depth9M32" 
+is_analyze_after: false
+verbose: true

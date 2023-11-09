@@ -120,3 +120,6 @@ class UnetV5Depth10(UnetV5):
     def __init__(self, in_channels=2):
         super().__init__(in_channels=in_channels, depth=10)
 
+class UnetV5Depth9M32(UnetV5):
+    def __init__(self, in_channels=2):
+        super().__init__(in_channels=in_channels, depth=9, M=32)
