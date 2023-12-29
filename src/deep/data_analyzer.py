@@ -166,8 +166,8 @@ class DataAnalyzer():
             long_x = np.concatenate((long_x, c_out_x))  # dirty
 
         Visualizer.plot_constellation_map_with_k_data_vecs([long_x, long_y], m_qam,
-                                                           '',
-                                                           ['dirty', 'clean'])
+                                                           '$\mu=$' + str(mu_cropped),
+                                                           ['Rx', 'Tx'])
         # Visualizer.plot_constellation_map_with_points(x9, m_qam, 'dirty signal')
         # Visualizer.plot_constellation_map_with_points(y9, m_qam, 'clean signal')
         # Visualizer.plot_constellation_map_with_points(pred9, m_qam, 'preds signal')

@@ -93,9 +93,9 @@ class Visualizer:
             plt.plot(i, q, '.', label=legend)
 
 
-        plt.xlabel('real part')
-        plt.ylabel('imag part')
-        plt.title(f'{m_qam}-QAM constellation map {title_ending}')
+        plt.xlabel('real part (I)')
+        plt.ylabel('imag part (Q)')
+        plt.title(rf'{m_qam}-QAM constellation map {title_ending}')
         plt.legend()
         plt.show()
 

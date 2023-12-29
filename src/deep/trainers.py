@@ -169,8 +169,8 @@ class Trainer:
         return trainer
 
     def print_summary(self):
-        x, _ = self.val_dataset[0]
-        shape = x.shape
+        rx, _, _ = self.get_single_item(0)
+        shape = rx.shape
         summary(self.model, shape, device="cuda")
 
     def plot_architecture(self, path: str = "model_architecture", format: str = "png"):
@@ -184,7 +184,7 @@ class Trainer:
 
     
     
-    def get_single_item(self, i: int):
+    def get_single_item(self, i: int, format: str = "numpy"):
         # test the model once before training
         Rx, Tx = self.val_dataset[i]
 
@@ -194,8 +194,12 @@ class Trainer:
         # x_np, y_np, pred_np = x.detach().numpy(), y.detach().numpy(), pred.detach().numpy()
         Rx_np, Tx_np, pred_Tx_np = [GeneralMethods.torch_to_complex_numpy(t) for t in [Rx, Tx, pred_Tx]]
 
-        return Rx_np, Tx_np, pred_Tx_np
-    
+        if format == "torch":
+            return Rx, Tx, pred_Tx
+        elif format == "numpy":
+            return Rx_np, Tx_np, pred_Tx_np
+        
+            
     def test_single_item(self, i: int, title=None, verbose=False):
         Rx_np, Tx_np, pred_Tx_np = self.get_single_item(i)
         title = title or f"after {self.train_state_vec.num_epochs} epochs"
