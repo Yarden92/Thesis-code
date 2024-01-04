@@ -1,10 +1,10 @@
-numpy
+numpy==1.23.4
 matplotlib
 joblib
 threadpoolctl
 ModulationPy
 cython
-scikit-commpy==0.6.0 # newer version doesn't compile on mac M1
+scikit-commpy==0.8.0 # if getting errors try changing versions.. original was 0.6.0 but also with older numpys
 tqdm
 jupyter
 torch
