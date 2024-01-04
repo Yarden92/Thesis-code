@@ -1,0 +1,2 @@
+python ./apps/deep/data_generator_app.py --config_path ./config/data_generation/noiseless_medium_b.yml 
+python ./apps/deep/data_generator_app.py --config_path ./config/data_generation/noiseless_medium_b1.yml 

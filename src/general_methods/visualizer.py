@@ -1,7 +1,14 @@
+from dataclasses import asdict
+import os
+from attr import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 from ModulationPy import ModulationPy
 from matplotlib.axes import Axes
+from IPython.display import Math, display, Markdown
+import json
+
+import pyrallis
 
 from src.general_methods.signal_processing import SP
 
@@ -55,19 +62,40 @@ class Visualizer:
 
     @staticmethod
     def plot_constellation_map_with_3_data_vecs(data_vec, data_vec2, data_vec3, m_qam,
-                                                title_ending, legend):
+                                                title_ending, legend, colors=None):
+        if colors is not None:
+            plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
+        Visualizer.plot_constellation_map_with_k_data_vecs([data_vec, data_vec2, data_vec3], m_qam,
+                                                           title_ending, legend)
+        # modem = ModulationPy.QAMModem(m_qam)
+        # fig = Visualizer.plot_constellation_map_grid(modem)
+
+        # i, q = np.real(data_vec), np.imag(data_vec)
+        # plt.plot(i, q, '.', label=legend[0])
+        # i, q = np.real(data_vec2), np.imag(data_vec2)
+        # plt.plot(i, q, '.', label=legend[1])
+        # i, q = np.real(data_vec3), np.imag(data_vec3)
+        # plt.plot(i, q, '.', label=legend[2])
+        # plt.xlabel('real part')
+        # plt.ylabel('imag part')
+        # plt.title(f'{m_qam}-QAM constellation map {title_ending}')
+        # plt.legend()
+        # plt.show()
+
+    @staticmethod
+    def plot_constellation_map_with_k_data_vecs(data_vecs, m_qam,
+                                                title_ending, legends):
         modem = ModulationPy.QAMModem(m_qam)
         fig = Visualizer.plot_constellation_map_grid(modem)
 
-        i, q = np.real(data_vec), np.imag(data_vec)
-        plt.plot(i, q, '.', label=legend[0])
-        i, q = np.real(data_vec2), np.imag(data_vec2)
-        plt.plot(i, q, '.', label=legend[1])
-        i, q = np.real(data_vec3), np.imag(data_vec3)
-        plt.plot(i, q, '.', label=legend[2])
-        plt.xlabel('real part')
-        plt.ylabel('imag part')
-        plt.title(f'{m_qam}-QAM constellation map {title_ending}')
+        for data_vec, legend in zip(data_vecs, legends):
+            i, q = np.real(data_vec), np.imag(data_vec)
+            plt.plot(i, q, '.', label=legend)
+
+
+        plt.xlabel('real part (I)')
+        plt.ylabel('imag part (Q)')
+        plt.title(rf'{m_qam}-QAM constellation map {title_ending}')
         plt.legend()
         plt.show()
 
@@ -95,7 +123,9 @@ class Visualizer:
 
     @staticmethod
     def double_plot(title: str, y1, y2, x1_vec=None, x2_vec=None,
-                    name1: str = 'plot1', name2: str = 'plot2', function='plot', output_name=None):
+                    name1: str = 'plot1', name2: str = 'plot2',
+                    function='plot', output_name=None,
+                    xlabel1=None, xlabel2=None):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
         if title:
             fig.suptitle(title)
@@ -103,8 +133,8 @@ class Visualizer:
             x1_vec = np.arange(len(y1))
         if x2_vec is None:
             x2_vec = np.arange(len(y2))
-        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1, function=function, hold=True)
-        Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2,
+        Visualizer.my_plot(x1_vec, y1, name=name1, ax=ax1, xlabel=xlabel1, function=function, hold=True)
+        Visualizer.my_plot(x2_vec, y2, name=name2, ax=ax2, xlabel=xlabel2,
                            function=function, output_name=output_name)
 
     @staticmethod
@@ -139,7 +169,7 @@ class Visualizer:
 
     @staticmethod
     def data_trio_plot(y1, y2, y3, zoom_indices=None, title: str = None, x_vec=None, xlabel='index',
-                       function='plot', 
+                       function='plot',
                        names=['input (dirty)', 'output (clean)', 'pred']):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 4))
         if title:
@@ -161,11 +191,12 @@ class Visualizer:
         Visualizer.my_plot(x, y3, name=names[2], xlabel=xlabel, ax=ax3, function=function, legend=['real', 'imag'])
 
     @staticmethod
-    def print_bits(bits, M, title='the bits are:'):
+    def print_bits(bits, sps: int, title='the bits are:'):
+        # sps = log2(M_QAM)
         print('\n_______________________________________________')
         print(title, f'- len={len(bits)}')
         # mat = np.int8(np.reshape(bits, (-1, M)))
-        mat = np.reshape(bits, (-1, M))
+        mat = np.reshape(bits, (-1, sps))
         print(mat)
         # print('\n')
 
@@ -199,6 +230,10 @@ class Visualizer:
         print(f'signal bw = [{tmin:.2e}:{tmax:.2e}]')
 
     @staticmethod
+    def print_equation(equation: str) -> None:
+        display(Markdown(rf"$$\begin{{align*}} {equation} \end{{align*}}$$"))
+
+    @staticmethod
     def print_nft_options(res_ob: dict) -> None:
         """
         pretty print the options of the INFT / NFT that was done.
@@ -212,12 +247,15 @@ class Visualizer:
         print(json.dumps(json_ob, indent=4))
 
     @staticmethod
-    def plot_bers(us, bers_vecs, legends=None, output_path=None):
+    def plot_bers(us, bers_vecs, legends=None, output_path=None, log_mu: bool = False):
         plt.figure(figsize=[10, 5])
         for bers in bers_vecs:
             mean = bers.mean(axis=-1)
             std = bers.std(axis=-1)
-            plt.semilogy(us, bers)
+            if log_mu:
+                plt.loglog(us, bers)
+            else:
+                plt.semilogy(us, bers)
             # plt.fill_between(us,mean-std,mean+std,alpha=0.4)
 
         plt.xlabel('normalizing factor'), plt.ylabel('BER')
@@ -268,6 +306,127 @@ class Visualizer:
             plt.show()
 
     @staticmethod
+    def plot_amp_and_phase(x, y, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+        Visualizer.double_plot(
+            title=title,
+            y1=np.abs(y),
+            y2=np.angle(y),
+            x1_vec=x,
+            x2_vec=x,
+            xlabel1=xlabel,
+            xlabel2=xlabel,
+            name1=rf'$|{y_name}|$',
+            name2=rf'$\angle {y_name}$'
+        )
+
+    @staticmethod
+    def plot_real_imag(x, y, xlabel=None, y_name=r'x', title=""):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+        Visualizer.double_plot(
+            title=title,
+            y1=np.real(y),
+            y2=np.imag(y),
+            x1_vec=x,
+            x2_vec=x,
+            xlabel1=xlabel,
+            xlabel2=xlabel,
+            name1=rf'$real({y_name})$',
+            name2=rf'$imag({y_name})$'
+        )
+
+    @staticmethod
+    def compare_amp_and_phase(x, y, y_ref, xlabel=None, y_name=r'x', title="", square=True, lgnd = ['Rx', 'Tx']):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+        if square:
+            y1 = np.abs(y)**2
+            y2 = np.abs(y_ref)**2
+            abs_name = rf'$|{y_name}|^2$'
+        else:
+            y1 = np.abs(y)
+            y2 = np.abs(y_ref)
+            abs_name = rf'$|{y_name}|$'
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
+
+        phs_name = rf'$\angle {y_name}$'
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
+
+    @staticmethod
+    def compare_amp_and_phase_dbm(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['Rx', 'Tx']):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = 30 + 10*np.log10(np.abs(y)**2)
+        y2 = 30 + 10*np.log10(np.abs(y_ref)**2)
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
+
+        abs_name = rf'$|{y_name}|^2$'
+        phs_name = rf'$\angle {y_name}$'
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[dBm]", legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, legend=lgnd)
+
+    # @staticmethod
+    # def plot_signal_dbm(x, y, xlabel=r'$\xi$', y_name=r'x',square=True):
+    #     y_name = y_name.replace('$', '')  # remove $ from y_name
+    #     if square:
+    #         y_name = rf'$|{y_name}|^2$'
+    #         y = 30 + 10*np.log10(np.abs(y)**2)
+    #     else:
+    #         y_name = rf'$|{y_name}|$'
+    #         y = 30 + 10*np.log10(np.abs(y))
+
+    #     Visualizer.my_plot(x, y, name=y_name, xlabel=xlabel, ylabel="[dBm]")
+
+
+    @staticmethod
+    def compare_amp_and_phase_log(x, y, y_ref, xlabel=None, y_name=r'x', title="", lgnd = ['Rx', 'Tx']):
+        y_name = y_name.replace('$', '')  # remove $ from y_name
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = np.abs(y)**2*1e3
+        y2 = np.abs(y_ref)**2*1e3
+        y3 = np.angle(y)
+        y4 = np.angle(y_ref)
+
+        abs_name = rf'$|{y_name}|^2$'
+        phs_name = rf'$\angle {y_name}$'
+
+        Visualizer.my_plot(x, y1, x, y2, name=abs_name, ax=ax1, xlabel=xlabel, ylabel="[mW]", function='semilogy', legend=lgnd, hold=True)
+        Visualizer.my_plot(x, y3, x, y4, name=phs_name, ax=ax2, xlabel=xlabel, ylabel="[deg]", legend=lgnd)
+
+    @staticmethod
+    def compare_stem_bits(y, y_ref, zm_max_index=50, title='sampled bits (real)'):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+        if title:
+            fig.suptitle(title)
+
+        y1 = np.real(y)
+        y2 = np.real(y_ref)
+        y3 = np.real(y[:zm_max_index])
+        y4 = np.real(y_ref[:zm_max_index])
+        x12 = np.arange(len(y1))
+        x34 = np.arange(zm_max_index)
+        lgnd = ['pred', 'ref']
+
+        Visualizer.my_plot(x12, y1, x12, y2, name='full scale', ax=ax1, legend=lgnd, function='stem', hold=True)
+        Visualizer.my_plot(x34, y3, x34, y4, name='crop in', ax=ax2, legend=lgnd, function='stem')
+
+    @staticmethod
     def plot_loss_vec(train_loss_vec, valid_loss_vec):
         assert len(train_loss_vec) == len(valid_loss_vec), "train and valid loss vectors must have the same length"
         x = range(len(train_loss_vec))
@@ -279,3 +438,39 @@ class Visualizer:
         plt.legend()
         plt.grid(True)
         plt.show()
+
+    @staticmethod
+    def print_math(long_text):
+        math_text = f""
+        for r in long_text.split('\n'):
+            math_text.append(f"{r.strip()}")
+
+    @staticmethod
+    def vec2str(vec, n_start: int = 3, n_end: int = 1) -> str:
+        txt = '['
+        txt += ', '.join(map(str, vec[:n_start]))
+        txt += ', ... ,'
+        txt += ', '.join(map(str, vec[-n_end:]))
+        txt += ']'
+        return txt
+
+    @staticmethod
+    def print_config(conf) -> None:
+        if type(conf) == dict:
+            conf_dict = conf
+        else: # if its a dataclass:
+            conf_dict = asdict(conf)
+        conf_json = json.dumps(conf_dict, indent=4)
+        print(conf_json)
+
+        # temp_file = 'temp.yml'
+        # # pretty print dict based config using json
+        # pyrallis.dump(dataclass_conf_instance, open(temp_file,'w'))
+        # # with open(temp_file, 'w') as f:
+        # #     pyrallis.dump(dataclass_conf_instance, f)
+        # with open(temp_file, 'r') as f:
+        #     config = json.load(f)
+        # print(json.dumps(config, indent=4))
+        
+        # os.remove(temp_file)
+

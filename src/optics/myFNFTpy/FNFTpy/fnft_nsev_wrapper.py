@@ -272,7 +272,8 @@ def nsev_wrapper(D, q, T1, T2, Xi1, Xi2,
         nsev_discspec,
         nsev_kappa,
         ctypes.byref(options))
-    check_return_code(rv)
+    if display_c_msg:
+        check_return_code(rv)
     K_new = nsev_K.value
     rdict = {
         'return_value': rv,

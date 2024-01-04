@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 
 from src.optics.channel_simulation import ChannelSimulator
+from src.optics.channel_simulation2 import ChannelSimulator2
 
 
 def create_us_vec(n_steps=10, min_u=-2.5, max_u=-1):
@@ -20,6 +21,19 @@ def run_n_times(cs: ChannelSimulator, n=10, pbar=None) -> (float, int):
             num_errors += cs.length_of_msg
         if pbar: pbar.update(1)
     ber = num_errors / (n * cs.length_of_msg)
+    return ber, num_errors
+
+def run_n_times2(cs: ChannelSimulator2, n=10, pbar=None) -> (float, int):
+    # outputs BER from N realisations
+    num_errors = 0
+    for r in range(n):
+        try:
+            num_errors += cs.simulate_and_analyze()[1]
+        except Exception as e:
+            print(f'Error in run {r}: {e}')
+            num_errors += cs.block11.N_bin
+        if pbar: pbar.update(1)
+    ber = num_errors / (n * cs.block11.N_bin)
     return ber, num_errors
 
 

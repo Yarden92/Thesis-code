@@ -1,0 +1,25 @@
+# System Configuration:
+W: 0.05             # Total bandwidth, estimated [THz]
+Nspans: 12            # The number of spans
+La: 80       # Transmission span [km]
+M_QAM: 64             # QAM order (2,4,16,64,256)
+Ts: 1               # Symbol period [??]
+
+# Modulation and Coding:
+Nos: 16               # Oversampling factor (must be even)
+eta: 2                # spectral efficiency penalty factor (1,4]
+mu: 0.1             # Dimensionless power scaling factor (RRC)
+bet: 0.2            # roll-off factor
+with_ssf: True       # whether to use SSF or not
+with_noise: True     # whether to add noise or not
+
+# Fiber and Dispersion:
+beta2: -21          # ps^2/km
+gamma: 1.27         # Nonlinear coefficient in [1/km*W]
+dz: 0.2             # Z-step, [km] - initial step estimate
+K_T: 1.1            # [unitless]
+chi: 0.0461         # Fiber loss coefficient [1/km]
+
+# general cs stuff
+verbose: False            # whether to print stuff or not
+io_type: 'c'              # 'b' or 'b1'

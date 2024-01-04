@@ -1,29 +1,26 @@
-import concurrent
+from copy import copy
+from dataclasses import dataclass
 import json
 import os
 from abc import ABC
-from concurrent.futures import ProcessPoolExecutor
-from datetime import time, datetime
+from datetime import datetime
 from glob import glob
 from typing import Tuple, Union
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from tqdm import tqdm
 
-from src.deep.standalone_methods import GeneralMethods, DataType
-from src.optics.channel_simulation import ChannelSimulator
-
-x_file_name = 'data_x.npy'
-y_file_name = 'data_y.npy'
-conf_file_name = 'conf.json'
+from src.deep.standalone_methods import GeneralMethods
+from src.general_methods.text_methods import FileNames
+from src.optics.channel_simulation2 import ChannelSimulator2
+from src.optics.config_manager import ChannelConfig, ConfigManager
 
 
 class OpticDataset(Dataset, ABC):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range]) -> None:
         super().__init__()
-        self.config = None
+        self.config: ChannelConfig = None
         self.mean = 0
         self.std = 1
         self.cropped_mu = 0
@@ -44,7 +41,7 @@ class OpticDataset(Dataset, ABC):
 def get_datasets_set(data_dir_path: str, dataset_type=OpticDataset,
                      train_ds_ratio=0.5, val_ds_ratio=0.2, test_ds_ratio=0.3):
     assert train_ds_ratio + val_ds_ratio + test_ds_ratio <= 1, "train, val and test ratios must sum up to 1 or less"
-    n_total = len(glob(f'{data_dir_path}/*{x_file_name}'))
+    n_total = len(glob(f'{data_dir_path}/*{FileNames.Rx}'))
     # if ds_limit:
     #     n_total = min(n_total, ds_limit)
     stop_index_train = int(n_total*train_ds_ratio)
@@ -72,10 +69,12 @@ class DatasetNormal(OpticDataset):
     def __init__(self, data_dir_path: str, data_indices: Union[list[int], range] = None) -> None:
         super().__init__(data_dir_path, data_indices)
         self.data_dir_path = os.path.abspath(data_dir_path)
-        self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{x_file_name}')))
+        self.data_indices = data_indices or range(len(glob(f'{self.data_dir_path}/*{FileNames.Rx}')))
         self.cropped_mu = GeneralMethods.name_to_mu_val(self.data_dir_path)
 
-        self.config = read_conf(self.data_dir_path)
+        # self.config = read_conf(self.data_dir_path)
+        # self.config = FilesReadWrite.read_channel_conf2(self.data_dir_path)
+        self.config = ConfigManager.read_config(self.data_dir_path)
         # self.n = len(glob(f'{self.data_dir_path}/*{x_file_name}'))
         self.n = len(self.data_indices)
 
@@ -85,23 +84,23 @@ class DatasetNormal(OpticDataset):
 
         file_id = self.data_indices[index]
 
-        x, y = read_xy(self.data_dir_path, file_id)
+        Rx, Tx = read_Rx_Tx(self.data_dir_path, file_id)
 
-        # x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
+        # Rx, Tx = GeneralMethods.normalize_xy(Rx, Tx, self.mean, self.std)
 
-        x = complex_numpy_to_torch2(x)
-        y = complex_numpy_to_torch2(y)
+        Rx = complex_numpy_to_torch2(Rx)
+        Tx = complex_numpy_to_torch2(Tx)
 
-        # x, y = x.T, y.T
 
-        return x, y
+
+        return Rx, Tx
 
     def __len__(self) -> int:
         return self.n
 
     def get_numpy_xy(self, i):
-        x, y = read_xy(self.data_dir_path, i)
-        return x, y
+        Rx, Tx = read_Rx_Tx(self.data_dir_path, i)
+        return Rx, Tx
 
 # TODO: move all standalone methods to a class
 
@@ -119,37 +118,37 @@ class SeparatedRealImagDataset(DatasetNormal):
         # the dataloader returns 1x2x8192 where 1 is the batch size
         file_id = self.data_indices[index]
 
-        x, y = read_xy(self.data_dir_path, file_id)
+        Rx, Tx = read_Rx_Tx(self.data_dir_path, file_id)
 
-        x, y = GeneralMethods.normalize_xy(x, y, self.mean, self.std)
+        Rx, Tx = GeneralMethods.normalize_xy(Rx, Tx, self.mean, self.std)
 
         if self.is_real:
-            x = numpy_to_torch(x.real)
-            y = numpy_to_torch(y.real)
+            Rx = numpy_to_torch(Rx.real)
+            Tx = numpy_to_torch(Tx.real)
         else:
-            x = numpy_to_torch(x.imag)
-            y = numpy_to_torch(y.imag)
+            Rx = numpy_to_torch(Rx.imag)
+            Tx = numpy_to_torch(Tx.imag)
 
-        x, y = x.unsqueeze(0), y.unsqueeze(0)
+        Rx, Tx = Rx.unsqueeze(0), Tx.unsqueeze(0)
 
-        return x, y
+        return Rx, Tx
 
 
 class FilesReadWrite:
 
     @staticmethod
-    def read_folder(dir: str, verbose: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
-        # example: dir = f'data/10_samples_mu=0.001'
+    def read_folder(dir: str, verbose: bool = False) -> Tuple[np.ndarray, np.ndarray, ChannelConfig]:
+        # conf_N is the number of files that supposed to be in the folder
 
-        conf_read = read_conf(dir)
+        # conf_read = FilesReadWrite.read_channel_conf2(dir)
+        conf_read = ConfigManager.read_config(dir)
         num_files = len(os.listdir(dir))
         N = int((num_files - 1)/2)
-        assert os.path.basename(dir).startswith(f'{N}'), f'wrong number ({N}) of files in folder: {dir}'
 
         all_x, all_y = [], []
         for i in range(N):
-            x_path = os.path.join(dir, f'{i}_{x_file_name}')
-            y_path = os.path.join(dir, f'{i}_{y_file_name}')
+            x_path = os.path.join(dir, f'{i}_{FileNames.Rx}')
+            y_path = os.path.join(dir, f'{i}_{FileNames.Tx}')
             x = np.load(x_path)
             y = np.load(y_path)
             all_x.append(x)
@@ -160,18 +159,35 @@ class FilesReadWrite:
 
         return all_x, all_y, conf_read
 
+    @staticmethod
+    def read_channel_conf2(dir: str, _conf_file_name=FileNames.conf_yml) -> ChannelConfig:
+        raise Exception("use the function from config_manager")
+        # conf_path = f'{dir}/{_conf_file_name}'
+        # if is_this_a_notebook():
+        #     conf = pyrallis.load(ChannelConfig, open(conf_path, "r"))
+        # else:
+        #     conf = pyrallis.parse(ChannelConfig, config_path=conf_path)
+        # # conf = fill_config_from_loading(conf)
+        # return conf
 
-def read_xy(dir: str, i: int):
-    x = np.load(f'{dir}/{i}_{x_file_name}')
-    y = np.load(f'{dir}/{i}_{y_file_name}')
-    return x, y
+
+def read_Rx_Tx(dir: str, i: int):
+    Rx = np.load(f'{dir}/{i}_{FileNames.Rx}')
+    Tx = np.load(f'{dir}/{i}_{FileNames.Tx}')
+    return Rx, Tx
 
 
-def read_conf(dir, _conf_file_name=conf_file_name):
-    conf_path = f'{dir}/{_conf_file_name}'
-    with open(conf_path, 'r') as f:
-        conf_read = json.load(f)
-    return conf_read
+def create_channels(template_conf: ChannelConfig) -> Tuple[ChannelSimulator2, ChannelSimulator2]:
+    original_ssf = template_conf.with_ssf
+    conf_for_input = copy(template_conf)
+    conf_for_output = copy(template_conf)
+    conf_for_input.with_ssf = False
+    assert conf_for_output.with_ssf == original_ssf, "this code is not correct"
+
+    cs_for_input = ChannelSimulator2(conf_for_input)
+    cs_for_output = ChannelSimulator2(conf_for_output)
+
+    return cs_for_input, cs_for_output
 
 
 def save_conf(path, conf):
@@ -179,64 +195,13 @@ def save_conf(path, conf):
         json.dump(conf, f, indent=4)
 
 
-def save_xy(dir, x, y, i):
-    x_path = f'{dir}/{i}_{x_file_name}'
-    y_path = f'{dir}/{i}_{y_file_name}'
-    with open(x_path, 'wb') as f:
-        np.save(f, x)
-    with open(y_path, 'wb') as f:
-        np.save(f, y)
-
-def gen_data(data_len, num_symbols, mu_vec, cs: ChannelSimulator, root_dir='data', tqdm=tqdm, logger_path=None, max_workers=1,
-              data_type=DataType.spectrum):
-    vec_lens = num_symbols*cs.over_sampling + cs.N_rrc - 1
-    assert vec_lens == num_symbols*8*2, "the formula is not correct! check again"
-    mu_delta = mu_vec[1] - mu_vec[0]
-    num_digits_mu = int(np.ceil(-np.log10(mu_delta)))
-
-    if logger_path:
-        os.makedirs(logger_path, exist_ok=True)
-        print(f'saving logs (disabled) to {os.path.abspath(logger_path)}')
-        print(f'saving data to {os.path.abspath(root_dir)}')
-    # file_path = f'{logger_path}/{get_ts_filename()}'
-
-    print('setting up tasks...')
-    # executor = ProcessPoolExecutor(max_workers=max_workers)
-    # futures = []
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = {}
-        for mu_i, mu in enumerate(mu_vec):
-            dir = f'{root_dir}/{data_len}_samples_mu={mu:.{num_digits_mu}f}'
-            os.makedirs(dir, exist_ok=True)
-            cs.normalization_factor = mu
-            conf = cs.params_to_dict()
-            conf['data_type'] = data_type
-            save_conf(f'{dir}/{conf_file_name}', conf)
-            for i in range(data_len):
-                f_i = executor.submit(_gen_data_i, cs, dir, i, mu, data_type)
-                futures[f_i] = (mu, i)
-
-        print('initiating data generation...')
-        pbar = tqdm(total=len(mu_vec)*data_len)
-        for future in concurrent.futures.as_completed(futures):
-            (mu, i) = futures[future]
-            try:
-                data = future.result()
-            except Exception as exc:
-                print(f'mu={mu}, i={i} generated an exception: {exc}')
-            pbar.update()
-
-    print('\nall done')
-
-
-def _gen_data_i(cs: ChannelSimulator, dir, i, mu, type=DataType.spectrum):
-    # print(f'generating data {i}, mu {mu_i}...')
-    try:
-        cs.normalization_factor = mu
-        x, y = cs.gen_io_data(type)
-        save_xy(dir, x, y, i)
-    except Exception as e:
-        print(f'error at mu={mu}, i={i}: {e}')
+def save_xy(dir, Rx, Tx, i):
+    Rx_path = f'{dir}/{i}_{FileNames.Rx}'
+    Tx_path = f'{dir}/{i}_{FileNames.Tx}'
+    with open(Rx_path, 'wb') as f:
+        np.save(f, Rx)
+    with open(Tx_path, 'wb') as f:
+        np.save(f, Tx)
 
 
 def log_status(file_path, mu, mu_i, mu_N, sample_i, N_samples, pbar):
