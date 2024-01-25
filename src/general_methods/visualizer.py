@@ -15,7 +15,7 @@ from src.general_methods.signal_processing import SP
 
 class Visualizer:
     @staticmethod
-    def plot_constellation_map_grid(modem: ModulationPy):
+    def plot_constellation_map_grid(modem: ModulationPy, is_annotate=True):
         size = 'small' if modem.M <= 16 else 'x-small' if modem.M == 64 else 'xx-small'
         logM = np.log2(modem.M)
         limits = logM if modem.M <= 16 else 1.5*logM if modem.M == 64 else 2.25*logM
@@ -34,7 +34,8 @@ class Visualizer:
                 h = 'center'
             elif abs(x) > 1e-9 and abs(y) < 1e-9:
                 v = 'center'
-            plt.annotate(i, (x + xadd, y + yadd), ha=h, va=v, size=size)
+            if is_annotate:
+                plt.annotate(i, (x + xadd, y + yadd), ha=h, va=v, size=size)
         M = str(modem.M)
 
         mapping = 'Gray' if modem.gray_map else 'Binary'
@@ -62,11 +63,11 @@ class Visualizer:
 
     @staticmethod
     def plot_constellation_map_with_3_data_vecs(data_vec, data_vec2, data_vec3, m_qam,
-                                                title_ending, legend, colors=None):
+                                                title_ending, legend, colors=None, is_annotate=True):
         if colors is not None:
             plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
         Visualizer.plot_constellation_map_with_k_data_vecs([data_vec, data_vec2, data_vec3], m_qam,
-                                                           title_ending, legend)
+                                                           title_ending, legend, is_annotate)
         # modem = ModulationPy.QAMModem(m_qam)
         # fig = Visualizer.plot_constellation_map_grid(modem)
 
@@ -84,9 +85,9 @@ class Visualizer:
 
     @staticmethod
     def plot_constellation_map_with_k_data_vecs(data_vecs, m_qam,
-                                                title_ending, legends):
+                                                title_ending, legends, is_annotate=True):
         modem = ModulationPy.QAMModem(m_qam)
-        fig = Visualizer.plot_constellation_map_grid(modem)
+        fig = Visualizer.plot_constellation_map_grid(modem, is_annotate)
 
         for data_vec, legend in zip(data_vecs, legends):
             i, q = np.real(data_vec), np.imag(data_vec)
@@ -95,7 +96,7 @@ class Visualizer:
 
         plt.xlabel('real part (I)')
         plt.ylabel('imag part (Q)')
-        plt.title(rf'{m_qam}-QAM constellation map {title_ending}')
+        plt.title(rf'{m_qam}-QAM constellation diagram {title_ending}')
         plt.legend()
         plt.show()
 
@@ -247,7 +248,8 @@ class Visualizer:
         print(json.dumps(json_ob, indent=4))
 
     @staticmethod
-    def plot_bers(us, bers_vecs, legends=None, output_path=None, log_mu: bool = False):
+    def plot_bers(us, bers_vecs, legends=None, output_path=None, log_mu: bool = False, 
+                  power_instead_mu: bool = False):
         plt.figure(figsize=[10, 5])
         for bers in bers_vecs:
             mean = bers.mean(axis=-1)
@@ -257,9 +259,13 @@ class Visualizer:
             else:
                 plt.semilogy(us, bers)
             # plt.fill_between(us,mean-std,mean+std,alpha=0.4)
-
-        plt.xlabel('normalizing factor'), plt.ylabel('BER')
-        plt.title('BER vs normalizing factor')
+        if power_instead_mu:
+            plt.xlabel('power [dBm]')
+            plt.title('BER vs power')
+        else:
+            plt.xlabel('normalizing factor')
+            plt.title('BER vs normalizing factor')
+        plt.ylabel('BER')
         plt.grid(which='both', axis='y')
         plt.grid(which='major', axis='x')
         # plt.ylim(top=1,bottom=3e-4)
@@ -269,6 +275,7 @@ class Visualizer:
             plt.savefig(output_path)
         else:
             plt.show()
+
 
     @staticmethod
     def plot_bers_boxplot(us, bers_vecs, legends=None, output_path=None):

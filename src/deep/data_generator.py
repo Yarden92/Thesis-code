@@ -88,7 +88,7 @@ class DataGenerator:
             print(f'ber_vec={self.ber_vec}')
             DataAnalyzer.save_ber(self.root_dir, self.ber_vec, self.mu_vec, self.config.num_samples)
 
-        print('\nall done')
+        print('\n'+'all done')
 
     def _gen_data_i(self, dir_path, i, mu, mu_index) -> float:
         try:

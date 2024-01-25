@@ -10,7 +10,7 @@ from src.optics.config_manager import ChannelConfig, ConfigConverter
 from src.optics.blocks.block_manager import BlockManager
 from src.optics.blocks import Modulator,    OverSampling,   SpectralShaper, PreEqualizer, Inft
 from src.optics.blocks import Decoder,      MatchFilter,                    PostEqualizer,  Nft, Ssf
-
+from src.general_methods.signal_processing import SP
 
 class ChannelSimulator2:
     def __init__(self, channel_config: ChannelConfig) -> None:
@@ -21,6 +21,17 @@ class ChannelSimulator2:
         self.blocks: list = pack_of_blocks[1]
         self.block11: Evaluator = pack_of_blocks[2]
         self.io_type = channel_config.io_type
+
+    # ------------------------------ actions ------------------------------ #
+    # - simulate_and_analyze()
+    # - quick_simulate()
+    # - get_io_samples()
+    # - io_to_msg()
+    # - io_to_c_constellation()
+    # - io_to_()
+    # - get_block()
+    # - update_mu()
+        
 
     def simulate_and_analyze(self) -> Tuple[float, int]:
         # output:
@@ -35,6 +46,20 @@ class ChannelSimulator2:
         rx_bin = self.blocks[-1].get_outputs()[0]
         num_errors, ber = self.block11.calc_ber(tx_bin, rx_bin)
         return ber, num_errors
+    
+    def simulate_and_calc_power(self) -> float:
+        # output:
+        #   power [dBm]: average power (float) of q_p
+        x = self._gen_input()
+        extra_runtime_inputs = None
+        for i in range(5):
+            x = self.blocks[i].execute(x, extra_runtime_inputs)
+        _, _, q_p = self.blocks[4].get_outputs()
+        dt = self.channel_config.dt
+        Tb = self.channel_config.Tb
+        power_dbm = SP.signal_power_dbm(q_p, dt, Tb)
+        return power_dbm
+
 
     def quick_simulate(self) -> None:
         if self.channel_config.verbose:
@@ -45,15 +70,6 @@ class ChannelSimulator2:
             for i in range(len(self.blocks)):
                 x = self.blocks[i].execute(x, extra_runtime_inputs)
 
-    def _quick_simulate_verbose(self) -> None:
-        x = self._gen_input()
-        extra_runtime_inputs = None  # for future use
-        for i in range(len(self.blocks)):
-            timestamp_before = time.time()
-            x = self.blocks[i].execute(x, extra_runtime_inputs)
-            dt = time.time() - timestamp_before
-            block_name = self.blocks[i].name
-            print(f'{dt:.2f} seconds - to evaluate block {i} ({block_name}) ')        
 
     def get_io_samples(self) -> Tuple[np.ndarray, np.ndarray]:
 
@@ -127,7 +143,32 @@ class ChannelSimulator2:
             c = x
 
         return c
+    
+    def io_to_(self, x: np.ndarray, desired_output_type) -> np.ndarray:
+        pass
 
+    def get_block(self, block_name) -> Block:
+        for block in self.blocks:
+            if block.name == block_name:
+                return block
+        return None
+
+    def update_mu(self, mu) -> None:
+        self.channel_config.mu = float(mu)        
+        self.get_block(BlockNames.BLOCK_4_PRE_EQUALIZER).mu = mu
+        self.get_block(BlockNames.BLOCK_8_POST_EQUALIZER).mu = mu
+
+    # ------------------------------ private ------------------------------ #
+
+    def _quick_simulate_verbose(self) -> None:
+        x = self._gen_input()
+        extra_runtime_inputs = None  # for future use
+        for i in range(len(self.blocks)):
+            timestamp_before = time.time()
+            x = self.blocks[i].execute(x, extra_runtime_inputs)
+            dt = time.time() - timestamp_before
+            block_name = self.blocks[i].name
+            print(f'{dt:.2f} seconds - to evaluate block {i} ({block_name}) ')        
 
 
     def _initiate_blocks(self) -> Tuple[InputGenerator, list, Evaluator]:
@@ -154,16 +195,7 @@ class ChannelSimulator2:
     def _gen_input(self) -> np.ndarray:
         return self.block0.execute()
 
-    def get_block(self, block_name) -> Block:
-        for block in self.blocks:
-            if block.name == block_name:
-                return block
-        return None
 
-    def update_mu(self, mu) -> None:
-        self.channel_config.mu = float(mu)        
-        self.get_block(BlockNames.BLOCK_4_PRE_EQUALIZER).mu = mu
-        self.get_block(BlockNames.BLOCK_8_POST_EQUALIZER).mu = mu
 
 
 def sanity_test():

@@ -1,20 +1,17 @@
-from copy import copy
 import os
 import re
-
-import numpy as np
 import wandb
+import json
+import numpy as np
 from tqdm.auto import tqdm
 from typing import Tuple
-from src.deep import data_loaders
 from src.deep import standalone_methods
-from src.deep.data_loaders import DatasetNormal, FilesReadWrite, create_channels
+from src.deep.data_loaders import DatasetNormal, create_channels
 from src.deep.data_methods import DataMethods, FolderTypes
 from src.deep.metrics import Metrics
-from src.deep.standalone_methods import DataType
+from src.deep.power_adder2 import PowerAdder2
 from src.general_methods.signal_processing import SP
 from src.general_methods.visualizer import Visualizer
-from src.optics.channel_simulation2 import ChannelSimulator2
 from src.optics.config_manager import ChannelConfig, ConfigManager
 
 class PATHS:
@@ -22,14 +19,15 @@ class PATHS:
     ber = 'ber.npy'
     mu = 'mu.npy'
     num_permuts = 'num_permutations.npy'
+    powers = 'mu_to_power.json'
 
 class DataAnalyzer():
     def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False, verbose_level=0,
                  load_ber_path=None):
         self.path = data_folder_path.rstrip('/')
         self.base_name = os.path.basename(self.path)
-        self.params, self.conf = self.fetch_params()
-        self.cs_for_input, self.cs_for_output = create_channels(self.conf)
+        self.params, self.cs_conf = self.fetch_params()
+        self.cs_for_input, self.cs_for_output = create_channels(self.cs_conf)
         self.is_wandb_init = False
         self.is_box_plot = is_box_plot
 
@@ -39,8 +37,9 @@ class DataAnalyzer():
         self.ber_vec = None
         self.mu_vec = None
         self.num_permutations = 0 
-        if load_ber_path is not None:
-            self.try_to_load_ber(load_ber_path)
+        self.power_resolution = 0 # number of repetitions for each mu
+        # self.try_to_load_ber()
+        self.try_to_load_powers()
 
     def calc_and_save_ber(self, n: int = None) -> None:
         n = n or self.params['num_samples']  # if n is None, take all permutations
@@ -80,12 +79,33 @@ class DataAnalyzer():
         if self.verbose_level > 0:
             print(f'no ber found at {ber_path}')
         return False
+    
+    def try_to_load_powers(self) -> bool:
+        # will load mu_to_power dict if exists, otherwise will do nothing
+        power_map_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
+        if os.path.exists(power_map_path):
+            with open(power_map_path, 'r') as f:
+                self.mu_to_power = json.load(f)
+            self.power_resolution = self.mu_to_power['power_resolution']
+            if self.verbose_level > 0:
+                print(f'loaded power map with resolution of  {self.power_resolution} repetions')
+            return True
+        else:
+            if self.verbose_level > 0:
+                print(f'no power map found at {power_map_path}')
+            return False
+        
+    def _save_power_map(self):
+        power_map_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
+        with open(power_map_path, 'w') as f:
+            json.dump(self.mu_to_power, f, indent=4)
+        print(f'power map saved to {power_map_path}')
 
     def fetch_params(self) -> Tuple[dict, ChannelConfig]:
         # num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]
         num_samples, num_mus = self._extract_values_from_folder_name()
         mu_vec = []
-        conf_list = []
+        cs_conf_list = []
         self.num_digits = self._count_digits(os.listdir(self.path)[0])
         for sub_name in os.listdir(self.path):
             folder_type = DataMethods.check_folder_type(os.path.basename(sub_name))
@@ -96,16 +116,16 @@ class DataAnalyzer():
             sub_path = f"{self.path}/{sub_name}"
             # conf = data_loaders.read_conf(sub_path)
             # conf = FilesReadWrite.read_channel_conf2(sub_path)
-            conf = ConfigManager.read_config(sub_path)
-            mu_vec.append(conf.mu)
-            conf_list.append(conf)
+            cs_conf = ConfigManager.read_config(sub_path)
+            mu_vec.append(cs_conf.mu)
+            cs_conf_list.append(cs_conf)
             num_files = len(os.listdir(sub_path))
             assert num_files == 1 + 2 * \
                 num_samples, f'ERROR at {sub_name}: [num_files={num_files}] != 1+2*[num_samples={num_samples}]'
 
-        assert len(conf_list) == num_mus, 'num of sub directories dont match num of mus from headline'
+        assert len(cs_conf_list) == num_mus, 'num of sub directories dont match num of mus from headline'
         assert len(mu_vec) == num_mus, 'num of sub directories dont match num of mus from headline'
-        conf = conf_list[0]  # arbitrarily chosen
+        cs_conf = cs_conf_list[0]  # arbitrarily chosen
         params = {
             'num_samples': num_samples,
             'num_mus': num_mus,
@@ -113,7 +133,7 @@ class DataAnalyzer():
             'mu_end': max(mu_vec),
             'num_digits': self.num_digits
         }
-        return params, conf
+        return params, cs_conf
 
     # -------------- plots --------------
 
@@ -184,13 +204,15 @@ class DataAnalyzer():
 
         return ber_vec
 
-    def plot_full_ber_graph(self, permute_limit=None, is_save_fig=True, log_mu=False):
+    def plot_full_ber_graph(self, permute_limit=None, is_save_fig=True, log_mu=False, 
+                            power_instead_of_mu=False):
         # n is the number of x's permutations to take from each folder
         self._calc_full_ber(permute_limit)
         out_dir = f'{self.path}/{PATHS.analysis_dir}'
         os.makedirs(out_dir, exist_ok=True)
         out_path = f'{out_dir}/ber_vs_mu.png'
 
+       
         if self.is_box_plot:
             Visualizer.plot_bers_boxplot(
                 us=self.mu_vec,
@@ -198,11 +220,15 @@ class DataAnalyzer():
                 output_path=out_path if is_save_fig else None,
             )
         else:
+            if power_instead_of_mu:
+                self._calc_power_from_mu_map(self.mu_vec)
+                self.mu_vec = self.mu_to_power.values()
             Visualizer.plot_bers(
                 us=self.mu_vec,
                 bers_vecs=[self.ber_vec],
                 output_path=out_path if is_save_fig else None,
                 log_mu=log_mu,
+                power_instead_mu = power_instead_of_mu
             )
 
         print(f'ber vs mu saved to {out_path}')
@@ -215,7 +241,7 @@ class DataAnalyzer():
         # data_type = self.params['conf']['data_type'] if 'data_type' in self.params['conf'] else 0
         # data_type = DataType(data_type).name
         mu_range = f'{self.params["mu_start"]}-{self.params["mu_end"]}'
-        qam = self.conf.M_QAM #  self.params['conf']['m_qam']
+        qam = self.cs_conf.M_QAM #  self.params['conf']['m_qam']
         run_name = f'{self.base_name}' # __{data_type}'
         wandb.init(project="data_analyze", entity="yarden92", name=run_name,
                    tags=[
@@ -281,7 +307,7 @@ class DataAnalyzer():
 
     # ------------ private ------------
 
-    def _calc_full_ber(self, n):
+    def _calc_full_ber(self, n) -> None:
         sub_name_filter = '*'
         n = n or self.params['num_samples']  # if n is None, take all permutations
         if self.num_permutations < n:
@@ -289,6 +315,22 @@ class DataAnalyzer():
                 self.path, sub_name_filter, self.verbose_level, self._tqdm, n, is_matrix_ber=self.is_box_plot,
                 in_cs=self.cs_for_input, out_cs=self.cs_for_output)
             self.num_permutations = n
+
+    def _calc_power_from_mu_map(self, mu_vec, power_resolution = 10, overwrite=False) -> None:
+        if self.power_resolution < power_resolution or self.mu_to_power is None:
+            if self.verbose_level > 0:
+                print(f'calculating power map with resolution of {power_resolution} repetions')
+            mu_to_power = {}
+            pa = PowerAdder2(num_repetitions=power_resolution)
+            for mu in tqdm(mu_vec):
+                subdir_path = os.path.join(self.path, self._get_sub_folder_name(mu))
+                mu_to_power[mu] = pa.calc_single_mu(subdir_path)
+                if self.verbose_level > 1:
+                    print(f'power for mu={mu} is {mu_to_power[mu]}')
+            self.mu_to_power = mu_to_power
+            self.power_resolution = power_resolution
+            self._save_power_map()
+        
 
     def _get_sub_folder_name(self, mu):
         cropped_mu = self._get_mu_as_str(mu)
@@ -322,6 +364,8 @@ class DataAnalyzer():
     def _count_digits(self, subfolder_name):
         mu = subfolder_name.split('=')[1]
         return len(mu.split('.')[1])
+    
+    
 
 
 if __name__ == '__main__':
