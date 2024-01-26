@@ -19,7 +19,7 @@ class PATHS:
     ber = 'ber.npy'
     mu = 'mu.npy'
     num_permuts = 'num_permutations.npy'
-    powers = 'mu_to_power.json'
+    powers = 'power_data.json'
 
 class DataAnalyzer():
     def __init__(self, data_folder_path: str, _tqdm=tqdm, is_box_plot=False, verbose_level=0,
@@ -82,24 +82,30 @@ class DataAnalyzer():
     
     def try_to_load_powers(self) -> bool:
         # will load mu_to_power dict if exists, otherwise will do nothing
-        power_map_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
-        if os.path.exists(power_map_path):
-            with open(power_map_path, 'r') as f:
-                self.mu_to_power = json.load(f)
-            self.power_resolution = self.mu_to_power['power_resolution']
+        power_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
+        if os.path.exists(power_path):
+            with open(power_path, 'r') as f:
+                power_data = json.load(f)
+            self.mu_to_power = power_data['mu_to_power']
+            self.power_resolution = power_data['power_resolution']
             if self.verbose_level > 0:
                 print(f'loaded power map with resolution of  {self.power_resolution} repetions')
             return True
         else:
             if self.verbose_level > 0:
-                print(f'no power map found at {power_map_path}')
+                print(f'no power map found at {power_path}')
             return False
         
     def _save_power_map(self):
-        power_map_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
-        with open(power_map_path, 'w') as f:
-            json.dump(self.mu_to_power, f, indent=4)
-        print(f'power map saved to {power_map_path}')
+        # we'll save a data structure of both the map and the resolution
+        power_path = os.path.join(self.path, PATHS.analysis_dir, PATHS.powers)
+        power_data = {
+            'power_resolution': self.power_resolution,
+            'mu_to_power': self.mu_to_power
+        }
+        with open(power_path, 'w') as f:
+            json.dump(power_data, f, indent=4)
+        print(f'power map saved to {power_path}')
 
     def fetch_params(self) -> Tuple[dict, ChannelConfig]:
         # num_samples, num_mus = [int(x) for x in self.base_name.split('_')[-1].split('x')]

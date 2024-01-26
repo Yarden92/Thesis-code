@@ -3,12 +3,13 @@ import numpy as np
 from tqdm.auto import tqdm
 
 import wandb
+from torch.utils.data import DataLoader
 from src.deep.data_loaders import DatasetNormal, create_channels, get_datasets_set
 from src.deep.standalone_methods import get_platform
 from src.deep.trainers import Trainer
 from src.general_methods.visualizer import Visualizer
 from src.deep.standalone_methods import GeneralMethods as GM
-from torch.utils.data import DataLoader
+from src.deep.data_analyzer import DataAnalyzer
 
 
 class ModelAnalyzer:
@@ -39,9 +40,11 @@ class ModelAnalyzer:
         wandb.run = None
 
     def plot_all_bers(self, base_path, train_ds_ratio, val_ds_ratio, test_ds_ratio,
-                      _tqdm=None, verbose_level=1, is_upload_to_wandb=False):
+                      _tqdm=None, verbose_level=1, is_upload_to_wandb=False, power_instead_mu=False):
 
         sorted_dirs = GM.sort_dirs_by_mu(os.listdir(base_path))
+        if power_instead_mu:
+            mu_to_power = self._get_mu_to_power_dict(base_path)
         # powers, org_bers, model_bers, ber_improvements = [], [], [], []
         # self.outputs['powers'] = []
         self.outputs['mu'] = []
@@ -69,21 +72,25 @@ class ModelAnalyzer:
             # model_bers.append(model_ber)
             # ber_improvements.append(ber_improve)
             # self.outputs['powers'].append(y_power)
-            self.outputs['mu'].append(mu)
+            if power_instead_mu:
+                power = mu_to_power[str(self.cs_in.channel_config.mu)]
+                self.outputs['mu'].append(power)
+            else:
+                self.outputs['mu'].append(mu)
             self.outputs['org_bers'].append(org_ber)
             self.outputs['model_bers'].append(model_ber)
             self.outputs['ber_improvements'].append(ber_improve)
 
         # x_axis = self.outputs['powers']
+        
         x_axis = self.outputs['mu']
 
         Visualizer.my_plot(
             x_axis, self.outputs['org_bers'],
             x_axis, self.outputs['model_bers'],
-            name='BERs vs. y power',
-            legend=['org_ber', 'model_ber'],
-            # xlabel='y power',
-            xlabel='mu',
+            name='BERs vs power' if power_instead_mu else 'BERs vs mu',
+            legend=['vanilla (original)', 'optimized (DeltaNet)'],
+            xlabel='mu' if not power_instead_mu else 'power [dBm]',
             ylabel='BER',
             function='semilogy'
         )
@@ -192,10 +199,11 @@ class ModelAnalyzer:
             names=[rf'$c[n]$ [Tx]', rf'$\hat c[n]$ [Rx]', rf'$\widetilde c[n]$ [pred]'],
         )
 
-    def plot_constelation(self, indices: list, colors=None):
+    def plot_constelation(self, indices: list, colors=None, is_annotate=True):
         m_qam = self.trainer.train_dataset.config.M_QAM
 
         Rx, Tx, pred_Tx = np.array([]), np.array([]), np.array([])
+        mu = self.trainer.train_dataset.cropped_mu
         for i in tqdm(indices):
             Rx_i, Tx_i, pred_Tx_i = self.trainer.get_single_item(i)
             c_out_Tx = self.cs_in.io_to_c_constellation(Tx_i)
@@ -206,7 +214,7 @@ class ModelAnalyzer:
             pred_Tx = np.concatenate((pred_Tx, c_out_pred_Tx))
             Tx = np.concatenate((Tx, c_out_Tx))  # clean
 
-        Visualizer.plot_constellation_map_with_3_data_vecs(Rx, pred_Tx, Tx, m_qam, 'constellation map', ['Rx', 'pred_Tx','Tx'], colors)
+        Visualizer.plot_constellation_map_with_3_data_vecs(Rx, pred_Tx, Tx, m_qam, f'$\mu=${mu}', ['Rx', 'optimized','Tx'], colors, is_annotate)
 
     def calc_norms(self, _tqdm=None, verbose_level=1, max_items=None):
         Rx_norms, Tx_norms, pred_Tx_norms = 0, 0, 0
@@ -281,3 +289,12 @@ class ModelAnalyzer:
 
         if is_reset_wandb:
             self._reset_wandb()
+
+    def _get_mu_to_power_dict(self, base_path) -> dict:
+        # read the dict from _analyzed folder using data analyzer
+        
+        da = DataAnalyzer(base_path)
+        if da.try_to_load_powers():
+            return da.mu_to_power
+        else:
+            raise Exception('mu_to_power dict not found, analyze the data first')
